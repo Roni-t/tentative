@@ -10,7 +10,7 @@ services:
     environment:
       - DATABASE_URL=sqlite:////app/data/tentative.db
       - SECRET_KEY=tentative-celestial-production-secret-key-2026
-      - FERNET_KEY=dGVudGF0aXZlLWZlcm5ldC1zZWNyZXQtMzItYnl0ZXMh
+      - FERNET_KEY=dGVudGF0aXZlLWZlcm5ldC1zZWNyZXQtMzItYnl0ZXM=
       - PHONE_HASH_SALT=tentative_space_salt_2026
       - SMS_PROVIDER=console
       - DEFAULT_SEMESTER_END_DATE=2026-12-18

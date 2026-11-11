@@ -13,6 +13,7 @@ def test_capacity_limit_and_waitlist_auto_promotion(client, db_session):
     event_id = create_resp.json()["id"]
 
     # Participant 1 RSVPs Going
+    client.cookies.clear()
     p1 = client.post(f"/api/events/{event_id}/rsvp", json={
         "participant_name": "Sarah Connor",
         "status": "going"
@@ -21,6 +22,7 @@ def test_capacity_limit_and_waitlist_auto_promotion(client, db_session):
     assert p1["waitlist_position"] is None
 
     # Participant 2 RSVPs Going
+    client.cookies.clear()
     p2 = client.post(f"/api/events/{event_id}/rsvp", json={
         "participant_name": "John Connor",
         "status": "going"
@@ -29,6 +31,7 @@ def test_capacity_limit_and_waitlist_auto_promotion(client, db_session):
     assert p2["waitlist_position"] is None
 
     # Participant 3 RSVPs Going -> Capacity full! Assigned to waitlist (Rank 1)
+    client.cookies.clear()
     p3 = client.post(f"/api/events/{event_id}/rsvp", json={
         "participant_name": "Kyle Reese",
         "status": "going"
@@ -37,6 +40,7 @@ def test_capacity_limit_and_waitlist_auto_promotion(client, db_session):
     assert p3["waitlist_position"] == 1
 
     # Participant 4 RSVPs Going -> Waitlisted (Rank 2)
+    client.cookies.clear()
     p4 = client.post(f"/api/events/{event_id}/rsvp", json={
         "participant_name": "Miles Dyson",
         "status": "going"

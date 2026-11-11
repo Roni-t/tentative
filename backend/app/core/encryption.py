@@ -1,10 +1,24 @@
+import base64
 import hashlib
 import re
 from cryptography.fernet import Fernet
 from app.config import settings
 
-# Initialize Fernet cipher
-_fernet = Fernet(settings.FERNET_KEY.encode("utf-8"))
+
+def _get_fernet_instance() -> Fernet:
+    """Initialize Fernet cipher, falling back to 32-byte SHA-256 derived key if needed."""
+    raw_key = settings.FERNET_KEY.strip()
+    try:
+        # Check if already a valid 32 url-safe base64-encoded key
+        return Fernet(raw_key.encode("utf-8"))
+    except Exception:
+        # Fall back to deriving exactly 32 bytes from raw_key via SHA-256
+        derived_32 = hashlib.sha256(raw_key.encode("utf-8")).digest()
+        safe_key = base64.urlsafe_b64encode(derived_32)
+        return Fernet(safe_key)
+
+
+_fernet = _get_fernet_instance()
 
 
 def normalize_phone(phone: str) -> str:

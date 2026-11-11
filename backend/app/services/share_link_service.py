@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from app.config import settings
-from app.core.security import generate_secure_token
+from app.core.security import ensure_utc, generate_secure_token
 from app.models.event import Event
 from app.models.shareable_url import ShareableURL
 
@@ -68,8 +68,9 @@ class ShareLinkService:
 
         last_expiry = None
         for u in existing:
-            if not last_expiry or u.expires_at > last_expiry:
-                last_expiry = u.expires_at
+            u_exp = ensure_utc(u.expires_at)
+            if not last_expiry or (u_exp and u_exp > last_expiry):
+                last_expiry = u_exp
             u.is_active = False
 
         now = datetime.now(timezone.utc)
@@ -131,7 +132,7 @@ class ShareLinkService:
             )
 
         now = datetime.now(timezone.utc)
-        if not record.is_active or record.expires_at < now:
+        if not record.is_active or (record.expires_at and ensure_utc(record.expires_at) < now):
             raise HTTPException(
                 status_code=status.HTTP_410_GONE,
                 detail="This orbit has ended. The shareable link has expired."

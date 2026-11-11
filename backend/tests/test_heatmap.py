@@ -18,6 +18,7 @@ def test_heatmap_calculation_and_caching(client, db_session):
     event_id = create_resp.json()["id"]
 
     # Invitee 1 submits: 14:00 - 15:00
+    client.cookies.clear()
     client.post(f"/api/events/{event_id}/availability", json={
         "participant_name": "Alice",
         "slots": [
@@ -27,6 +28,7 @@ def test_heatmap_calculation_and_caching(client, db_session):
     })
 
     # Invitee 2 submits: 14:30 - 15:30
+    client.cookies.clear()
     client.post(f"/api/events/{event_id}/availability", json={
         "participant_name": "Bob",
         "slots": [
@@ -36,6 +38,7 @@ def test_heatmap_calculation_and_caching(client, db_session):
     })
 
     # Invitee 3 submits: 14:30 - 15:00
+    client.cookies.clear()
     client.post(f"/api/events/{event_id}/availability", json={
         "participant_name": "Charlie",
         "slots": [

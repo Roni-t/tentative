@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from app.core.security import generate_secure_token
+from app.core.security import ensure_utc, generate_secure_token
 from app.models.availability import Availability
 from app.models.event import Event
 from app.models.user import User
@@ -26,7 +26,7 @@ class AvailabilityService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Event has been canceled.")
 
         # Check deadline
-        if event.deadline and datetime.now(timezone.utc) > event.deadline.replace(tzinfo=timezone.utc):
+        if event.deadline and datetime.now(timezone.utc) > ensure_utc(event.deadline):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Response deadline has passed.")
 
         # Check blocked

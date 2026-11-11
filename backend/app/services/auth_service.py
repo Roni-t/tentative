@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.adapters.sms_adapter import get_sms_adapter
 from app.config import settings
 from app.core.encryption import encrypt_phone, hash_phone, mask_phone, normalize_phone
-from app.core.security import create_access_token, generate_secure_token, generate_verification_code
+from app.core.security import create_access_token, ensure_utc, generate_secure_token, generate_verification_code
 from app.models.auth import Session as DbSession, VerificationCode
 from app.models.user import User
 
@@ -68,7 +68,7 @@ class AuthService:
                 detail="No pending verification code found. Please request a new code."
             )
 
-        if db_code.expires_at < now:
+        if ensure_utc(db_code.expires_at) < now:
             db.delete(db_code)
             db.commit()
             raise HTTPException(

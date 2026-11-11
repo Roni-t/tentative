@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     # Must be 32 url-safe base64-encoded bytes for Fernet
     FERNET_KEY: str = os.getenv(
         "FERNET_KEY",
-        base64.urlsafe_b64encode(b"tentative-fernet-secret-32-bytes!").decode("utf-8")
+        base64.urlsafe_b64encode(b"tentative-fernet-secret-32-bytes").decode("utf-8")
     )
     PHONE_HASH_SALT: str = os.getenv("PHONE_HASH_SALT", "tentative_space_salt_2026")
     

@@ -3,6 +3,7 @@ from fastapi import APIRouter, Cookie, Depends, Query, Response
 from sqlalchemy.orm import Session
 from app.core.dependencies import get_current_user_optional
 from app.database import get_db
+from app.models.rsvp import RSVP
 from app.models.user import User
 from app.schemas.rsvp import RsvpOut, RsvpSubmitPayload, RsvpSummary
 from app.services.rsvp_service import rsvp_service
@@ -21,7 +22,12 @@ def submit_rsvp(
 ):
     """Submit or update RSVP status. Handles FIFO waitlist if capacity limit is reached."""
     if not payload.edit_token and tentative_edit_token:
-        payload.edit_token = tentative_edit_token
+        existing = db.query(RSVP).filter(
+            RSVP.event_id == event_id,
+            RSVP.edit_token == tentative_edit_token
+        ).first()
+        if existing and existing.participant_name.strip().lower() == payload.participant_name.strip().lower():
+            payload.edit_token = tentative_edit_token
 
     rsvp = rsvp_service.submit_rsvp(
         event_id=event_id,

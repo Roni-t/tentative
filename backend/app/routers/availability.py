@@ -3,6 +3,7 @@ from fastapi import APIRouter, Cookie, Depends, Query, Response
 from sqlalchemy.orm import Session
 from app.core.dependencies import get_current_user_optional
 from app.database import get_db
+from app.models.availability import Availability
 from app.models.user import User
 from app.schemas.availability import (
     AvailabilitySubmitPayload,
@@ -26,9 +27,14 @@ def submit_availability(
     db: Session = Depends(get_db)
 ):
     """Submit availability for participant. Works for both anonymous invitees and logged in hosts."""
-    # If client didn't supply edit_token in payload, check cookie
+    # If client didn't supply edit_token in payload, check cookie if same participant
     if not payload.edit_token and tentative_edit_token:
-        payload.edit_token = tentative_edit_token
+        existing = db.query(Availability).filter(
+            Availability.event_id == event_id,
+            Availability.edit_token == tentative_edit_token
+        ).first()
+        if existing and existing.participant_name.strip().lower() == payload.participant_name.strip().lower():
+            payload.edit_token = tentative_edit_token
 
     result = availability_service.submit_availability(
         event_id=event_id,
