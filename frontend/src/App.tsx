@@ -96,7 +96,7 @@ export const App: React.FC = () => {
       <ScrollToTop />
       <AuthProvider>
         <ToastProvider>
-          <div className="relative min-h-screen flex flex-col bg-space-950 text-slate-100 selection:bg-cosmic-purple/30 selection:text-white">
+          <div className="relative min-h-screen flex flex-col bg-black text-zinc-100 selection:bg-white/20 selection:text-white">
             {/* Ambient Celestial Starfield */}
             <StarField />
 

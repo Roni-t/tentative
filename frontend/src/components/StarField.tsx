@@ -13,14 +13,24 @@ interface ShootingStar {
 
 export const StarField: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 });
+  const glowRef = useRef<HTMLDivElement | null>(null);
 
+  // High-performance direct DOM transform tracking with zero React re-renders
   useEffect(() => {
+    let rafId: number;
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        if (glowRef.current) {
+          glowRef.current.style.transform = `translate3d(${e.clientX - 225}px, ${e.clientY - 225}px, 0)`;
+        }
+      });
     };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      cancelAnimationFrame(rafId);
+    };
   }, []);
 
   useEffect(() => {
@@ -159,16 +169,33 @@ export const StarField: React.FC = () => {
 
       {/* Subtle interactive cursor light glow that follows mouse pointer */}
       <div
-        className="absolute w-[450px] h-[450px] rounded-full bg-white/[0.03] blur-[120px] pointer-events-none transition-transform duration-300 ease-out"
+        ref={glowRef}
+        className="absolute w-[450px] h-[450px] rounded-full pointer-events-none will-change-transform"
         style={{
-          transform: `translate3d(${mousePos.x - 225}px, ${mousePos.y - 225}px, 0)`,
+          background: 'radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%)',
+          transform: 'translate3d(-1000px, -1000px, 0)',
         }}
       />
 
-      {/* Drifting atmospheric monochrome silver/white gradient glows */}
-      <div className="absolute -top-[25%] -left-[15%] w-[60vw] h-[60vw] rounded-full bg-white/[0.03] blur-[140px] pointer-events-none animate-drift" />
-      <div className="absolute top-[35%] -right-[15%] w-[50vw] h-[50vw] rounded-full bg-white/[0.02] blur-[150px] pointer-events-none animate-pulse-glow" />
-      <div className="absolute -bottom-[20%] left-[20%] w-[55vw] h-[55vw] rounded-full bg-white/[0.02] blur-[160px] pointer-events-none" />
+      {/* Atmospheric monochrome silver/white gradient glows using GPU-friendly radial gradients */}
+      <div
+        className="absolute -top-[20%] -left-[10%] w-[55vw] h-[55vw] rounded-full pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle, rgba(255, 255, 255, 0.035) 0%, transparent 70%)',
+        }}
+      />
+      <div
+        className="absolute top-[35%] -right-[15%] w-[50vw] h-[50vw] rounded-full pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle, rgba(255, 255, 255, 0.025) 0%, transparent 70%)',
+        }}
+      />
+      <div
+        className="absolute -bottom-[20%] left-[20%] w-[55vw] h-[55vw] rounded-full pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle, rgba(255, 255, 255, 0.025) 0%, transparent 70%)',
+        }}
+      />
     </div>
   );
 };

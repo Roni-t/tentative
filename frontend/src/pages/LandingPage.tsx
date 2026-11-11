@@ -27,13 +27,20 @@ export const LandingPage: React.FC = () => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, []);
 
-  // Track scroll position for floating scroll-to-top button
+  // Track scroll position for floating scroll-to-top button with RAF throttling and state de-duplication
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 160);
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const isScrolled = window.scrollY > 180;
+          setShowScrollTop((prev) => (prev !== isScrolled ? isScrolled : prev));
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -43,45 +50,37 @@ export const LandingPage: React.FC = () => {
     offset: ['start start', 'end end'],
   });
 
-  // Apple-smooth physics spring interpolation (calibrated for bidirectional responsiveness)
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 140,
-    damping: 26,
-    mass: 0.08,
-    restDelta: 0.0005,
-  });
-
   // ==========================================
   // STAGE 1: Opening Fold Transforms
+  // Direct hardware-accelerated transforms for 60/120fps stutter-free scroll
   // ==========================================
-  // Title & Subtitle fade out gently as you scroll down; re-emerge symmetrically when scrolling back up
-  const titleOpacity = useTransform(smoothProgress, [0, 0.22], [1, 0]);
-  const titleY = useTransform(smoothProgress, [0, 0.22], [0, -35]);
-  const titleScale = useTransform(smoothProgress, [0, 0.22], [1, 0.92]);
-  const titlePointerEvents = useTransform(smoothProgress, (v) => (v < 0.2 ? 'auto' : 'none'));
+  const titleOpacity = useTransform(scrollYProgress, [0, 0.18], [1, 0]);
+  const titleY = useTransform(scrollYProgress, [0, 0.18], [0, -25]);
+  const titleScale = useTransform(scrollYProgress, [0, 0.18], [1, 0.94]);
+  const titlePointerEvents = useTransform(scrollYProgress, (v) => (v < 0.18 ? 'auto' : 'none'));
 
   // Scroll cue prompt at the bottom
-  const scrollPromptOpacity = useTransform(smoothProgress, [0, 0.12], [1, 0]);
-  const scrollPromptPointerEvents = useTransform(smoothProgress, (v) => (v < 0.1 ? 'auto' : 'none'));
+  const scrollPromptOpacity = useTransform(scrollYProgress, [0, 0.1], [1, 0]);
+  const scrollPromptPointerEvents = useTransform(scrollYProgress, (v) => (v < 0.08 ? 'auto' : 'none'));
 
   // Planet dynamic scaling & depth shift (The Apple centerpiece effect)
-  const planetScale = useTransform(smoothProgress, [0.04, 0.52], [1, 1.28]);
-  const planetY = useTransform(smoothProgress, [0.04, 0.52], [0, -55]);
-  const planetOpacity = useTransform(smoothProgress, [0.25, 0.6], [1, 0.38]);
+  const planetScale = useTransform(scrollYProgress, [0.06, 0.45], [1, 1.25]);
+  const planetY = useTransform(scrollYProgress, [0.06, 0.45], [0, -60]);
+  const planetOpacity = useTransform(scrollYProgress, [0.15, 0.45], [1, 0.3]);
 
   // ==========================================
   // STAGE 2: Main Menu Hub Reveal Transforms
   // ==========================================
   // Menu emerges from depth, locks into crystal clear focus in the center
-  const menuOpacity = useTransform(smoothProgress, [0.25, 0.55], [0, 1]);
-  const menuY = useTransform(smoothProgress, [0.25, 0.55], [45, 0]);
-  const menuScale = useTransform(smoothProgress, [0.25, 0.55], [0.93, 1]);
-  const menuPointerEvents = useTransform(smoothProgress, (v) => (v > 0.26 ? 'auto' : 'none'));
+  const menuOpacity = useTransform(scrollYProgress, [0.22, 0.48], [0, 1]);
+  const menuY = useTransform(scrollYProgress, [0.22, 0.48], [40, 0]);
+  const menuScale = useTransform(scrollYProgress, [0.22, 0.48], [0.94, 1]);
+  const menuPointerEvents = useTransform(scrollYProgress, (v) => (v > 0.22 ? 'auto' : 'none'));
 
   const scrollToMenu = () => {
     const track = trackRef.current;
     if (track) {
-      const targetY = track.offsetTop + (track.offsetHeight - window.innerHeight) * 0.62;
+      const targetY = track.offsetTop + (track.offsetHeight - window.innerHeight) * 0.55;
       window.scrollTo({ top: targetY, behavior: 'smooth' });
     }
   };
@@ -101,39 +100,42 @@ export const LandingPage: React.FC = () => {
   return (
     <div className="relative w-full">
       {/* ========================================================
-          APPLE STICKY SCROLL SECTION (190vh Pinning Track)
+          APPLE STICKY SCROLL SECTION (180vh Pinning Track)
           ======================================================== */}
-      <div ref={trackRef} className="relative h-[190vh] w-full">
+      <div ref={trackRef} className="relative h-[180vh] w-full">
         <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
-          {/* Centered Celestial Sphere (Scales & transforms with Apple inertia) */}
-          <motion.div
-            style={{
-              scale: planetScale,
-              y: planetY,
-              opacity: planetOpacity,
-            }}
-            className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0"
-          >
-            <HeroPlanet />
-          </motion.div>
+          {/* STAGE 1: Centered Hero Showcase (Planet + Title underneath, unified and perfectly centered) */}
+          <div className="relative z-10 flex flex-col items-center justify-center text-center select-none px-4 -mt-10 sm:-mt-12">
+            {/* The White Celestial Planet */}
+            <motion.div
+              style={{
+                scale: planetScale,
+                y: planetY,
+                opacity: planetOpacity,
+              }}
+              className="pointer-events-none select-none mb-3 sm:mb-4"
+            >
+              <HeroPlanet />
+            </motion.div>
 
-          {/* STAGE 1: Opening Fold (Title & Program Identity) */}
-          <motion.div
-            style={{
-              opacity: titleOpacity,
-              y: titleY,
-              scale: titleScale,
-              pointerEvents: titlePointerEvents,
-            }}
-            className="relative z-10 flex flex-col items-center justify-center text-center select-none px-4 max-w-2xl mt-48 sm:mt-56"
-          >
-            <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight text-white drop-shadow-[0_0_40px_rgba(255,255,255,0.4)]">
-              Tentative
-            </h1>
-            <p className="text-xs sm:text-sm text-zinc-400 font-mono tracking-widest uppercase mt-3">
-              Group Scheduling in Perfect Orbit
-            </p>
-          </motion.div>
+            {/* Title & Subtitle directly and cleanly below the planet */}
+            <motion.div
+              style={{
+                opacity: titleOpacity,
+                y: titleY,
+                scale: titleScale,
+                pointerEvents: titlePointerEvents,
+              }}
+              className="flex flex-col items-center justify-center text-center"
+            >
+              <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight text-white drop-shadow-[0_0_35px_rgba(255,255,255,0.4)]">
+                Tentative
+              </h1>
+              <p className="text-xs sm:text-sm text-zinc-400 font-mono tracking-widest uppercase mt-3">
+                Group Scheduling in Perfect Orbit
+              </p>
+            </motion.div>
+          </div>
 
           {/* Minimal Scroll Cue Button */}
           <motion.button

@@ -109,15 +109,15 @@ export const CreateEventPage: React.FC = () => {
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Core Info */}
-        <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 space-y-6">
+        <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-zinc-800 space-y-6">
           <h2 className="text-base font-bold text-white flex items-center space-x-2">
-            <Sparkles className="w-4 h-4 text-cosmic-purple" />
+            <Sparkles className="w-4 h-4 text-white" />
             <span>Event Essentials</span>
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
                 Event Title *
               </label>
               <input
@@ -126,12 +126,12 @@ export const CreateEventPage: React.FC = () => {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Software Engineering Team Meeting"
-                className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-slate-600 text-sm focus:border-cosmic-purple focus:ring-1 focus:ring-cosmic-purple transition-all"
+                className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-zinc-500 text-sm focus:border-white focus:ring-1 focus:ring-white transition-all"
               />
             </div>
 
             <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
                 Description
               </label>
               <textarea
@@ -139,34 +139,34 @@ export const CreateEventPage: React.FC = () => {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Provide context, meeting objectives, or instructions..."
-                className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-slate-600 text-sm focus:border-cosmic-purple focus:ring-1 focus:ring-cosmic-purple transition-all custom-scrollbar"
+                className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-zinc-500 text-sm focus:border-white focus:ring-1 focus:ring-white transition-all custom-scrollbar"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
                 Location or Virtual Meeting Link
               </label>
               <div className="relative">
-                <MapPin className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+                <MapPin className="w-4 h-4 text-zinc-500 absolute left-3.5 top-3" />
                 <input
                   type="text"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="e.g. ECSS 2.410 / Microsoft Teams"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-slate-600 text-sm focus:border-cosmic-purple focus:ring-1 focus:ring-cosmic-purple transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-zinc-500 text-sm focus:border-white focus:ring-1 focus:ring-white transition-all"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
                 Timezone
               </label>
               <select
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-2xl bg-space-900 border border-white/10 text-white text-sm focus:border-cosmic-purple transition-all"
+                className="w-full px-4 py-2.5 rounded-2xl bg-zinc-900 border border-zinc-700 text-white text-sm focus:border-white transition-all"
               >
                 {COMMON_TIMEZONES.map((tz) => (
                   <option key={tz} value={tz}>

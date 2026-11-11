@@ -14,13 +14,20 @@ export const HeroPlanet: React.FC = () => {
   const rotateX = useTransform(springY, [-0.5, 0.5], [12, -12]);
   const rotateY = useTransform(springX, [-0.5, 0.5], [-14, 14]);
 
-  // Track cursor movement across window with passive listener for seamless 3D perspective
+  // Track cursor movement across window with requestAnimationFrame throttling for seamless 60fps 3D perspective
   useEffect(() => {
+    let ticking = false;
     const handleWindowMouseMove = (e: MouseEvent) => {
-      const xPct = e.clientX / window.innerWidth - 0.5;
-      const yPct = e.clientY / window.innerHeight - 0.5;
-      mouseX.set(xPct);
-      mouseY.set(yPct);
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const xPct = e.clientX / window.innerWidth - 0.5;
+          const yPct = e.clientY / window.innerHeight - 0.5;
+          mouseX.set(xPct);
+          mouseY.set(yPct);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
     window.addEventListener('mousemove', handleWindowMouseMove, { passive: true });
@@ -30,7 +37,7 @@ export const HeroPlanet: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      className="relative w-full max-w-lg h-[380px] sm:h-[420px] flex items-center justify-center mx-auto select-none perspective-[1000px]"
+      className="relative w-full max-w-md h-[250px] sm:h-[280px] flex items-center justify-center mx-auto select-none perspective-[1000px]"
     >
       {/* Central Celestial Orb with 3D Parallax */}
       <motion.div
