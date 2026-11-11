@@ -1,5 +1,6 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { StarField } from './components/StarField';
@@ -32,6 +33,52 @@ const ShareRedirect: React.FC = () => {
   return <Navigate to={`/share/${token}/heatmap`} replace />;
 };
 
+const AnimatedRoutes: React.FC = () => {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, y: 12, filter: 'blur(3px)' }}
+        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+        exit={{ opacity: 0, y: -8, filter: 'blur(3px)' }}
+        transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full flex-1 flex flex-col"
+      >
+        <Routes location={location}>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<CreateAccountPage />} />
+          <Route path="/events" element={<MyEventsPage />} />
+          <Route path="/create" element={<CreateEventPage />} />
+
+          {/* Event Details & Functional Views */}
+          <Route path="/events/:id" element={<EventDetailsPage />} />
+          <Route path="/events/:id/respond" element={<RespondAvailabilityPage />} />
+          <Route path="/events/:id/heatmap" element={<HeatmapPage />} />
+          <Route path="/events/:id/finalize" element={<FinalizePage />} />
+          <Route path="/events/:id/rsvps" element={<RsvpListPage />} />
+          <Route path="/events/:id/discussion" element={<DiscussionPage />} />
+          <Route path="/events/:id/share" element={<ShareExpiryPage />} />
+          <Route path="/events/:id/recurrence" element={<RecurrencePage />} />
+
+          {/* Shareable Link Routes (Invitee Anonymous Routes) */}
+          <Route path="/share/:token" element={<ShareRedirect />} />
+          <Route path="/share/:token/respond" element={<RespondAvailabilityPage />} />
+          <Route path="/share/:token/heatmap" element={<HeatmapPage />} />
+
+          {/* System & Extra Views */}
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/bug-report" element={<BugReportPage />} />
+          <Route path="/expired" element={<ExpiredOrbitPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
 export const App: React.FC = () => {
   return (
     <BrowserRouter>
@@ -47,36 +94,9 @@ export const App: React.FC = () => {
             {/* Notification Toasts */}
             <ToastContainer />
 
-            {/* Content Routes */}
-            <main className="flex-1 relative z-10">
-              <Routes>
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<CreateAccountPage />} />
-                <Route path="/events" element={<MyEventsPage />} />
-                <Route path="/create" element={<CreateEventPage />} />
-
-                {/* Event Details & Functional Views */}
-                <Route path="/events/:id" element={<EventDetailsPage />} />
-                <Route path="/events/:id/respond" element={<RespondAvailabilityPage />} />
-                <Route path="/events/:id/heatmap" element={<HeatmapPage />} />
-                <Route path="/events/:id/finalize" element={<FinalizePage />} />
-                <Route path="/events/:id/rsvps" element={<RsvpListPage />} />
-                <Route path="/events/:id/discussion" element={<DiscussionPage />} />
-                <Route path="/events/:id/share" element={<ShareExpiryPage />} />
-                <Route path="/events/:id/recurrence" element={<RecurrencePage />} />
-
-                {/* Shareable Link Routes (Invitee Anonymous Routes) */}
-                <Route path="/share/:token" element={<ShareRedirect />} />
-                <Route path="/share/:token/respond" element={<RespondAvailabilityPage />} />
-                <Route path="/share/:token/heatmap" element={<HeatmapPage />} />
-
-                {/* System & Extra Views */}
-                <Route path="/admin" element={<AdminPage />} />
-                <Route path="/bug-report" element={<BugReportPage />} />
-                <Route path="/expired" element={<ExpiredOrbitPage />} />
-                <Route path="*" element={<NotFoundPage />} />
-              </Routes>
+            {/* Content Routes with Smooth Page Transitions */}
+            <main className="flex-1 relative z-10 flex flex-col">
+              <AnimatedRoutes />
             </main>
 
             {/* Footer */}

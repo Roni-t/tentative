@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { TimeSlot } from '../types';
-import { formatDateHeading, formatSlotTime } from '../utils/format';
-import { Clock, CheckSquare, XSquare } from 'lucide-react';
+import { formatDateHeading } from '../utils/format';
+import { Clock, CheckSquare, XSquare, Sparkles } from 'lucide-react';
 
 interface AvailabilityGridProps {
   candidateDates: string[];
@@ -80,43 +81,43 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
     onSlotsChange(result);
   };
 
-  const handleSlotMouseDown = (startIso: string) => {
+  // Mouse drag handlers
+  const handleSlotMouseDown = (slotIso: string) => {
     isMouseDownRef.current = true;
-    const isAlready = selectedSet.has(startIso);
-    dragModeRef.current = isAlready ? 'remove' : 'add';
+    const isCurrentlySelected = selectedSet.has(slotIso);
+    dragModeRef.current = isCurrentlySelected ? 'remove' : 'add';
 
     const next = new Set(selectedSet);
     if (dragModeRef.current === 'add') {
-      next.add(startIso);
+      next.add(slotIso);
     } else {
-      next.delete(startIso);
+      next.delete(slotIso);
     }
     setSelectedSet(next);
     notifyChange(next);
   };
 
-  const handleSlotMouseEnter = (startIso: string) => {
+  const handleSlotMouseEnter = (slotIso: string) => {
     if (!isMouseDownRef.current) return;
     const next = new Set(selectedSet);
     if (dragModeRef.current === 'add') {
-      next.add(startIso);
+      next.add(slotIso);
     } else {
-      next.delete(startIso);
+      next.delete(slotIso);
     }
     setSelectedSet(next);
     notifyChange(next);
   };
 
-  const handleMouseUp = () => {
-    isMouseDownRef.current = false;
-  };
-
   useEffect(() => {
+    const handleMouseUp = () => {
+      isMouseDownRef.current = false;
+    };
     window.addEventListener('mouseup', handleMouseUp);
     return () => window.removeEventListener('mouseup', handleMouseUp);
-  }, [selectedSet]);
+  }, []);
 
-  // Touch painting support
+  // Touch drag support
   const handleTouchMove = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     const elem = document.elementFromPoint(touch.clientX, touch.clientY);
@@ -153,31 +154,37 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
     notifyChange(next);
   };
 
+  const totalHours = (selectedSet.size * (slotDurationMinutes / 60)).toFixed(1);
+
   return (
     <div className="w-full flex flex-col space-y-4 select-none">
       {/* Action Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-        <div className="flex items-center space-x-2 text-slate-400">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs glass-panel px-4 py-3 rounded-2xl border border-white/10">
+        <div className="flex items-center space-x-2 text-slate-300">
           <Clock className="w-4 h-4 text-cosmic-purple" />
           <span>Click & drag across cells to mark available times</span>
         </div>
         <div className="flex items-center space-x-2">
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             type="button"
             onClick={selectAll}
-            className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 flex items-center space-x-1.5 transition-colors"
+            className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 hover:text-white border border-white/10 flex items-center space-x-1.5 transition-colors cursor-pointer"
           >
             <CheckSquare className="w-3.5 h-3.5 text-cosmic-cyan" />
             <span>Select All</span>
-          </button>
-          <button
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             type="button"
             onClick={clearAll}
-            className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 flex items-center space-x-1.5 transition-colors"
+            className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 hover:text-white border border-white/10 flex items-center space-x-1.5 transition-colors cursor-pointer"
           >
             <XSquare className="w-3.5 h-3.5 text-red-400" />
             <span>Clear</span>
-          </button>
+          </motion.button>
         </div>
       </div>
 
@@ -218,7 +225,7 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
                   const isSelected = selectedSet.has(startIso);
 
                   return (
-                    <div
+                    <motion.div
                       key={startIso}
                       data-slot-iso={startIso}
                       onMouseDown={() => handleSlotMouseDown(startIso)}
@@ -232,14 +239,20 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
                         setSelectedSet(next);
                         notifyChange(next);
                       }}
-                      className={`w-28 sm:w-32 h-9 mx-1 rounded-xl cursor-pointer transition-all duration-150 flex items-center justify-center text-[11px] font-medium border ${
+                      animate={{ scale: isSelected ? [0.95, 1] : 1 }}
+                      transition={{ duration: 0.15 }}
+                      className={`w-28 sm:w-32 h-9 mx-1 rounded-xl cursor-pointer transition-colors duration-150 flex items-center justify-center text-[11px] font-medium border relative group ${
                         isSelected
-                          ? 'bg-gradient-to-r from-cosmic-purple/80 to-cosmic-cyan/80 text-white border-white/40 shadow-glow-sm scale-[0.98]'
+                          ? 'bg-gradient-to-r from-cosmic-purple/85 to-cosmic-cyan/85 text-white border-white/50 shadow-glow-sm'
                           : 'bg-white/[0.03] hover:bg-white/[0.08] text-slate-500 border-white/[0.06] hover:border-white/20'
                       }`}
                     >
-                      {isSelected ? 'Available' : ''}
-                    </div>
+                      {isSelected ? (
+                        <span className="flex items-center space-x-1 text-white font-semibold">
+                          <span>Free</span>
+                        </span>
+                      ) : null}
+                    </motion.div>
                   );
                 })}
               </div>
@@ -248,8 +261,17 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
         </div>
       </div>
 
-      <div className="text-right text-xs text-slate-400 font-mono">
-        {selectedSet.size} slot{selectedSet.size === 1 ? '' : 's'} selected ({selectedSet.size * (slotDurationMinutes / 60)} hrs total)
+      {/* Floating Selection Counter Chip */}
+      <div className="flex items-center justify-between px-2 text-xs">
+        <span className="text-slate-400">Time window: {dailyStartTime} – {dailyEndTime}</span>
+        <motion.div
+          animate={{ scale: selectedSet.size > 0 ? [1, 1.05, 1] : 1 }}
+          transition={{ duration: 0.25 }}
+          className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cosmic-purple/20 border border-cosmic-purple/30 text-cosmic-cyan font-mono"
+        >
+          <Sparkles className="w-3 h-3 text-cosmic-purple" />
+          <span>{selectedSet.size} slots selected ({totalHours} hrs)</span>
+        </motion.div>
       </div>
     </div>
   );

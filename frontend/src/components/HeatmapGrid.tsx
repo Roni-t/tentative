@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { HeatmapResponse, HeatmapSlot } from '../types';
 import { formatDateHeading, formatSlotTime, formatSlotRange } from '../utils/format';
 import { Sparkles, Users, UserCheck, UserX, List, Grid as GridIcon, CheckCircle } from 'lucide-react';
@@ -46,38 +47,38 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
     if (ratio === 0) {
       return {
         bg: 'bg-white/[0.02]',
-        border: 'border-white/[0.04]',
+        border: 'border-white/[0.05]',
         text: 'text-slate-600',
         shadow: 'none',
       };
     } else if (ratio < 0.3) {
       return {
-        bg: 'bg-indigo-950/40',
-        border: 'border-indigo-800/30',
+        bg: 'bg-indigo-950/45',
+        border: 'border-indigo-800/35',
         text: 'text-indigo-300',
         shadow: 'none',
       };
     } else if (ratio < 0.6) {
       return {
-        bg: 'bg-purple-900/60',
-        border: 'border-purple-600/40',
+        bg: 'bg-purple-900/65',
+        border: 'border-purple-600/45',
         text: 'text-purple-200',
-        shadow: '0 0 10px rgba(168, 85, 247, 0.2)',
+        shadow: '0 0 12px rgba(168, 85, 247, 0.25)',
       };
     } else if (ratio < 0.9) {
       return {
-        bg: 'bg-gradient-to-br from-purple-600/80 to-indigo-600/80',
-        border: 'border-purple-400/50',
+        bg: 'bg-gradient-to-br from-purple-600/85 to-indigo-600/85',
+        border: 'border-purple-400/60',
         text: 'text-white font-semibold',
-        shadow: '0 0 16px rgba(168, 85, 247, 0.4)',
+        shadow: '0 0 18px rgba(168, 85, 247, 0.45)',
       };
     } else {
       // 90%+ Overlap (Hero glow!)
       return {
         bg: 'bg-gradient-to-r from-cosmic-purple via-cosmic-cyan to-cosmic-pink',
-        border: 'border-white/80',
+        border: 'border-white/90',
         text: 'text-white font-bold',
-        shadow: '0 0 25px rgba(56, 189, 248, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.5)',
+        shadow: '0 0 28px rgba(56, 189, 248, 0.65), inset 0 0 12px rgba(255, 255, 255, 0.5)',
       };
     }
   };
@@ -99,21 +100,19 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
               <Users className="w-4 h-4" />
             </div>
             <div>
+              <div className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Participants</div>
               <div className="text-sm font-bold text-white">
-                {heatmap.total_respondents} Respondent{heatmap.total_respondents === 1 ? '' : 's'}
-              </div>
-              <div className="text-[11px] text-slate-400">
-                {heatmap.respondent_names.length > 0
-                  ? heatmap.respondent_names.slice(0, 4).join(', ') +
-                    (heatmap.respondent_names.length > 4 ? ` +${heatmap.respondent_names.length - 4} more` : '')
-                  : 'Awaiting participants'}
+                {heatmap.total_respondents}{' '}
+                <span className="text-xs font-normal text-slate-400">
+                  {heatmap.total_respondents === 1 ? 'response' : 'responses'}
+                </span>
               </div>
             </div>
           </div>
 
           {heatmap.best_slots.length > 0 && (
             <div className="hidden sm:flex items-center space-x-2.5 pl-6 border-l border-white/10">
-              <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-cosmic-cyan to-cosmic-purple text-white flex items-center justify-center shadow-glow-sm">
+              <div className="w-9 h-9 rounded-2xl bg-cosmic-cyan/20 text-cosmic-cyan flex items-center justify-center">
                 <Sparkles className="w-4 h-4" />
               </div>
               <div>
@@ -127,23 +126,38 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
           )}
         </div>
 
-        {/* View Mode Toggle */}
-        <div className="flex items-center space-x-1 glass-card p-1 rounded-2xl border border-white/10">
+        {/* View Mode Toggle with animated sliding pill */}
+        <div className="flex items-center space-x-1 glass-card p-1 rounded-2xl border border-white/10 relative">
           <button
             onClick={() => setViewMode('grid')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center space-x-1.5 transition-all ${
-              viewMode === 'grid' ? 'bg-white/15 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+            className={`relative px-3.5 py-1.5 rounded-xl text-xs font-medium flex items-center space-x-1.5 transition-colors z-10 ${
+              viewMode === 'grid' ? 'text-white font-semibold' : 'text-slate-400 hover:text-white'
             }`}
           >
+            {viewMode === 'grid' && (
+              <motion.div
+                layoutId="viewmode-pill"
+                className="absolute inset-0 bg-white/15 rounded-xl border border-white/20 shadow-sm -z-10"
+                transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+              />
+            )}
             <GridIcon className="w-3.5 h-3.5" />
             <span>Heatmap Grid</span>
           </button>
+
           <button
             onClick={() => setViewMode('list')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center space-x-1.5 transition-all ${
-              viewMode === 'list' ? 'bg-white/15 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+            className={`relative px-3.5 py-1.5 rounded-xl text-xs font-medium flex items-center space-x-1.5 transition-colors z-10 ${
+              viewMode === 'list' ? 'text-white font-semibold' : 'text-slate-400 hover:text-white'
             }`}
           >
+            {viewMode === 'list' && (
+              <motion.div
+                layoutId="viewmode-pill"
+                className="absolute inset-0 bg-white/15 rounded-xl border border-white/20 shadow-sm -z-10"
+                transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+              />
+            )}
             <List className="w-3.5 h-3.5" />
             <span>Ranked List</span>
           </button>
@@ -190,21 +204,28 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                         activeSlot.end_time === slot.end_time;
 
                       return (
-                        <button
+                        <motion.button
                           key={slot.start_time}
                           type="button"
                           onClick={() => handleCellClick(slot)}
-                          className={`w-28 sm:w-32 h-10 mx-1 rounded-xl transition-all duration-200 flex items-center justify-center text-xs border relative group ${
+                          whileHover={{ scale: 1.05, y: -1.5 }}
+                          whileTap={{ scale: 0.96 }}
+                          transition={{ type: 'spring', stiffness: 450, damping: 20 }}
+                          className={`w-28 sm:w-32 h-10 mx-1 rounded-xl flex items-center justify-center text-xs border relative group cursor-pointer ${
                             style.bg
                           } ${style.border} ${style.text} ${
-                            isSelected ? 'ring-2 ring-cosmic-cyan scale-[1.03] z-10' : 'hover:scale-[1.02]'
+                            isSelected ? 'ring-2 ring-cosmic-cyan scale-[1.03] z-10' : ''
                           }`}
-                          style={{ boxShadow: style.shadow }}
+                          style={{
+                            boxShadow: isSelected
+                              ? '0 0 22px rgba(56, 189, 248, 0.6)'
+                              : style.shadow,
+                          }}
                         >
                           <span className="font-mono text-xs">
                             {slot.count}/{slot.total_participants}
                           </span>
-                        </button>
+                        </motion.button>
                       );
                     })}
                   </div>
@@ -227,91 +248,108 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
             </div>
           </div>
 
-          {/* Slot Inspector Sidebar */}
+          {/* Slot Inspector Sidebar with Smooth Spring Transition */}
           <div className="lg:col-span-4 flex flex-col space-y-4">
             <div className="p-5 rounded-3xl glass-panel border border-white/15 sticky top-24">
-              <div className="text-[10px] uppercase font-bold tracking-wider text-cosmic-cyan mb-1">
+              <div className="text-[10px] uppercase font-bold tracking-wider text-cosmic-cyan mb-2">
                 Selected Slot Details
               </div>
 
-              {activeSlot ? (
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="text-lg font-bold text-white">
-                      {format(parseISO(activeSlot.start_time), 'EEEE, MMM d')}
-                    </h4>
-                    <p className="text-xs font-mono text-cosmic-purple">
-                      {formatSlotRange(activeSlot.start_time, activeSlot.end_time)}
-                    </p>
-                  </div>
-
-                  <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
-                    <span className="text-xs text-slate-300">Availability Overlap</span>
-                    <span className="text-sm font-bold font-mono text-white">
-                      {activeSlot.count} of {activeSlot.total_participants} free (
-                      {Math.round(activeSlot.ratio * 100)}%)
-                    </span>
-                  </div>
-
-                  {/* Available List */}
-                  <div>
-                    <div className="flex items-center space-x-1.5 text-xs font-semibold text-emerald-400 mb-2">
-                      <UserCheck className="w-3.5 h-3.5" />
-                      <span>Available ({activeSlot.available_participants.length})</span>
-                    </div>
-                    {activeSlot.available_participants.length > 0 ? (
-                      <div className="flex flex-wrap gap-1.5">
-                        {activeSlot.available_participants.map((name) => (
-                          <span
-                            key={name}
-                            className="px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-200 text-xs font-medium"
-                          >
-                            {name}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-slate-500 italic">No one available for this slot.</p>
-                    )}
-                  </div>
-
-                  {/* Unavailable / Missing List */}
-                  {activeSlot.unavailable_participants.length > 0 && (
+              <AnimatePresence mode="wait">
+                {activeSlot ? (
+                  <motion.div
+                    key={activeSlot.start_time}
+                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                    className="space-y-4"
+                  >
                     <div>
-                      <div className="flex items-center space-x-1.5 text-xs font-semibold text-slate-400 mb-2">
-                        <UserX className="w-3.5 h-3.5 text-red-400/80" />
-                        <span>Unavailable / Busy ({activeSlot.unavailable_participants.length})</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {activeSlot.unavailable_participants.map((name) => (
-                          <span
-                            key={name}
-                            className="px-2.5 py-1 rounded-xl bg-white/[0.03] border border-white/5 text-slate-400 text-xs"
-                          >
-                            {name}
-                          </span>
-                        ))}
-                      </div>
+                      <h4 className="text-lg font-bold text-white">
+                        {format(parseISO(activeSlot.start_time), 'EEEE, MMM d')}
+                      </h4>
+                      <p className="text-xs font-mono text-cosmic-purple">
+                        {formatSlotRange(activeSlot.start_time, activeSlot.end_time)}
+                      </p>
                     </div>
-                  )}
 
-                  {/* Finalize Action */}
-                  {isHostOrCohost && onSelectSlot && (
-                    <button
-                      type="button"
-                      onClick={() => onSelectSlot(activeSlot)}
-                      className="w-full mt-4 py-3 rounded-2xl font-bold text-xs bg-gradient-to-r from-cosmic-purple via-cosmic-cyan to-cosmic-pink text-white shadow-glow-sm hover:shadow-glow-md flex items-center justify-center space-x-2 transition-all"
-                    >
-                      <CheckCircle className="w-4 h-4" />
-                      <span>Lock In & Finalize This Time</span>
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div className="py-8 text-center text-xs text-slate-500">
-                  Select any cell in the heatmap to view who is free.
-                </div>
-              )}
+                    <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                      <span className="text-xs text-slate-300">Availability Overlap</span>
+                      <span className="text-sm font-bold font-mono text-white">
+                        {activeSlot.count} of {activeSlot.total_participants} free (
+                        {Math.round(activeSlot.ratio * 100)}%)
+                      </span>
+                    </div>
+
+                    {/* Available List */}
+                    <div>
+                      <div className="flex items-center space-x-1.5 text-xs font-semibold text-emerald-400 mb-2">
+                        <UserCheck className="w-3.5 h-3.5" />
+                        <span>Available ({activeSlot.available_participants.length})</span>
+                      </div>
+                      {activeSlot.available_participants.length > 0 ? (
+                        <div className="flex flex-wrap gap-1.5">
+                          {activeSlot.available_participants.map((name) => (
+                            <span
+                              key={name}
+                              className="px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-200 text-xs font-medium"
+                            >
+                              {name}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-slate-500 italic">No one marked available</div>
+                      )}
+                    </div>
+
+                    {/* Unavailable List */}
+                    {activeSlot.unavailable_participants.length > 0 && (
+                      <div>
+                        <div className="flex items-center space-x-1.5 text-xs font-semibold text-slate-400 mb-2">
+                          <UserX className="w-3.5 h-3.5" />
+                          <span>Unavailable ({activeSlot.unavailable_participants.length})</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {activeSlot.unavailable_participants.map((name) => (
+                            <span
+                              key={name}
+                              className="px-2.5 py-1 rounded-xl bg-white/5 border border-white/10 text-slate-400 text-xs font-medium"
+                            >
+                              {name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Host action shortcut */}
+                    {isHostOrCohost && onSelectSlot && (
+                      <motion.button
+                        type="button"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => onSelectSlot(activeSlot)}
+                        className="w-full mt-4 py-3 rounded-2xl font-bold text-xs bg-gradient-to-r from-cosmic-purple via-cosmic-cyan to-cosmic-pink text-white shadow-glow-sm hover:shadow-glow-md flex items-center justify-center space-x-2 transition-all cursor-pointer"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Lock In & Finalize This Time</span>
+                      </motion.button>
+                    )}
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="empty"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="py-8 text-center text-xs text-slate-500"
+                  >
+                    Select any cell in the heatmap to view who is free.
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>
@@ -325,8 +363,11 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
 
           <div className="divide-y divide-white/10">
             {heatmap.best_slots.map((slot, idx) => (
-              <div
+              <motion.div
                 key={slot.start_time}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, delay: idx * 0.05 }}
                 className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
               >
                 <div className="flex items-start space-x-3">
@@ -350,15 +391,17 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                 </div>
 
                 {isHostOrCohost && onSelectSlot && (
-                  <button
+                  <motion.button
                     type="button"
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.96 }}
                     onClick={() => onSelectSlot(slot)}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-colors shrink-0"
+                    className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-colors shrink-0 cursor-pointer"
                   >
                     Select this time
-                  </button>
+                  </motion.button>
                 )}
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
