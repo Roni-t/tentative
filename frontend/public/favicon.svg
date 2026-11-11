@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="planetGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="55%" stop-color="#E4E4E7" />
+      <stop offset="100%" stop-color="#52525B" />
+    </linearGradient>
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="45%" stop-color="#D4D4D8" />
+      <stop offset="100%" stop-color="#FFFFFF" />
+    </linearGradient>
+    <filter id="planetGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Luminous White Ambient Aura -->
+  <circle cx="32" cy="32" r="18" fill="#FFFFFF" opacity="0.3" filter="url(#planetGlow)" />
+
+  <!-- Back of Tilted Orbital Ring -->
+  <path
+    d="M 6 32 C 6 22, 58 14, 58 24"
+    stroke="url(#ringGrad)"
+    stroke-width="3.5"
+    stroke-linecap="round"
+    opacity="0.5"
+    transform="rotate(-20 32 32)"
+  />
+
+  <!-- White Celestial Sphere -->
+  <circle
+    cx="32"
+    cy="32"
+    r="16"
+    fill="url(#planetGrad)"
+    stroke="#FFFFFF"
+    stroke-width="0.8"
+  />
+
+  <!-- Specular Rim Light -->
+  <path
+    d="M 20 24 A 14 14 0 0 1 42 20"
+    stroke="rgba(255,255,255,0.75)"
+    stroke-width="2"
+    stroke-linecap="round"
+  />
+
+  <!-- Front of Tilted Orbital Ring -->
+  <path
+    d="M 58 24 C 58 38, 6 42, 6 32"
+    stroke="url(#ringGrad)"
+    stroke-width="3.8"
+    stroke-linecap="round"
+    transform="rotate(-20 32 32)"
+  />
+</svg>
