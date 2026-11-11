@@ -108,10 +108,10 @@ export const FinalizePage: React.FC = () => {
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: [0, 1.25, 1], opacity: 1 }}
                   transition={{ duration: 0.6, delay: 0.8, type: 'spring', stiffness: 350, damping: 20 }}
-                  className="relative z-10 w-20 h-20 rounded-full bg-gradient-to-tr from-cosmic-purple via-cosmic-cyan to-cosmic-pink p-[2px] shadow-glow-lg flex items-center justify-center text-white"
+                  className="relative z-10 w-20 h-20 rounded-full bg-white p-[2px] shadow-[0_0_30px_rgba(255,255,255,0.7)] flex items-center justify-center text-white"
                 >
-                  <div className="w-full h-full rounded-full bg-space-900 flex items-center justify-center">
-                    <Lock className="w-8 h-8 text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.8)]" />
+                  <div className="w-full h-full rounded-full bg-black flex items-center justify-center">
+                    <Lock className="w-8 h-8 text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.9)]" />
                   </div>
                 </motion.div>
 
@@ -120,7 +120,7 @@ export const FinalizePage: React.FC = () => {
                   initial={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: [0.5, 2.4], opacity: [0, 0.9, 0] }}
                   transition={{ duration: 1, delay: 1.2, ease: 'easeOut' }}
-                  className="absolute w-40 h-40 rounded-full bg-gradient-to-r from-cosmic-cyan via-white to-cosmic-pink blur-xl"
+                  className="absolute w-40 h-40 rounded-full bg-white blur-xl"
                 />
               </div>
 
@@ -272,9 +272,9 @@ export const FinalizePage: React.FC = () => {
                     whileTap={{ scale: 0.98 }}
                     onClick={handleConfirmFinalize}
                     disabled={submitting || isOrbitLocking}
-                    className="w-full py-3 rounded-2xl text-xs font-bold bg-gradient-to-r from-cosmic-purple via-cosmic-cyan to-cosmic-pink text-white shadow-glow-sm hover:shadow-glow-md flex items-center justify-center space-x-2 transition-all disabled:opacity-50 cursor-pointer"
+                    className="w-full py-3 rounded-2xl text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_20px_rgba(255,255,255,0.4)] flex items-center justify-center space-x-2 transition-all disabled:opacity-50 cursor-pointer"
                   >
-                    <CheckCircle2 className="w-4 h-4" />
+                    <CheckCircle2 className="w-4 h-4 text-black" />
                     <span>{submitting ? 'Locking orbit...' : 'Confirm & Finalize Orbit'}</span>
                   </motion.button>
                   <Link

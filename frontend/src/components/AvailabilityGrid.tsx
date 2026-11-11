@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { TimeSlot } from '../types';
-import { formatDateHeading } from '../utils/format';
-import { Clock, CheckSquare, XSquare, Sparkles } from 'lucide-react';
+import { formatDateHeading, formatDayName, formatDateSub } from '../utils/format';
+import { Clock, CheckSquare, XSquare, Sparkles, Calendar, Sun, Briefcase } from 'lucide-react';
 
 interface AvailabilityGridProps {
   candidateDates: string[];
@@ -21,6 +21,7 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
   slotDurationMinutes,
   initialSlots = [],
   onSlotsChange,
+  timezone,
 }) => {
   // Selected slot start timestamps stored as ISO string keys
   const [selectedSet, setSelectedSet] = useState<Set<string>>(new Set());
@@ -32,7 +33,7 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
   const [endHour, endMin] = dailyEndTime.split(':').map(Number);
 
   // Generate grid matrix: dates x timeslots
-  const timeIncrements: { hour: number; minute: number; label: string }[] = [];
+  const timeIncrements: { hour: number; minute: number; label: string; isTopHour: boolean }[] = [];
   let curHour = startHour;
   let curMin = startMin;
   const endMinutesTotal = endHour * 60 + endMin;
@@ -40,7 +41,12 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
   while (curHour * 60 + curMin < endMinutesTotal) {
     const d = new Date(2026, 0, 1, curHour, curMin);
     const label = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-    timeIncrements.push({ hour: curHour, minute: curMin, label });
+    timeIncrements.push({
+      hour: curHour,
+      minute: curMin,
+      label,
+      isTopHour: curMin === 0,
+    });
 
     curMin += slotDurationMinutes;
     if (curMin >= 60) {
@@ -136,6 +142,7 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
     }
   };
 
+  // Quick Preset Handlers
   const selectAll = () => {
     const next = new Set<string>();
     candidateDates.forEach((dateStr) => {
@@ -154,122 +161,196 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
     notifyChange(next);
   };
 
+  const applyPresetHours = (startH: number, endH: number) => {
+    const next = new Set(selectedSet);
+    candidateDates.forEach((dateStr) => {
+      timeIncrements.forEach(({ hour, minute }) => {
+        if (hour >= startH && hour < endH) {
+          const { startIso } = getSlotIso(dateStr, hour, minute);
+          next.add(startIso);
+        }
+      });
+    });
+    setSelectedSet(next);
+    notifyChange(next);
+  };
+
   const totalHours = (selectedSet.size * (slotDurationMinutes / 60)).toFixed(1);
 
   return (
     <div className="w-full flex flex-col space-y-4 select-none">
-      {/* Action Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 text-xs glass-panel px-4 py-3 rounded-2xl border border-white/10">
-        <div className="flex items-center space-x-2 text-slate-300">
-          <Clock className="w-4 h-4 text-cosmic-purple" />
-          <span>Click & drag across cells to mark available times</span>
+      {/* Schedule Planner Header & Quick Actions Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs glass-panel px-4 py-3 rounded-2xl border border-zinc-800 bg-zinc-950/80">
+        <div className="flex items-center space-x-2.5 text-zinc-300">
+          <Calendar className="w-4 h-4 text-white" />
+          <span className="font-semibold text-white">Weekly Schedule Grid</span>
+          <span className="text-zinc-500 hidden sm:inline">· Click & drag to paint free blocks</span>
         </div>
-        <div className="flex items-center space-x-2">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+
+        {/* Quick Paint Presets */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => applyPresetHours(9, 17)}
+            className="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-200 hover:text-white border border-zinc-800 flex items-center space-x-1.5 transition-colors cursor-pointer text-[11px]"
+            title="Mark 9:00 AM – 5:00 PM as free across all days"
+          >
+            <Briefcase className="w-3 h-3 text-white" />
+            <span>9am–5pm</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => applyPresetHours(8, 12)}
+            className="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-200 hover:text-white border border-zinc-800 flex items-center space-x-1.5 transition-colors cursor-pointer text-[11px]"
+            title="Mark 8:00 AM – 12:00 PM as free across all days"
+          >
+            <Sun className="w-3 h-3 text-white" />
+            <span>Mornings</span>
+          </button>
+
+          <button
             type="button"
             onClick={selectAll}
-            className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 hover:text-white border border-white/10 flex items-center space-x-1.5 transition-colors cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-200 hover:text-white border border-zinc-800 flex items-center space-x-1.5 transition-colors cursor-pointer text-[11px]"
           >
-            <CheckSquare className="w-3.5 h-3.5 text-cosmic-cyan" />
-            <span>Select All</span>
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            <CheckSquare className="w-3 h-3 text-white" />
+            <span>All</span>
+          </button>
+
+          <button
             type="button"
             onClick={clearAll}
-            className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 hover:text-white border border-white/10 flex items-center space-x-1.5 transition-colors cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-red-400 border border-zinc-800 flex items-center space-x-1.5 transition-colors cursor-pointer text-[11px]"
           >
-            <XSquare className="w-3.5 h-3.5 text-red-400" />
+            <XSquare className="w-3 h-3" />
             <span>Clear</span>
-          </motion.button>
+          </button>
         </div>
       </div>
 
-      {/* Grid container with overflow-x */}
-      <div className="overflow-x-auto pb-4 custom-scrollbar rounded-2xl border border-white/10 bg-space-900/60 backdrop-blur-md">
+      {/* University Timetable Grid Style (Course Planner layout) */}
+      <div className="overflow-x-auto pb-4 custom-scrollbar rounded-2xl border border-zinc-800 bg-black shadow-2xl">
         <div
-          className="min-w-max p-4"
+          className="min-w-max"
           onTouchMove={handleTouchMove}
           onTouchEnd={() => (isMouseDownRef.current = false)}
         >
-          {/* Header Row: Dates */}
-          <div className="flex items-center mb-2">
-            <div className="w-20 shrink-0 text-right pr-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+          {/* Header Bar Across All Days (Matches Collegiate Schedule Banner) */}
+          <div className="flex items-stretch bg-zinc-900/90 border-b border-zinc-700/80 sticky top-0 z-20">
+            {/* Corner time header */}
+            <div className="w-20 sm:w-24 shrink-0 p-3 text-right text-[11px] font-bold text-zinc-400 uppercase tracking-wider border-r border-zinc-800 flex items-center justify-end">
               Time
             </div>
-            {candidateDates.map((dateStr) => (
-              <div
-                key={dateStr}
-                className="w-28 sm:w-32 shrink-0 px-2 text-center text-xs font-semibold text-slate-200"
-              >
-                {formatDateHeading(dateStr)}
-              </div>
-            ))}
+
+            {/* Day columns headers */}
+            {candidateDates.map((dateStr) => {
+              const dayName = formatDayName(dateStr);
+              const dateSub = formatDateSub(dateStr);
+
+              return (
+                <div
+                  key={dateStr}
+                  className="w-32 sm:w-40 md:w-44 shrink-0 py-3 px-3 text-center border-r border-zinc-800 last:border-r-0 flex flex-col items-center justify-center"
+                >
+                  <span className="text-xs sm:text-sm font-bold text-white tracking-wide uppercase">
+                    {dayName}
+                  </span>
+                  <span className="text-[10px] text-zinc-400 font-mono mt-0.5">
+                    {dateSub}
+                  </span>
+                </div>
+              );
+            })}
           </div>
 
-          {/* Time Rows */}
-          <div className="flex flex-col space-y-1.5">
-            {timeIncrements.map(({ hour, minute, label }) => (
-              <div key={`${hour}:${minute}`} className="flex items-center">
-                {/* Time Label */}
-                <div className="w-20 shrink-0 text-right pr-3 text-[11px] font-mono text-slate-400">
-                  {label}
-                </div>
+          {/* Time Rows Matrix */}
+          <div className="flex flex-col">
+            {timeIncrements.map(({ hour, minute, label, isTopHour }, index) => {
+              const hourLabel = label.split(' ')[0];
+              const ampm = label.split(' ')[1] || '';
 
-                {/* Day Cells */}
-                {candidateDates.map((dateStr) => {
-                  const { startIso } = getSlotIso(dateStr, hour, minute);
-                  const isSelected = selectedSet.has(startIso);
-
-                  return (
-                    <motion.div
-                      key={startIso}
-                      data-slot-iso={startIso}
-                      onMouseDown={() => handleSlotMouseDown(startIso)}
-                      onMouseEnter={() => handleSlotMouseEnter(startIso)}
-                      onTouchStart={() => {
-                        isMouseDownRef.current = true;
-                        dragModeRef.current = isSelected ? 'remove' : 'add';
-                        const next = new Set(selectedSet);
-                        if (dragModeRef.current === 'add') next.add(startIso);
-                        else next.delete(startIso);
-                        setSelectedSet(next);
-                        notifyChange(next);
-                      }}
-                      animate={{ scale: isSelected ? [0.95, 1] : 1 }}
-                      transition={{ duration: 0.15 }}
-                      className={`w-28 sm:w-32 h-9 mx-1 rounded-xl cursor-pointer transition-colors duration-150 flex items-center justify-center text-[11px] font-medium border relative group ${
-                        isSelected
-                          ? 'bg-gradient-to-r from-cosmic-purple/85 to-cosmic-cyan/85 text-white border-white/50 shadow-glow-sm'
-                          : 'bg-white/[0.03] hover:bg-white/[0.08] text-slate-500 border-white/[0.06] hover:border-white/20'
+              return (
+                <div
+                  key={`${hour}:${minute}`}
+                  className={`flex items-stretch ${
+                    isTopHour
+                      ? 'border-t border-zinc-800 bg-zinc-950/40'
+                      : 'border-t border-zinc-900/70 bg-black'
+                  }`}
+                >
+                  {/* Left-hand Time Gutter (Hours & Sub-intervals) */}
+                  <div className="w-20 sm:w-24 shrink-0 pr-3 py-1.5 text-right border-r border-zinc-800/80 flex items-center justify-end">
+                    <span
+                      className={`font-mono text-[11px] ${
+                        isTopHour ? 'font-bold text-white' : 'font-normal text-zinc-500'
                       }`}
                     >
-                      {isSelected ? (
-                        <span className="flex items-center space-x-1 text-white font-semibold">
-                          <span>Free</span>
-                        </span>
-                      ) : null}
-                    </motion.div>
-                  );
-                })}
-              </div>
-            ))}
+                      {isTopHour ? `${hourLabel} ${ampm}` : `${minute}m`}
+                    </span>
+                  </div>
+
+                  {/* Day Slots (Course Block Card Style) */}
+                  {candidateDates.map((dateStr) => {
+                    const { startIso } = getSlotIso(dateStr, hour, minute);
+                    const isSelected = selectedSet.has(startIso);
+
+                    return (
+                      <div
+                        key={startIso}
+                        data-slot-iso={startIso}
+                        onMouseDown={() => handleSlotMouseDown(startIso)}
+                        onMouseEnter={() => handleSlotMouseEnter(startIso)}
+                        onTouchStart={() => {
+                          isMouseDownRef.current = true;
+                          dragModeRef.current = isSelected ? 'remove' : 'add';
+                          const next = new Set(selectedSet);
+                          if (dragModeRef.current === 'add') next.add(startIso);
+                          else next.delete(startIso);
+                          setSelectedSet(next);
+                          notifyChange(next);
+                        }}
+                        className={`w-32 sm:w-40 md:w-44 h-8 sm:h-9 px-1.5 py-0.5 border-r border-zinc-800/80 last:border-r-0 cursor-pointer transition-colors duration-100 flex items-center ${
+                          isSelected
+                            ? 'bg-zinc-800/90 text-white'
+                            : 'hover:bg-zinc-900/60 text-zinc-600'
+                        }`}
+                      >
+                        {isSelected ? (
+                          <motion.div
+                            initial={{ scale: 0.95 }}
+                            animate={{ scale: 1 }}
+                            className="w-full h-full rounded-md bg-white text-black font-semibold text-[11px] flex items-center justify-between px-2 shadow-[0_0_10px_rgba(255,255,255,0.4)] border-l-4 border-black"
+                          >
+                            <span className="tracking-tight">Available</span>
+                            <span className="text-[10px] font-mono opacity-70">✓</span>
+                          </motion.div>
+                        ) : (
+                          <div className="w-full h-full rounded border border-transparent hover:border-zinc-700/40" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      {/* Floating Selection Counter Chip */}
-      <div className="flex items-center justify-between px-2 text-xs">
-        <span className="text-slate-400">Time window: {dailyStartTime} – {dailyEndTime}</span>
+      {/* Floating Status & Time Window Information */}
+      <div className="flex flex-wrap items-center justify-between px-2 text-xs text-zinc-400 gap-2">
+        <div className="flex items-center space-x-2">
+          <Clock className="w-3.5 h-3.5 text-zinc-500" />
+          <span>Active Window: {dailyStartTime} – {dailyEndTime} {timezone ? `(${timezone})` : ''}</span>
+        </div>
+
         <motion.div
-          animate={{ scale: selectedSet.size > 0 ? [1, 1.05, 1] : 1 }}
-          transition={{ duration: 0.25 }}
-          className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cosmic-purple/20 border border-cosmic-purple/30 text-cosmic-cyan font-mono"
+          animate={{ scale: selectedSet.size > 0 ? [1, 1.04, 1] : 1 }}
+          transition={{ duration: 0.2 }}
+          className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white text-black font-mono font-bold shadow-[0_0_15px_rgba(255,255,255,0.3)] text-xs"
         >
-          <Sparkles className="w-3 h-3 text-cosmic-purple" />
+          <Sparkles className="w-3.5 h-3.5 text-black" />
           <span>{selectedSet.size} slots selected ({totalHours} hrs)</span>
         </motion.div>
       </div>

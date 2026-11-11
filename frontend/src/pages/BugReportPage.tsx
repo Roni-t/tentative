@@ -115,9 +115,9 @@ export const BugReportPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2.5 rounded-full text-xs font-bold bg-gradient-to-r from-cosmic-purple to-cosmic-pink text-white shadow-glow-sm hover:shadow-glow-md flex items-center space-x-1.5 transition-all disabled:opacity-50"
+                className="px-6 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_15px_rgba(255,255,255,0.3)] flex items-center space-x-1.5 transition-all disabled:opacity-50 cursor-pointer"
               >
-                <Send className="w-3.5 h-3.5" />
+                <Send className="w-3.5 h-3.5 text-black" />
                 <span>{loading ? 'Submitting...' : 'Submit Report'}</span>
               </button>
             </div>

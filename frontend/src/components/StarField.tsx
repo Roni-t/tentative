@@ -116,8 +116,8 @@ export const StarField: React.FC = () => {
           const tailY = shootingStar.y - (shootingStar.dy / shootingStar.speed) * shootingStar.length;
 
           const grad = ctx.createLinearGradient(tailX, tailY, shootingStar.x, shootingStar.y);
-          grad.addColorStop(0, 'rgba(168, 85, 247, 0)');
-          grad.addColorStop(0.6, `rgba(56, 189, 248, ${shootingStar.opacity * 0.4})`);
+          grad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+          grad.addColorStop(0.6, `rgba(220, 225, 235, ${shootingStar.opacity * 0.4})`);
           grad.addColorStop(1, `rgba(255, 255, 255, ${shootingStar.opacity})`);
 
           ctx.beginPath();
@@ -153,22 +153,22 @@ export const StarField: React.FC = () => {
   }, []);
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-black">
       {/* Background canvas for stars and meteor streaks */}
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full opacity-65" />
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full opacity-70" />
 
       {/* Subtle interactive cursor light glow that follows mouse pointer */}
       <div
-        className="absolute w-[450px] h-[450px] rounded-full bg-cosmic-purple/10 blur-[120px] pointer-events-none transition-transform duration-300 ease-out"
+        className="absolute w-[450px] h-[450px] rounded-full bg-white/[0.03] blur-[120px] pointer-events-none transition-transform duration-300 ease-out"
         style={{
           transform: `translate3d(${mousePos.x - 225}px, ${mousePos.y - 225}px, 0)`,
         }}
       />
 
-      {/* Drifting atmospheric nebula gradient glows */}
-      <div className="absolute -top-[25%] -left-[15%] w-[60vw] h-[60vw] rounded-full bg-cosmic-purple/15 blur-[140px] pointer-events-none animate-drift" />
-      <div className="absolute top-[35%] -right-[15%] w-[50vw] h-[50vw] rounded-full bg-cosmic-cyan/12 blur-[150px] pointer-events-none animate-pulse-glow" />
-      <div className="absolute -bottom-[20%] left-[20%] w-[55vw] h-[55vw] rounded-full bg-cosmic-pink/10 blur-[160px] pointer-events-none" />
+      {/* Drifting atmospheric monochrome silver/white gradient glows */}
+      <div className="absolute -top-[25%] -left-[15%] w-[60vw] h-[60vw] rounded-full bg-white/[0.03] blur-[140px] pointer-events-none animate-drift" />
+      <div className="absolute top-[35%] -right-[15%] w-[50vw] h-[50vw] rounded-full bg-white/[0.02] blur-[150px] pointer-events-none animate-pulse-glow" />
+      <div className="absolute -bottom-[20%] left-[20%] w-[55vw] h-[55vw] rounded-full bg-white/[0.02] blur-[160px] pointer-events-none" />
     </div>
   );
 };

@@ -32,6 +32,32 @@ export function formatDateHeading(dateStr: string): string {
   }
 }
 
+export function formatDayName(dateStr: string): string {
+  try {
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      return format(d, 'EEEE');
+    }
+    return dateStr;
+  } catch {
+    return dateStr;
+  }
+}
+
+export function formatDateSub(dateStr: string): string {
+  try {
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      return format(d, 'MMM d');
+    }
+    return dateStr;
+  } catch {
+    return dateStr;
+  }
+}
+
 export function formatDateTimeLong(isoString?: string | null): string {
   if (!isoString) return 'Not finalized';
   try {

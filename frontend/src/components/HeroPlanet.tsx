@@ -42,37 +42,39 @@ export const HeroPlanet: React.FC = () => {
         transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
         className="relative flex items-center justify-center transform-gpu"
       >
-        {/* Soft, minimal ambient glow */}
-        <div className="absolute w-72 h-72 rounded-full bg-gradient-to-tr from-cosmic-purple/35 via-cosmic-cyan/25 to-cosmic-pink/25 blur-3xl opacity-75" />
+        {/* Pure white radiant ambient glow */}
+        <div className="absolute w-72 h-72 rounded-full bg-white/20 blur-3xl opacity-60 animate-pulse-glow" />
 
-        {/* Planet Sphere */}
-        <div className="relative w-52 h-52 sm:w-56 sm:h-56 rounded-full bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-950 p-[1.5px] shadow-2xl shadow-cosmic-purple/30 border border-white/20 overflow-hidden">
-          {/* Subtle atmospheric gradients */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_25%,rgba(168,85,247,0.65),transparent_60%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_75%,rgba(56,189,248,0.35),transparent_65%)]" />
+        {/* Planet Sphere (Pure White Luminous Celestial Body) */}
+        <div className="relative w-52 h-52 sm:w-56 sm:h-56 rounded-full p-[1.5px] shadow-[0_0_45px_rgba(255,255,255,0.4)] border border-white/50 overflow-hidden bg-gradient-to-br from-white via-zinc-200 to-zinc-950">
+          {/* Internal volumetric white-to-charcoal gradients */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_32%_28%,#FFFFFF_0%,#F4F4F5_30%,#D4D4D8_55%,#52525B_80%,#09090B_100%)]" />
 
-          {/* Gentle specular rim light */}
-          <div className="absolute top-2 left-6 w-32 h-16 rounded-full bg-white/20 blur-md transform -rotate-12" />
+          {/* Crisp specular white rim highlight */}
+          <div className="absolute top-2 left-6 w-32 h-16 rounded-full bg-white/60 blur-sm transform -rotate-12 pointer-events-none" />
 
-          {/* Slow rotating surface shadow */}
+          {/* Subtle lunar crater / atmospheric micro-texture */}
+          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_45%_40%,rgba(0,0,0,0.5)_4px,transparent_6px),radial-gradient(circle_at_60%_65%,rgba(0,0,0,0.4)_6px,transparent_8px),radial-gradient(circle_at_25%_60%,rgba(0,0,0,0.3)_3px,transparent_5px)]" />
+
+          {/* Slow rotating orbital shadow */}
           <motion.div
             animate={{ rotate: 360 }}
-            transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
-            className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,transparent_40%,rgba(5,6,10,0.85)_100%)]"
+            transition={{ duration: 70, repeat: Infinity, ease: 'linear' }}
+            className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(0,0,0,0.85)_25%,transparent_65%)] pointer-events-none"
           />
         </div>
 
-        {/* Tilted Planetary Ring */}
+        {/* Tilted Planetary Ring (Luminous Pure White & Platinum) */}
         <motion.div
           animate={{ rotate: [-24, -20, -24] }}
           transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute w-[360px] sm:w-[390px] h-[100px] sm:h-[110px] border-[3px] border-transparent rounded-[100%] pointer-events-none"
+          className="absolute w-[360px] sm:w-[390px] h-[100px] sm:h-[110px] border-[3.5px] border-transparent rounded-[100%] pointer-events-none"
           style={{
-            borderTopColor: 'rgba(56, 189, 248, 0.85)',
-            borderRightColor: 'rgba(168, 85, 247, 0.9)',
-            borderBottomColor: 'rgba(236, 72, 153, 0.75)',
-            borderLeftColor: 'rgba(99, 102, 241, 0.55)',
-            boxShadow: '0 0 30px rgba(168, 85, 247, 0.35), inset 0 0 20px rgba(56, 189, 248, 0.25)',
+            borderTopColor: 'rgba(255, 255, 255, 0.95)',
+            borderRightColor: 'rgba(255, 255, 255, 0.85)',
+            borderBottomColor: 'rgba(161, 161, 170, 0.4)',
+            borderLeftColor: 'rgba(255, 255, 255, 0.9)',
+            boxShadow: '0 0 35px rgba(255, 255, 255, 0.65), inset 0 0 20px rgba(255, 255, 255, 0.45)',
             transform: 'rotate(-22deg)',
           }}
         />

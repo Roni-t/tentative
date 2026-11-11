@@ -114,10 +114,10 @@ export const LoginPage: React.FC = () => {
                   whileTap={{ scale: 0.98 }}
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 rounded-2xl text-xs font-bold bg-gradient-to-r from-cosmic-purple to-cosmic-cyan text-white shadow-glow-sm hover:shadow-glow-md flex items-center justify-center space-x-2 transition-all disabled:opacity-50 cursor-pointer"
+                  className="w-full py-3 rounded-2xl text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_20px_rgba(255,255,255,0.35)] flex items-center justify-center space-x-2 transition-all disabled:opacity-50 cursor-pointer"
                 >
                   <span>{loading ? 'Sending code...' : 'Send SMS Code'}</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 text-black" />
                 </motion.button>
               </motion.form>
             ) : (
@@ -170,10 +170,10 @@ export const LoginPage: React.FC = () => {
                   whileTap={{ scale: 0.98 }}
                   type="submit"
                   disabled={loading || code.length < 6}
-                  className="w-full py-3 rounded-2xl text-xs font-bold bg-gradient-to-r from-cosmic-purple via-cosmic-cyan to-cosmic-pink text-white shadow-glow-sm hover:shadow-glow-md flex items-center justify-center space-x-2 transition-all disabled:opacity-50 cursor-pointer"
+                  className="w-full py-3 rounded-2xl text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_20px_rgba(255,255,255,0.35)] flex items-center justify-center space-x-2 transition-all disabled:opacity-50 cursor-pointer"
                 >
                   <span>{loading ? 'Verifying...' : 'Verify & Enter Orbit'}</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 text-black" />
                 </motion.button>
               </motion.form>
             )}

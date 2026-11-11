@@ -41,9 +41,9 @@ export const MyEventsPage: React.FC = () => {
         <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.96 }}>
           <Link
             to="/create"
-            className="px-5 py-2.5 rounded-full text-xs font-bold bg-gradient-to-r from-cosmic-purple to-cosmic-pink text-white shadow-glow-sm hover:shadow-glow-md flex items-center space-x-2 transition-all self-start sm:self-auto cursor-pointer"
+            className="px-5 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_20px_rgba(255,255,255,0.35)] flex items-center space-x-2 transition-all self-start sm:self-auto cursor-pointer"
           >
-            <PlusCircle className="w-4 h-4" />
+            <PlusCircle className="w-4 h-4 text-black" />
             <span>New Orbit</span>
           </Link>
         </motion.div>

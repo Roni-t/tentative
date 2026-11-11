@@ -127,9 +127,9 @@ export const HeatmapPage: React.FC = () => {
           </a>
           <Link
             to={token ? `/share/${token}/respond` : `/events/${event.id}/respond`}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-cosmic-purple to-cosmic-cyan text-white text-xs font-bold shadow-glow-sm hover:shadow-glow-md flex items-center space-x-1.5 transition-all"
+            className="px-4 py-2 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-bold shadow-[0_0_15px_rgba(255,255,255,0.35)] flex items-center space-x-1.5 transition-all"
           >
-            <PlusCircle className="w-3.5 h-3.5" />
+            <PlusCircle className="w-3.5 h-3.5 text-black" />
             <span>Paint My Times</span>
           </Link>
         </div>

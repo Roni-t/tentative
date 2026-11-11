@@ -23,7 +23,7 @@ export const Navbar: React.FC = () => {
           >
             <PlanetLogo size={32} isSpinning={false} />
           </motion.div>
-          <span className="text-lg font-bold tracking-tight text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-cosmic-purple transition-all">
+          <span className="text-lg font-bold tracking-tight text-white group-hover:text-zinc-300 transition-all">
             Tentative
           </span>
         </Link>
@@ -83,15 +83,15 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center space-x-3">
           {user ? (
             <div className="flex items-center space-x-2">
-              <div className="hidden sm:flex items-center space-x-2 text-xs text-slate-300 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">
-                <UserIcon className="w-3.5 h-3.5 text-cosmic-cyan" />
+              <div className="hidden sm:flex items-center space-x-2 text-xs text-zinc-300 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-full">
+                <UserIcon className="w-3.5 h-3.5 text-white" />
                 <span className="font-semibold text-white">{user.name}</span>
               </div>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={logout}
-                className="p-2 rounded-full text-slate-400 hover:text-red-400 hover:bg-red-500/10 border border-white/5 transition-all cursor-pointer"
+                className="p-2 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 border border-zinc-800 transition-all cursor-pointer"
                 title="Sign out"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -101,7 +101,7 @@ export const Navbar: React.FC = () => {
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
               <Link
                 to="/login"
-                className="px-4 py-1.5 rounded-full text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/15 transition-all"
+                className="px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-black hover:bg-zinc-200 shadow-sm transition-all"
               >
                 Sign in
               </Link>

@@ -30,9 +30,9 @@ export const ExpiredOrbitPage: React.FC = () => {
           </Link>
           <Link
             to="/create"
-            className="w-full sm:w-auto px-5 py-2.5 rounded-full text-xs font-bold bg-gradient-to-r from-cosmic-purple to-cosmic-pink text-white shadow-glow-sm hover:shadow-glow-md flex items-center justify-center space-x-1.5 transition-all"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_15px_rgba(255,255,255,0.3)] flex items-center justify-center space-x-1.5 transition-all"
           >
-            <PlusCircle className="w-3.5 h-3.5" />
+            <PlusCircle className="w-3.5 h-3.5 text-black" />
             <span>Host New Orbit</span>
           </Link>
         </div>

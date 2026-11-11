@@ -18,23 +18,23 @@ export const PlanetLogo: React.FC<PlanetLogoProps> = ({ size = 32, className = '
       >
         <defs>
           <linearGradient id="planetGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#A855F7" />
-            <stop offset="50%" stopColor="#6366F1" />
-            <stop offset="100%" stopColor="#EC4899" />
+            <stop offset="0%" stopColor="#FFFFFF" />
+            <stop offset="55%" stopColor="#E4E4E7" />
+            <stop offset="100%" stopColor="#52525B" />
           </linearGradient>
           <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#38BDF8" />
-            <stop offset="40%" stopColor="#C084FC" />
-            <stop offset="100%" stopColor="#F43F5E" />
+            <stop offset="0%" stopColor="#FFFFFF" />
+            <stop offset="45%" stopColor="#D4D4D8" />
+            <stop offset="100%" stopColor="#FFFFFF" />
           </linearGradient>
-          <filter id="planetGlow" x="-25%" y="-25%" width="150%" height="150%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
+          <filter id="planetGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="3.5" result="blur" />
             <feComposite in="SourceGraphic" in2="blur" operator="over" />
           </filter>
         </defs>
 
         {/* Outer glowing aura */}
-        <circle cx="32" cy="32" r="18" fill="url(#planetGrad)" opacity="0.15" filter="url(#planetGlow)" />
+        <circle cx="32" cy="32" r="18" fill="#FFFFFF" opacity="0.22" filter="url(#planetGlow)" />
 
         {/* Back of the tilted ring */}
         <path

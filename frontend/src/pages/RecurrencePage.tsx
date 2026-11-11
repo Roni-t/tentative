@@ -109,9 +109,9 @@ export const RecurrencePage: React.FC = () => {
           <div className="pt-2 flex justify-end">
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-full text-xs font-bold bg-gradient-to-r from-cosmic-purple to-cosmic-cyan text-white shadow-glow-sm hover:shadow-glow-md flex items-center space-x-1.5 transition-all"
+              className="px-6 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_15px_rgba(255,255,255,0.3)] flex items-center space-x-1.5 transition-all cursor-pointer"
             >
-              <Check className="w-4 h-4" />
+              <Check className="w-4 h-4 text-black" />
               <span>Save Recurrence</span>
             </button>
           </div>

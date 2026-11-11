@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HeatmapResponse, HeatmapSlot } from '../types';
-import { formatDateHeading, formatSlotTime, formatSlotRange } from '../utils/format';
-import { Sparkles, Users, UserCheck, UserX, List, Grid as GridIcon, CheckCircle } from 'lucide-react';
+import { formatDateHeading, formatSlotTime, formatSlotRange, formatDayName, formatDateSub } from '../utils/format';
+import { Sparkles, Users, UserCheck, UserX, List, Grid as GridIcon, CheckCircle, Calendar, Clock, Info } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 
 interface HeatmapGridProps {
@@ -37,48 +37,53 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
 
   // Extract unique time labels from the first populated day
   const sampleDay = Object.values(slotsByDate)[0] || [];
-  const timeLabels = sampleDay.map((s) => ({
-    label: formatSlotTime(s.start_time),
-    start_time: s.start_time,
-  }));
+  const timeLabels = sampleDay.map((s) => {
+    const timeStr = formatSlotTime(s.start_time);
+    const isTopHour = timeStr.includes(':00');
+    return {
+      label: timeStr,
+      start_time: s.start_time,
+      isTopHour,
+    };
+  });
 
-  // Helper for glow color intensity
-  const getCellIntensityStyle = (ratio: number) => {
+  // Monochrome / Black & White heatmap intensity scale
+  const getMonochromeIntensityStyle = (ratio: number) => {
     if (ratio === 0) {
       return {
-        bg: 'bg-white/[0.02]',
-        border: 'border-white/[0.05]',
-        text: 'text-slate-600',
+        bg: 'bg-black/60',
+        border: 'border-zinc-900',
+        text: 'text-zinc-600',
         shadow: 'none',
       };
     } else if (ratio < 0.3) {
       return {
-        bg: 'bg-indigo-950/45',
-        border: 'border-indigo-800/35',
-        text: 'text-indigo-300',
+        bg: 'bg-zinc-900/90',
+        border: 'border-zinc-800',
+        text: 'text-zinc-400',
         shadow: 'none',
       };
     } else if (ratio < 0.6) {
       return {
-        bg: 'bg-purple-900/65',
-        border: 'border-purple-600/45',
-        text: 'text-purple-200',
-        shadow: '0 0 12px rgba(168, 85, 247, 0.25)',
+        bg: 'bg-zinc-700/80',
+        border: 'border-zinc-600',
+        text: 'text-zinc-100',
+        shadow: 'none',
       };
     } else if (ratio < 0.9) {
       return {
-        bg: 'bg-gradient-to-br from-purple-600/85 to-indigo-600/85',
-        border: 'border-purple-400/60',
-        text: 'text-white font-semibold',
-        shadow: '0 0 18px rgba(168, 85, 247, 0.45)',
+        bg: 'bg-zinc-300',
+        border: 'border-white/80',
+        text: 'text-black font-semibold',
+        shadow: '0 0 12px rgba(255, 255, 255, 0.25)',
       };
     } else {
-      // 90%+ Overlap (Hero glow!)
+      // 90%+ Overlap (Max White Glow)
       return {
-        bg: 'bg-gradient-to-r from-cosmic-purple via-cosmic-cyan to-cosmic-pink',
-        border: 'border-white/90',
-        text: 'text-white font-bold',
-        shadow: '0 0 28px rgba(56, 189, 248, 0.65), inset 0 0 12px rgba(255, 255, 255, 0.5)',
+        bg: 'bg-white',
+        border: 'border-white',
+        text: 'text-black font-extrabold',
+        shadow: '0 0 20px rgba(255, 255, 255, 0.75), inset 0 0 8px rgba(0, 0, 0, 0.1)',
       };
     }
   };
@@ -93,17 +98,17 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
   return (
     <div className="w-full flex flex-col space-y-6">
       {/* Top Bar: Overview & View Switcher */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-3xl glass-panel">
+      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl glass-panel border border-zinc-800 bg-zinc-950/80">
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-cosmic-purple/20 text-cosmic-purple flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-white text-black flex items-center justify-center font-bold">
               <Users className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Participants</div>
+              <div className="text-[10px] uppercase font-bold tracking-wider text-zinc-500">Participants</div>
               <div className="text-sm font-bold text-white">
                 {heatmap.total_respondents}{' '}
-                <span className="text-xs font-normal text-slate-400">
+                <span className="text-xs font-normal text-zinc-400">
                   {heatmap.total_respondents === 1 ? 'response' : 'responses'}
                 </span>
               </div>
@@ -111,14 +116,14 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
           </div>
 
           {heatmap.best_slots.length > 0 && (
-            <div className="hidden sm:flex items-center space-x-2.5 pl-6 border-l border-white/10">
-              <div className="w-9 h-9 rounded-2xl bg-cosmic-cyan/20 text-cosmic-cyan flex items-center justify-center">
-                <Sparkles className="w-4 h-4" />
+            <div className="hidden sm:flex items-center space-x-2.5 pl-6 border-l border-zinc-800">
+              <div className="w-9 h-9 rounded-xl bg-zinc-800 text-white flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-white" />
               </div>
               <div>
-                <div className="text-[10px] uppercase font-bold tracking-wider text-cosmic-cyan">Top Overlap</div>
+                <div className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">Top Overlap</div>
                 <div className="text-xs font-semibold text-white">
-                  {formatDateHeading(format(parseISO(heatmap.best_slots[0].start_time), 'yyyy-MM-dd'))} ·{' '}
+                  {formatDayName(format(parseISO(heatmap.best_slots[0].start_time), 'yyyy-MM-dd'))} ·{' '}
                   {formatSlotRange(heatmap.best_slots[0].start_time, heatmap.best_slots[0].end_time)}
                 </div>
               </div>
@@ -127,34 +132,34 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
         </div>
 
         {/* View Mode Toggle with animated sliding pill */}
-        <div className="flex items-center space-x-1 glass-card p-1 rounded-2xl border border-white/10 relative">
+        <div className="flex items-center space-x-1 p-1 rounded-xl bg-zinc-900 border border-zinc-800 relative">
           <button
             onClick={() => setViewMode('grid')}
-            className={`relative px-3.5 py-1.5 rounded-xl text-xs font-medium flex items-center space-x-1.5 transition-colors z-10 ${
-              viewMode === 'grid' ? 'text-white font-semibold' : 'text-slate-400 hover:text-white'
+            className={`relative px-3.5 py-1.5 rounded-lg text-xs font-medium flex items-center space-x-1.5 transition-colors z-10 ${
+              viewMode === 'grid' ? 'text-black font-bold' : 'text-zinc-400 hover:text-white'
             }`}
           >
             {viewMode === 'grid' && (
               <motion.div
                 layoutId="viewmode-pill"
-                className="absolute inset-0 bg-white/15 rounded-xl border border-white/20 shadow-sm -z-10"
+                className="absolute inset-0 bg-white rounded-lg -z-10 shadow-sm"
                 transition={{ type: 'spring', stiffness: 400, damping: 28 }}
               />
             )}
             <GridIcon className="w-3.5 h-3.5" />
-            <span>Heatmap Grid</span>
+            <span>Schedule Grid</span>
           </button>
 
           <button
             onClick={() => setViewMode('list')}
-            className={`relative px-3.5 py-1.5 rounded-xl text-xs font-medium flex items-center space-x-1.5 transition-colors z-10 ${
-              viewMode === 'list' ? 'text-white font-semibold' : 'text-slate-400 hover:text-white'
+            className={`relative px-3.5 py-1.5 rounded-lg text-xs font-medium flex items-center space-x-1.5 transition-colors z-10 ${
+              viewMode === 'list' ? 'text-black font-bold' : 'text-zinc-400 hover:text-white'
             }`}
           >
             {viewMode === 'list' && (
               <motion.div
                 layoutId="viewmode-pill"
-                className="absolute inset-0 bg-white/15 rounded-xl border border-white/20 shadow-sm -z-10"
+                className="absolute inset-0 bg-white rounded-lg -z-10 shadow-sm"
                 transition={{ type: 'spring', stiffness: 400, damping: 28 }}
               />
             )}
@@ -167,92 +172,205 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
       {/* Main Grid View */}
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Heatmap Matrix */}
-          <div className="lg:col-span-8 overflow-x-auto custom-scrollbar rounded-3xl border border-white/10 bg-space-900/60 p-4 backdrop-blur-md">
-            <div className="min-w-max">
-              {/* Header dates */}
-              <div className="flex items-center mb-3">
-                <div className="w-20 shrink-0 text-right pr-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                  Time
-                </div>
-                {candidateDates.map((dStr) => (
-                  <div key={dStr} className="w-28 sm:w-32 shrink-0 px-2 text-center">
-                    <div className="text-xs font-bold text-white">{formatDateHeading(dStr)}</div>
+          {/* Heatmap Matrix (University Timetable Schedule Layout) */}
+          <div className="lg:col-span-8 flex flex-col space-y-6">
+            <div className="overflow-x-auto custom-scrollbar rounded-2xl border border-zinc-800 bg-black shadow-2xl">
+              <div className="min-w-max">
+                {/* Header Bar Across All Days (Collegiate Schedule Banner) */}
+                <div className="flex items-stretch bg-zinc-900/90 border-b border-zinc-700/80 sticky top-0 z-20">
+                  <div className="w-20 sm:w-24 shrink-0 p-3 text-right text-[11px] font-bold text-zinc-400 uppercase tracking-wider border-r border-zinc-800 flex items-center justify-end">
+                    Time
                   </div>
-                ))}
-              </div>
-
-              {/* Rows */}
-              <div className="flex flex-col space-y-1.5">
-                {timeLabels.map((tItem, rowIndex) => (
-                  <div key={tItem.label} className="flex items-center">
-                    <div className="w-20 shrink-0 text-right pr-3 text-[11px] font-mono text-slate-400">
-                      {tItem.label}
+                  {candidateDates.map((dStr) => (
+                    <div
+                      key={dStr}
+                      className="w-32 sm:w-40 md:w-44 shrink-0 py-3 px-3 text-center border-r border-zinc-800 last:border-r-0 flex flex-col items-center justify-center"
+                    >
+                      <span className="text-xs sm:text-sm font-bold text-white tracking-wide uppercase">
+                        {formatDayName(dStr)}
+                      </span>
+                      <span className="text-[10px] text-zinc-400 font-mono mt-0.5">
+                        {formatDateSub(dStr)}
+                      </span>
                     </div>
+                  ))}
+                </div>
 
-                    {candidateDates.map((dStr) => {
-                      const daySlots = slotsByDate[dStr] || [];
-                      const slot = daySlots[rowIndex];
-                      if (!slot) {
-                        return <div key={dStr} className="w-28 sm:w-32 h-10 mx-1 opacity-0" />;
-                      }
-
-                      const style = getCellIntensityStyle(slot.ratio);
-                      const isSelected =
-                        activeSlot &&
-                        activeSlot.start_time === slot.start_time &&
-                        activeSlot.end_time === slot.end_time;
-
-                      return (
-                        <motion.button
-                          key={slot.start_time}
-                          type="button"
-                          onClick={() => handleCellClick(slot)}
-                          whileHover={{ scale: 1.05, y: -1.5 }}
-                          whileTap={{ scale: 0.96 }}
-                          transition={{ type: 'spring', stiffness: 450, damping: 20 }}
-                          className={`w-28 sm:w-32 h-10 mx-1 rounded-xl flex items-center justify-center text-xs border relative group cursor-pointer ${
-                            style.bg
-                          } ${style.border} ${style.text} ${
-                            isSelected ? 'ring-2 ring-cosmic-cyan scale-[1.03] z-10' : ''
+                {/* Rows with Time Gutter and Schedule Cells */}
+                <div className="flex flex-col">
+                  {timeLabels.map((tItem, rowIndex) => (
+                    <div
+                      key={tItem.label}
+                      className={`flex items-stretch ${
+                        tItem.isTopHour
+                          ? 'border-t border-zinc-800 bg-zinc-950/40'
+                          : 'border-t border-zinc-900/70 bg-black'
+                      }`}
+                    >
+                      {/* Left time label */}
+                      <div className="w-20 sm:w-24 shrink-0 pr-3 py-1.5 text-right border-r border-zinc-800/80 flex items-center justify-end">
+                        <span
+                          className={`font-mono text-[11px] ${
+                            tItem.isTopHour ? 'font-bold text-white' : 'font-normal text-zinc-500'
                           }`}
-                          style={{
-                            boxShadow: isSelected
-                              ? '0 0 22px rgba(56, 189, 248, 0.6)'
-                              : style.shadow,
-                          }}
                         >
-                          <span className="font-mono text-xs">
-                            {slot.count}/{slot.total_participants}
-                          </span>
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                ))}
+                          {tItem.label}
+                        </span>
+                      </div>
+
+                      {/* Day Columns */}
+                      {candidateDates.map((dStr) => {
+                        const daySlots = slotsByDate[dStr] || [];
+                        const slot = daySlots[rowIndex];
+                        if (!slot) {
+                          return (
+                            <div
+                              key={dStr}
+                              className="w-32 sm:w-40 md:w-44 h-9 border-r border-zinc-800/80 last:border-r-0 opacity-0"
+                            />
+                          );
+                        }
+
+                        const style = getMonochromeIntensityStyle(slot.ratio);
+                        const isSelected =
+                          activeSlot &&
+                          activeSlot.start_time === slot.start_time &&
+                          activeSlot.end_time === slot.end_time;
+
+                        return (
+                          <div
+                            key={slot.start_time}
+                            className="w-32 sm:w-40 md:w-44 h-8 sm:h-9 px-1.5 py-0.5 border-r border-zinc-800/80 last:border-r-0 flex items-center"
+                          >
+                            <motion.button
+                              type="button"
+                              onClick={() => handleCellClick(slot)}
+                              whileHover={{ scale: 1.03 }}
+                              whileTap={{ scale: 0.97 }}
+                              className={`w-full h-full rounded-md flex items-center justify-between px-2 text-xs border cursor-pointer transition-all duration-100 ${
+                                style.bg
+                              } ${style.border} ${style.text} ${
+                                isSelected ? 'ring-2 ring-white scale-[1.02] z-10' : ''
+                              }`}
+                              style={{
+                                boxShadow: isSelected
+                                  ? '0 0 16px rgba(255, 255, 255, 0.8)'
+                                  : style.shadow,
+                              }}
+                            >
+                              <span className="font-mono text-[11px]">
+                                {slot.count}/{slot.total_participants}
+                              </span>
+                              {slot.ratio >= 0.9 && (
+                                <span className="text-[10px] font-bold">★</span>
+                              )}
+                            </motion.button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* Legend */}
-              <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
-                <span>Darker = fewer free · Brighter glow = highest alignment</span>
+              {/* Monochrome Legend */}
+              <div className="p-3 bg-zinc-950 border-t border-zinc-800 flex flex-wrap items-center justify-between text-xs text-zinc-400">
+                <span className="text-[11px]">Darker = fewer free · Pure white = unanimous group alignment</span>
                 <div className="flex items-center space-x-1.5">
-                  <span className="text-[10px] text-slate-500">0%</span>
-                  <div className="w-3.5 h-3.5 rounded bg-white/[0.04] border border-white/10" />
-                  <div className="w-3.5 h-3.5 rounded bg-indigo-950 border border-indigo-800/40" />
-                  <div className="w-3.5 h-3.5 rounded bg-purple-900 border border-purple-600/40" />
-                  <div className="w-3.5 h-3.5 rounded bg-purple-600 border border-purple-400" />
-                  <div className="w-3.5 h-3.5 rounded bg-gradient-to-r from-cosmic-purple to-cosmic-cyan border border-white" />
-                  <span className="text-[10px] text-cosmic-cyan font-bold">100%</span>
+                  <span className="text-[10px] text-zinc-500">0%</span>
+                  <div className="w-3 h-3 rounded bg-black border border-zinc-800" title="0%" />
+                  <div className="w-3 h-3 rounded bg-zinc-900 border border-zinc-700" title="25%" />
+                  <div className="w-3 h-3 rounded bg-zinc-700 border border-zinc-500" title="50%" />
+                  <div className="w-3 h-3 rounded bg-zinc-300 border border-zinc-200" title="75%" />
+                  <div className="w-3 h-3 rounded bg-white border border-white shadow-[0_0_8px_rgba(255,255,255,0.6)]" title="100%" />
+                  <span className="text-[10px] text-white font-bold">100%</span>
                 </div>
+              </div>
+            </div>
+
+            {/* University Schedule Block Cards (Matches Course Schedule Cards from Screenshot) */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-zinc-400">
+                  <Calendar className="w-4 h-4 text-white" />
+                  <span>Identified Consensus Blocks</span>
+                </div>
+                <span className="text-xs text-zinc-500 font-mono">
+                  {heatmap.best_slots.length} top options found
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {heatmap.best_slots.slice(0, 4).map((slot, idx) => {
+                  const dayName = formatDayName(format(parseISO(slot.start_time), 'yyyy-MM-dd'));
+                  const dateSub = formatDateSub(format(parseISO(slot.start_time), 'yyyy-MM-dd'));
+                  const isSelected =
+                    activeSlot &&
+                    activeSlot.start_time === slot.start_time &&
+                    activeSlot.end_time === slot.end_time;
+
+                  return (
+                    <motion.div
+                      key={slot.start_time}
+                      whileHover={{ y: -2 }}
+                      onClick={() => handleCellClick(slot)}
+                      className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-150 relative ${
+                        isSelected
+                          ? 'bg-zinc-900 border-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                          : 'bg-zinc-950/80 hover:bg-zinc-900/90 border-zinc-800'
+                      }`}
+                      style={{ borderLeftWidth: '5px', borderLeftColor: idx === 0 ? '#FFFFFF' : '#A1A1AA' }}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Info className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                          <span className="text-xs font-bold text-white">
+                            {idx === 0 ? 'Top Orbit Window' : `Option #${idx + 1}`}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white text-black font-bold">
+                          {slot.count}/{slot.total_participants} Free
+                        </span>
+                      </div>
+
+                      <div className="mt-2 text-xs text-zinc-200 font-semibold">
+                        {dayName}, {dateSub}
+                      </div>
+                      <div className="text-[11px] font-mono text-zinc-400">
+                        {formatSlotRange(slot.start_time, slot.end_time)}
+                      </div>
+
+                      <div className="mt-2.5 pt-2 border-t border-zinc-800/80 flex items-center justify-between">
+                        <span className="text-[10px] text-zinc-500 truncate max-w-[150px]">
+                          {slot.available_participants.slice(0, 3).join(', ')}
+                          {slot.available_participants.length > 3 ? ` +${slot.available_participants.length - 3}` : ''}
+                        </span>
+                        {isHostOrCohost && onSelectSlot && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSelectSlot(slot);
+                            }}
+                            className="px-2.5 py-1 rounded bg-white hover:bg-zinc-200 text-black font-semibold text-[10px] transition-colors"
+                          >
+                            Finalize
+                          </button>
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
           </div>
 
-          {/* Slot Inspector Sidebar with Smooth Spring Transition */}
+          {/* Slot Inspector Sidebar */}
           <div className="lg:col-span-4 flex flex-col space-y-4">
-            <div className="p-5 rounded-3xl glass-panel border border-white/15 sticky top-24">
-              <div className="text-[10px] uppercase font-bold tracking-wider text-cosmic-cyan mb-2">
-                Selected Slot Details
+            <div className="p-5 rounded-2xl glass-panel border border-zinc-800 bg-zinc-950/90 sticky top-24 shadow-2xl">
+              <div className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2 flex items-center space-x-1.5">
+                <Clock className="w-3.5 h-3.5 text-white" />
+                <span>Slot Overlap Inspector</span>
               </div>
 
               <AnimatePresence mode="wait">
@@ -262,20 +380,20 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                     initial={{ opacity: 0, y: 8, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.98 }}
-                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                     className="space-y-4"
                   >
                     <div>
-                      <h4 className="text-lg font-bold text-white">
+                      <h4 className="text-base font-bold text-white">
                         {format(parseISO(activeSlot.start_time), 'EEEE, MMM d')}
                       </h4>
-                      <p className="text-xs font-mono text-cosmic-purple">
+                      <p className="text-xs font-mono text-zinc-300">
                         {formatSlotRange(activeSlot.start_time, activeSlot.end_time)}
                       </p>
                     </div>
 
-                    <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
-                      <span className="text-xs text-slate-300">Availability Overlap</span>
+                    <div className="p-3.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-between">
+                      <span className="text-xs text-zinc-400">Attendance Alignment</span>
                       <span className="text-sm font-bold font-mono text-white">
                         {activeSlot.count} of {activeSlot.total_participants} free (
                         {Math.round(activeSlot.ratio * 100)}%)
@@ -284,8 +402,8 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
 
                     {/* Available List */}
                     <div>
-                      <div className="flex items-center space-x-1.5 text-xs font-semibold text-emerald-400 mb-2">
-                        <UserCheck className="w-3.5 h-3.5" />
+                      <div className="flex items-center space-x-1.5 text-xs font-semibold text-white mb-2">
+                        <UserCheck className="w-3.5 h-3.5 text-white" />
                         <span>Available ({activeSlot.available_participants.length})</span>
                       </div>
                       {activeSlot.available_participants.length > 0 ? (
@@ -293,21 +411,21 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                           {activeSlot.available_participants.map((name) => (
                             <span
                               key={name}
-                              className="px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-200 text-xs font-medium"
+                              className="px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-xs font-medium"
                             >
                               {name}
                             </span>
                           ))}
                         </div>
                       ) : (
-                        <div className="text-xs text-slate-500 italic">No one marked available</div>
+                        <div className="text-xs text-zinc-500 italic">No one marked available</div>
                       )}
                     </div>
 
                     {/* Unavailable List */}
                     {activeSlot.unavailable_participants.length > 0 && (
                       <div>
-                        <div className="flex items-center space-x-1.5 text-xs font-semibold text-slate-400 mb-2">
+                        <div className="flex items-center space-x-1.5 text-xs font-semibold text-zinc-400 mb-2">
                           <UserX className="w-3.5 h-3.5" />
                           <span>Unavailable ({activeSlot.unavailable_participants.length})</span>
                         </div>
@@ -315,7 +433,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                           {activeSlot.unavailable_participants.map((name) => (
                             <span
                               key={name}
-                              className="px-2.5 py-1 rounded-xl bg-white/5 border border-white/10 text-slate-400 text-xs font-medium"
+                              className="px-2.5 py-1 rounded-lg bg-black/60 border border-zinc-800 text-zinc-400 text-xs font-medium"
                             >
                               {name}
                             </span>
@@ -324,16 +442,16 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                       </div>
                     )}
 
-                    {/* Host action shortcut */}
+                    {/* Host Action Button */}
                     {isHostOrCohost && onSelectSlot && (
                       <motion.button
                         type="button"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => onSelectSlot(activeSlot)}
-                        className="w-full mt-4 py-3 rounded-2xl font-bold text-xs bg-gradient-to-r from-cosmic-purple via-cosmic-cyan to-cosmic-pink text-white shadow-glow-sm hover:shadow-glow-md flex items-center justify-center space-x-2 transition-all cursor-pointer"
+                        className="w-full mt-4 py-3 rounded-xl font-bold text-xs bg-white text-black hover:bg-zinc-200 shadow-[0_0_20px_rgba(255,255,255,0.4)] flex items-center justify-center space-x-2 transition-all cursor-pointer"
                       >
-                        <CheckCircle className="w-4 h-4" />
+                        <CheckCircle className="w-4 h-4 text-black" />
                         <span>Lock In & Finalize This Time</span>
                       </motion.button>
                     )}
@@ -344,9 +462,9 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="py-8 text-center text-xs text-slate-500"
+                    className="py-8 text-center text-xs text-zinc-500"
                   >
-                    Select any cell in the heatmap to view who is free.
+                    Select any cell in the schedule grid to inspect respondents.
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -355,34 +473,34 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
         </div>
       ) : (
         /* Accessible Ranked List View */
-        <div className="p-6 rounded-3xl glass-panel space-y-4">
+        <div className="p-6 rounded-2xl glass-panel border border-zinc-800 bg-zinc-950/80 space-y-4">
           <h3 className="text-sm font-bold text-white flex items-center space-x-2">
-            <Sparkles className="w-4 h-4 text-cosmic-cyan" />
+            <Sparkles className="w-4 h-4 text-white" />
             <span>Ranked Schedule Alignment (Screen Reader Accessible)</span>
           </h3>
 
-          <div className="divide-y divide-white/10">
+          <div className="divide-y divide-zinc-800">
             {heatmap.best_slots.map((slot, idx) => (
               <motion.div
                 key={slot.start_time}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25, delay: idx * 0.05 }}
+                transition={{ duration: 0.2, delay: idx * 0.04 }}
                 className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
               >
                 <div className="flex items-start space-x-3">
-                  <div className="w-7 h-7 rounded-xl bg-cosmic-purple/20 text-cosmic-purple font-mono font-bold text-xs flex items-center justify-center shrink-0">
+                  <div className="w-7 h-7 rounded-lg bg-zinc-800 text-white font-mono font-bold text-xs flex items-center justify-center shrink-0 border border-zinc-700">
                     #{idx + 1}
                   </div>
                   <div>
                     <div className="text-sm font-bold text-white">
                       {format(parseISO(slot.start_time), 'EEEE, MMMM d, yyyy')}
                     </div>
-                    <div className="text-xs font-mono text-cosmic-cyan">
+                    <div className="text-xs font-mono text-zinc-300">
                       {formatSlotRange(slot.start_time, slot.end_time)}
                     </div>
-                    <div className="text-xs text-slate-300 mt-1">
-                      <span className="font-semibold text-emerald-400">
+                    <div className="text-xs text-zinc-400 mt-1">
+                      <span className="font-semibold text-white">
                         {slot.count} of {slot.total_participants} free
                       </span>{' '}
                       ({Math.round(slot.ratio * 100)}% overlap): {slot.available_participants.join(', ')}
@@ -396,7 +514,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                     whileHover={{ scale: 1.04 }}
                     whileTap={{ scale: 0.96 }}
                     onClick={() => onSelectSlot(slot)}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-colors shrink-0 cursor-pointer"
+                    className="px-4 py-2 rounded-xl text-xs font-semibold bg-white hover:bg-zinc-200 text-black transition-colors shrink-0 cursor-pointer shadow-sm"
                   >
                     Select this time
                   </motion.button>
