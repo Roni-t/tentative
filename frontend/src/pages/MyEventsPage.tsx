@@ -128,7 +128,7 @@ export const MyEventsPage: React.FC = () => {
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.3, delay: idx * 0.05 }}
                 whileHover={{ y: -5, scale: 1.015 }}
-                className="glass-panel p-6 rounded-3xl border border-white/10 hover:border-cosmic-purple/50 transition-colors flex flex-col justify-between group cursor-default"
+                className="glass-panel p-6 rounded-3xl border border-zinc-800 hover:border-zinc-500 transition-colors flex flex-col justify-between group cursor-default"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -138,42 +138,42 @@ export const MyEventsPage: React.FC = () => {
                           ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                           : ev.status === 'canceled'
                           ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                          : 'bg-cosmic-purple/20 text-purple-300 border border-purple-500/30'
+                          : 'bg-zinc-900 text-zinc-300 border border-zinc-700'
                       }`}
                     >
                       {ev.status}
                     </span>
-                    <span className="text-[11px] text-slate-500 font-mono">
+                    <span className="text-[11px] text-zinc-500 font-mono">
                       {ev.candidate_dates?.length || 0} candidate days
                     </span>
                   </div>
 
                   <div>
-                    <h3 className="text-base font-bold text-white group-hover:text-cosmic-cyan transition-colors">
+                    <h3 className="text-base font-bold text-white group-hover:text-zinc-300 transition-colors">
                       {ev.title}
                     </h3>
-                    <p className="text-xs text-slate-400 line-clamp-2 mt-1">
+                    <p className="text-xs text-zinc-400 line-clamp-2 mt-1">
                       {ev.description || 'No description provided.'}
                     </p>
                   </div>
 
-                  <div className="pt-2 border-t border-white/5 space-y-1.5 text-xs text-slate-400">
+                  <div className="pt-2 border-t border-zinc-800/80 space-y-1.5 text-xs text-zinc-400">
                     <div className="flex items-center space-x-2">
-                      <Users className="w-3.5 h-3.5 text-cosmic-purple" />
+                      <Users className="w-3.5 h-3.5 text-white" />
                       <span>{ev.respondents_count} participants responded</span>
                     </div>
                     {ev.location && (
-                      <div className="truncate text-slate-500">
+                      <div className="truncate text-zinc-500">
                         📍 {ev.location}
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between gap-2">
+                <div className="mt-6 pt-4 border-t border-zinc-800/80 flex items-center justify-between gap-2">
                   <Link
                     to={`/events/${ev.id}`}
-                    className="text-xs font-semibold text-white hover:text-cosmic-cyan flex items-center space-x-1 transition-colors"
+                    className="text-xs font-semibold text-white hover:text-zinc-300 flex items-center space-x-1 transition-colors"
                   >
                     <span>Manage Orbit</span>
                     <ArrowUpRight className="w-3.5 h-3.5" />
@@ -182,10 +182,10 @@ export const MyEventsPage: React.FC = () => {
                     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                       <Link
                         to={`/share/${ev.active_token}/heatmap`}
-                        className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-cosmic-cyan border border-white/10 flex items-center space-x-1.5 transition-colors"
+                        className="px-3 py-1.5 rounded-xl bg-white text-black hover:bg-zinc-200 text-xs font-semibold flex items-center space-x-1.5 transition-colors"
                       >
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>Heatmap</span>
+                        <Sparkles className="w-3.5 h-3.5 text-black" />
+                        <span>Timetable Heatmap</span>
                       </Link>
                     </motion.div>
                   )}

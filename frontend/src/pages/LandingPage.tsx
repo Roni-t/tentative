@@ -103,9 +103,9 @@ export const LandingPage: React.FC = () => {
           APPLE STICKY SCROLL SECTION (180vh Pinning Track)
           ======================================================== */}
       <div ref={trackRef} className="relative h-[180vh] w-full">
-        <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
-          {/* STAGE 1: Centered Hero Showcase (Planet + Title underneath, unified and perfectly centered) */}
-          <div className="relative z-10 flex flex-col items-center justify-center text-center select-none px-4 -mt-10 sm:-mt-12">
+        <div className="sticky top-16 h-[calc(100vh-4rem)] w-full flex items-center justify-center overflow-hidden">
+          {/* STAGE 1: Centered Hero Showcase (Planet + Title underneath, elevated in the viewport) */}
+          <div className="relative z-10 flex flex-col items-center justify-center text-center select-none px-4 -mt-16 sm:-mt-24">
             {/* The White Celestial Planet */}
             <motion.div
               style={{
@@ -113,7 +113,7 @@ export const LandingPage: React.FC = () => {
                 y: planetY,
                 opacity: planetOpacity,
               }}
-              className="pointer-events-none select-none mb-3 sm:mb-4"
+              className="pointer-events-none select-none mb-2 sm:mb-3"
             >
               <HeroPlanet />
             </motion.div>
@@ -131,7 +131,7 @@ export const LandingPage: React.FC = () => {
               <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight text-white drop-shadow-[0_0_35px_rgba(255,255,255,0.4)]">
                 Tentative
               </h1>
-              <p className="text-xs sm:text-sm text-zinc-400 font-mono tracking-widest uppercase mt-3">
+              <p className="text-xs sm:text-sm text-zinc-400 font-mono tracking-widest uppercase mt-2.5 sm:mt-3">
                 Group Scheduling in Perfect Orbit
               </p>
             </motion.div>

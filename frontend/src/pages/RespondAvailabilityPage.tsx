@@ -90,21 +90,21 @@ export const RespondAvailabilityPage: React.FC = () => {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       {/* Event Header */}
-      <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 space-y-3">
-        <div className="text-[10px] uppercase font-bold tracking-wider text-cosmic-cyan">
+      <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-zinc-800 space-y-3">
+        <div className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">
           Submit Group Availability
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-white">{event.title}</h1>
-        {event.description && <p className="text-xs text-slate-300 max-w-2xl">{event.description}</p>}
-        <div className="flex flex-wrap gap-4 pt-2 text-xs text-slate-400">
+        {event.description && <p className="text-xs text-zinc-300 max-w-2xl">{event.description}</p>}
+        <div className="flex flex-wrap gap-4 pt-2 text-xs text-zinc-400">
           {event.location && (
-            <div className="flex items-center space-x-1 text-slate-300">
-              <MapPin className="w-3.5 h-3.5 text-cosmic-purple" />
+            <div className="flex items-center space-x-1 text-zinc-200">
+              <MapPin className="w-3.5 h-3.5 text-white" />
               <span>{event.location}</span>
             </div>
           )}
           <div className="flex items-center space-x-1">
-            <Clock className="w-3.5 h-3.5 text-cosmic-cyan" />
+            <Clock className="w-3.5 h-3.5 text-white" />
             <span>Timezone: {event.timezone}</span>
           </div>
         </div>
@@ -112,20 +112,20 @@ export const RespondAvailabilityPage: React.FC = () => {
 
       {/* Participant Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="glass-panel p-6 rounded-3xl border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="glass-panel p-6 rounded-3xl border border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="w-full sm:max-w-xs space-y-1">
-            <label className="block text-xs font-semibold text-slate-300">
+            <label className="block text-xs font-semibold text-zinc-300">
               Your Name *
             </label>
             <div className="relative">
-              <UserIcon className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+              <UserIcon className="w-4 h-4 text-zinc-500 absolute left-3.5 top-3" />
               <input
                 type="text"
                 required
                 value={participantName}
                 onChange={(e) => setParticipantName(e.target.value)}
                 placeholder="e.g. Alex Morgan"
-                className="w-full pl-10 pr-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:border-cosmic-purple"
+                className="w-full pl-10 pr-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:border-white"
               />
             </div>
           </div>
@@ -133,7 +133,7 @@ export const RespondAvailabilityPage: React.FC = () => {
           <div className="flex items-center space-x-3 w-full sm:w-auto justify-end">
             <Link
               to={token ? `/share/${token}/heatmap` : `/events/${event.id}/heatmap`}
-              className="px-4 py-2.5 rounded-full text-xs font-semibold text-slate-300 hover:text-white glass-card"
+              className="px-4 py-2.5 rounded-full text-xs font-semibold text-zinc-300 hover:text-white glass-card"
             >
               Skip to Heatmap
             </Link>

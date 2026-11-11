@@ -85,8 +85,8 @@ export const RecurrencePage: React.FC = () => {
                     onClick={() => toggleDay(d.code)}
                     className={`w-9 h-9 rounded-full text-xs font-bold transition-all ${
                       active
-                        ? 'bg-cosmic-purple text-white shadow-glow-sm'
-                        : 'bg-white/5 text-slate-400 hover:text-white border border-white/10'
+                        ? 'bg-white text-black shadow-[0_0_12px_rgba(255,255,255,0.4)]'
+                        : 'bg-white/5 text-zinc-400 hover:text-white border border-white/10'
                     }`}
                   >
                     {d.label}
@@ -97,7 +97,7 @@ export const RecurrencePage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">Ends On Date</label>
+            <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Ends On Date</label>
             <input
               type="date"
               value={endDate}
@@ -118,11 +118,11 @@ export const RecurrencePage: React.FC = () => {
         </form>
 
         {/* Schedule Preview (Wireframe p. 48) */}
-        <div className="lg:col-span-5 glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
-          <div className="text-[10px] uppercase font-bold tracking-wider text-cosmic-cyan">
+        <div className="lg:col-span-5 glass-panel p-6 rounded-3xl border border-zinc-800 space-y-4">
+          <div className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">
             Schedule Preview
           </div>
-          <p className="text-xs text-slate-300">
+          <p className="text-xs text-zinc-300">
             Next predicted occurrences based on this pattern:
           </p>
 
@@ -133,7 +133,7 @@ export const RecurrencePage: React.FC = () => {
                 className="p-3 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-between"
               >
                 <div className="flex items-center space-x-2.5">
-                  <div className="w-6 h-6 rounded-lg bg-cosmic-purple/20 text-cosmic-purple text-xs font-mono font-bold flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-xs font-mono font-bold flex items-center justify-center">
                     {idx + 1}
                   </div>
                   <div>

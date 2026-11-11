@@ -133,44 +133,44 @@ export const RsvpListPage: React.FC = () => {
           <div className="text-[11px] text-slate-400 uppercase font-semibold tracking-wider mt-1">Not Going</div>
         </div>
 
-        <div className="glass-panel p-4 rounded-2xl border border-white/10 text-center">
-          <div className="text-2xl font-extrabold text-cosmic-purple">{summary.count_waitlisted}</div>
-          <div className="text-[11px] text-slate-400 uppercase font-semibold tracking-wider mt-1">Waitlist</div>
+        <div className="glass-panel p-4 rounded-2xl border border-zinc-800 text-center">
+          <div className="text-2xl font-extrabold text-white">{summary.count_waitlisted}</div>
+          <div className="text-[11px] text-zinc-400 uppercase font-semibold tracking-wider mt-1">Waitlist</div>
         </div>
 
-        <div className="glass-panel p-4 rounded-2xl border border-white/10 text-center col-span-2 sm:col-span-1">
-          <div className="text-2xl font-extrabold text-slate-400">{summary.count_no_response}</div>
-          <div className="text-[11px] text-slate-400 uppercase font-semibold tracking-wider mt-1">No Response</div>
+        <div className="glass-panel p-4 rounded-2xl border border-zinc-800 text-center col-span-2 sm:col-span-1">
+          <div className="text-2xl font-extrabold text-zinc-400">{summary.count_no_response}</div>
+          <div className="text-[11px] text-zinc-400 uppercase font-semibold tracking-wider mt-1">No Response</div>
         </div>
       </div>
 
       {/* Submit / Update My RSVP Box */}
-      <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
-        <div className="text-xs font-bold text-white uppercase tracking-wider text-cosmic-cyan">
+      <div className="glass-panel p-6 rounded-3xl border border-zinc-800 space-y-4">
+        <div className="text-xs font-bold text-white uppercase tracking-wider">
           {summary.current_status ? 'Update Your RSVP' : 'Submit Your RSVP'}
         </div>
 
         <form onSubmit={handleRsvpSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Your Full Name *</label>
+              <label className="block text-xs font-semibold text-zinc-300 mb-1">Your Full Name *</label>
               <input
                 type="text"
                 required
                 value={participantName}
                 onChange={(e) => setParticipantName(e.target.value)}
                 placeholder="e.g. Alex Morgan"
-                className="w-full px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:border-cosmic-purple"
+                className="w-full px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:border-white"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Phone or Email (for SMS updates)</label>
+              <label className="block text-xs font-semibold text-zinc-300 mb-1">Phone or Email (for SMS updates)</label>
               <input
                 type="text"
                 value={contactInfo}
                 onChange={(e) => setContactInfo(e.target.value)}
                 placeholder="e.g. +19725550142"
-                className="w-full px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:border-cosmic-purple"
+                className="w-full px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:border-white"
               />
             </div>
           </div>
@@ -220,7 +220,7 @@ export const RsvpListPage: React.FC = () => {
           </div>
 
           {summary.current_waitlist_position && (
-            <div className="p-3 rounded-2xl bg-cosmic-purple/20 border border-cosmic-purple/40 text-xs text-purple-200">
+            <div className="p-3 rounded-2xl bg-zinc-900 border border-zinc-700 text-xs text-zinc-200">
               ⚡ You are currently on the waitlist at <strong>Position #{summary.current_waitlist_position}</strong>.
               If a spot opens up, you will be automatically promoted to Going.
             </div>
@@ -242,13 +242,13 @@ export const RsvpListPage: React.FC = () => {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="relative w-full sm:max-w-xs">
-            <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+            <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-3" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by name..."
-              className="w-full pl-10 pr-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:border-cosmic-purple"
+              className="w-full pl-10 pr-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:border-white"
             />
           </div>
 
@@ -294,7 +294,7 @@ export const RsvpListPage: React.FC = () => {
                     <td className="py-3.5 px-4 sm:px-6 font-semibold text-white">
                       {r.participant_name}
                       {r.waitlist_position && (
-                        <span className="ml-2 text-[10px] font-mono font-bold text-cosmic-pink">
+                        <span className="ml-2 text-[10px] font-mono font-bold text-zinc-400">
                           (Waitlist #{r.waitlist_position})
                         </span>
                       )}
@@ -307,7 +307,7 @@ export const RsvpListPage: React.FC = () => {
                             : r.status === 'maybe'
                             ? 'bg-amber-400/20 text-amber-300 border border-amber-400/30'
                             : r.status === 'waitlisted'
-                            ? 'bg-cosmic-purple/20 text-purple-300 border border-purple-500/30'
+                            ? 'bg-zinc-800 text-zinc-300 border border-zinc-700'
                             : 'bg-red-400/20 text-red-300 border border-red-400/30'
                         }`}
                       >
