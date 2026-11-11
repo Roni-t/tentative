@@ -493,7 +493,7 @@ export const EventDetailsPage: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-cosmic-purple to-cosmic-cyan text-white"
+              className="px-4 py-2 rounded-xl text-xs font-bold bg-white text-black hover:bg-zinc-200 transition-colors cursor-pointer shadow-sm"
             >
               Add Co-Host
             </button>

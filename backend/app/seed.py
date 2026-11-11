@@ -43,20 +43,24 @@ def seed_database(db: Session) -> None:
         db.commit()
         db.refresh(admin)
 
-    # 2. Host Account (Kaelan Nguyen from Wireframe p. 41-43)
+    # 2. Host Account (Ronit Dhaliwal)
     host_phone = "+19725550142"
     host_norm = normalize_phone(host_phone)
     host_hash = hash_phone(host_norm)
     host = db.query(User).filter(User.phone_hash == host_hash).first()
     if not host:
         host = User(
-            name="Kaelan Nguyen",
+            name="Ronit Dhaliwal",
             phone_number_encrypted=encrypt_phone(host_norm),
             phone_hash=host_hash,
             is_admin=False,
             created_at=now - timedelta(days=5)
         )
         db.add(host)
+        db.commit()
+        db.refresh(host)
+    else:
+        host.name = "Ronit Dhaliwal"
         db.commit()
         db.refresh(host)
 

@@ -33,6 +33,17 @@ const ShareRedirect: React.FC = () => {
   return <Navigate to={`/share/${token}/heatmap`} replace />;
 };
 
+// Automatically scrolls window to top on every route change
+const ScrollToTop: React.FC = () => {
+  const { pathname } = useLocation();
+
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+};
+
 const AnimatedRoutes: React.FC = () => {
   const location = useLocation();
 
@@ -82,6 +93,7 @@ const AnimatedRoutes: React.FC = () => {
 export const App: React.FC = () => {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AuthProvider>
         <ToastProvider>
           <div className="relative min-h-screen flex flex-col bg-space-950 text-slate-100 selection:bg-cosmic-purple/30 selection:text-white">

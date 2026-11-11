@@ -15,7 +15,11 @@ export const Navbar: React.FC = () => {
     <header className="sticky top-0 z-50 px-4 sm:px-8 py-3.5 backdrop-blur-2xl bg-space-950/70 border-b border-white/[0.06] transition-all">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         {/* Brand */}
-        <Link to="/" className="flex items-center space-x-2.5 group">
+        <Link
+          to="/"
+          onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })}
+          className="flex items-center space-x-2.5 group"
+        >
           <motion.div
             whileHover={{ scale: 1.06, rotate: 6 }}
             whileTap={{ scale: 0.95 }}

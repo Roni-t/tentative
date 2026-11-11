@@ -1,6 +1,6 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { HeroPlanet } from '../components/HeroPlanet';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -16,17 +16,10 @@ export const LandingPage: React.FC = () => {
   const { user } = useAuth();
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Scroll animations
-  const { scrollY } = useScroll();
-
-  // Intro fold transforms: fades gently upward on scroll
-  const introOpacity = useTransform(scrollY, [0, 320], [1, 0]);
-  const introScale = useTransform(scrollY, [0, 320], [1, 0.94]);
-  const introY = useTransform(scrollY, [0, 320], [0, -40]);
-
-  // Main section transforms: slides up softly
-  const menuOpacity = useTransform(scrollY, [140, 360], [0, 1]);
-  const menuY = useTransform(scrollY, [140, 360], [40, 0]);
+  // Guarantee scroll to top when landing page loads
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, []);
 
   const scrollToMenu = () => {
     menuRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -37,10 +30,7 @@ export const LandingPage: React.FC = () => {
       {/* ========================================================
           STAGE 1: Opening Screen (Minimalist Centered Planet)
           ======================================================== */}
-      <motion.section
-        style={{ opacity: introOpacity, scale: introScale, y: introY }}
-        className="min-h-[calc(100vh-4.5rem)] flex flex-col items-center justify-center relative px-4 text-center select-none"
-      >
+      <section className="min-h-[calc(100vh-4.5rem)] flex flex-col items-center justify-center relative px-4 text-center select-none pb-12">
         {/* Planet Centerpiece */}
         <div className="w-full max-w-lg mb-2">
           <HeroPlanet />
@@ -50,7 +40,7 @@ export const LandingPage: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
           className="space-y-3 z-10"
         >
           <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight text-white drop-shadow-[0_0_35px_rgba(255,255,255,0.35)]">
@@ -67,7 +57,7 @@ export const LandingPage: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6, duration: 0.5 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center space-y-2 text-xs font-mono text-zinc-500 hover:text-white transition-colors cursor-pointer group"
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center space-y-1.5 text-xs font-mono text-zinc-500 hover:text-white transition-colors cursor-pointer group"
         >
           <span className="text-[11px] tracking-wider uppercase text-zinc-500 group-hover:text-zinc-300">
             Scroll to begin
@@ -79,7 +69,7 @@ export const LandingPage: React.FC = () => {
             <ChevronDown className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
           </motion.div>
         </motion.button>
-      </motion.section>
+      </section>
 
       {/* ========================================================
           STAGE 2: Simple & Elegant Main Menu (Black & White)
@@ -87,8 +77,11 @@ export const LandingPage: React.FC = () => {
       <motion.section
         ref={menuRef}
         id="main-menu"
-        style={{ opacity: menuOpacity, y: menuY }}
-        className="min-h-[85vh] py-20 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto flex flex-col items-center justify-center space-y-12 text-center"
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-50px' }}
+        transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+        className="min-h-[80vh] py-16 sm:py-24 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto flex flex-col items-center justify-center space-y-12 text-center"
       >
         {/* Main Headline */}
         <div className="space-y-4 max-w-2xl mx-auto">

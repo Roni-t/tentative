@@ -10,7 +10,7 @@ import { User, Phone, KeyRound, ArrowRight, ShieldCheck } from 'lucide-react';
 
 export const CreateAccountPage: React.FC = () => {
   const [step, setStep] = useState<1 | 2>(1);
-  const [name, setName] = useState('Kaelan Nguyen');
+  const [name, setName] = useState('Ronit Dhaliwal');
   const [phone, setPhone] = useState('+1 (972) 555-0142');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -99,7 +99,7 @@ export const CreateAccountPage: React.FC = () => {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="e.g. Kaelan Nguyen"
+                      placeholder="e.g. Ronit Dhaliwal"
                       required
                       className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-slate-600 text-sm focus:border-cosmic-purple focus:ring-1 focus:ring-cosmic-purple transition-all"
                     />
