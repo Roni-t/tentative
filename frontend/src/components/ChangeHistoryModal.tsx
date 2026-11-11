@@ -37,10 +37,10 @@ export const ChangeHistoryModal: React.FC<ChangeHistoryModalProps> = ({ isOpen, 
           <div className="relative border-l border-white/10 ml-3 space-y-6">
             {logs.map((log) => (
               <div key={log.id} className="relative pl-6">
-                <div className="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full bg-cosmic-purple border-2 border-space-950" />
+                <div className="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full bg-white border-2 border-black" />
                 <div className="text-xs font-bold text-white capitalize">{log.action.replace('_', ' ')}</div>
-                <div className="text-xs text-slate-300 mt-0.5">{log.details}</div>
-                <div className="flex items-center space-x-2 text-[10px] text-slate-500 mt-1 font-mono">
+                <div className="text-xs text-zinc-300 mt-0.5">{log.details}</div>
+                <div className="flex items-center space-x-2 text-[10px] text-zinc-500 mt-1 font-mono">
                   <Clock className="w-3 h-3" />
                   <span>{format(parseISO(log.timestamp), 'MMM d, yyyy · h:mm a')}</span>
                   <span>·</span>

@@ -108,8 +108,8 @@ export const ShareExpiryPage: React.FC = () => {
       {/* Shareable Link Box */}
       <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 space-y-4">
         <div className="flex items-center justify-between">
-          <div className="text-xs font-bold text-white uppercase tracking-wider text-cosmic-cyan flex items-center space-x-1.5">
-            <Share2 className="w-4 h-4" />
+          <div className="text-xs font-bold text-white uppercase tracking-wider flex items-center space-x-1.5">
+            <Share2 className="w-4 h-4 text-white" />
             <span>Active Cryptographic Share Link</span>
           </div>
           {event.expires_at && (
@@ -166,8 +166,8 @@ export const ShareExpiryPage: React.FC = () => {
       {/* Modify Expiry Policy */}
       {isHost && (
         <form onSubmit={handleUpdateExpiry} className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 space-y-4">
-          <div className="text-xs font-bold text-white uppercase tracking-wider text-cosmic-pink flex items-center space-x-1.5">
-            <Clock className="w-4 h-4" />
+          <div className="text-xs font-bold text-white uppercase tracking-wider flex items-center space-x-1.5">
+            <Clock className="w-4 h-4 text-white" />
             <span>Update Link Lifetime</span>
           </div>
 
@@ -209,7 +209,7 @@ export const ShareExpiryPage: React.FC = () => {
             <button
               type="submit"
               disabled={updatingExpiry}
-              className="px-6 py-2.5 rounded-full text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-colors"
+              className="px-6 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-colors cursor-pointer"
             >
               {updatingExpiry ? 'Saving...' : 'Apply Expiry Setting'}
             </button>

@@ -1,11 +1,12 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion';
 import { HeroPlanet } from '../components/HeroPlanet';
 import { useAuth } from '../context/AuthContext';
 import {
   ArrowRight,
   ChevronDown,
+  ChevronUp,
   Sparkles,
   Zap,
   Lock,
@@ -19,10 +20,21 @@ import {
 export const LandingPage: React.FC = () => {
   const { user } = useAuth();
   const trackRef = useRef<HTMLDivElement>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   // Guarantee scroll to top when landing page loads
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, []);
+
+  // Track scroll position for floating scroll-to-top button
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 160);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // Track scroll progress through the Apple sticky container (0.0 to 1.0)
@@ -31,41 +43,57 @@ export const LandingPage: React.FC = () => {
     offset: ['start start', 'end end'],
   });
 
-  // Apple-smooth physics spring interpolation
+  // Apple-smooth physics spring interpolation (calibrated for bidirectional responsiveness)
   const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 90,
-    damping: 22,
-    restDelta: 0.001,
+    stiffness: 140,
+    damping: 26,
+    mass: 0.08,
+    restDelta: 0.0005,
   });
 
   // ==========================================
   // STAGE 1: Opening Fold Transforms
   // ==========================================
-  // Title & Subtitle fade out gently as you scroll
-  const titleOpacity = useTransform(smoothProgress, [0, 0.25], [1, 0]);
-  const titleY = useTransform(smoothProgress, [0, 0.25], [0, -35]);
-  const titleScale = useTransform(smoothProgress, [0, 0.25], [1, 0.92]);
+  // Title & Subtitle fade out gently as you scroll down; re-emerge symmetrically when scrolling back up
+  const titleOpacity = useTransform(smoothProgress, [0, 0.22], [1, 0]);
+  const titleY = useTransform(smoothProgress, [0, 0.22], [0, -35]);
+  const titleScale = useTransform(smoothProgress, [0, 0.22], [1, 0.92]);
+  const titlePointerEvents = useTransform(smoothProgress, (v) => (v < 0.2 ? 'auto' : 'none'));
 
   // Scroll cue prompt at the bottom
-  const scrollPromptOpacity = useTransform(smoothProgress, [0, 0.15], [1, 0]);
+  const scrollPromptOpacity = useTransform(smoothProgress, [0, 0.12], [1, 0]);
+  const scrollPromptPointerEvents = useTransform(smoothProgress, (v) => (v < 0.1 ? 'auto' : 'none'));
 
   // Planet dynamic scaling & depth shift (The Apple centerpiece effect)
-  const planetScale = useTransform(smoothProgress, [0.08, 0.55], [1, 1.35]);
-  const planetY = useTransform(smoothProgress, [0.08, 0.55], [0, -65]);
-  const planetOpacity = useTransform(smoothProgress, [0.35, 0.65], [1, 0.4]);
+  const planetScale = useTransform(smoothProgress, [0.04, 0.52], [1, 1.28]);
+  const planetY = useTransform(smoothProgress, [0.04, 0.52], [0, -55]);
+  const planetOpacity = useTransform(smoothProgress, [0.25, 0.6], [1, 0.38]);
 
   // ==========================================
   // STAGE 2: Main Menu Hub Reveal Transforms
   // ==========================================
   // Menu emerges from depth, locks into crystal clear focus in the center
-  const menuOpacity = useTransform(smoothProgress, [0.3, 0.6], [0, 1]);
-  const menuY = useTransform(smoothProgress, [0.3, 0.6], [50, 0]);
-  const menuScale = useTransform(smoothProgress, [0.3, 0.6], [0.92, 1]);
+  const menuOpacity = useTransform(smoothProgress, [0.25, 0.55], [0, 1]);
+  const menuY = useTransform(smoothProgress, [0.25, 0.55], [45, 0]);
+  const menuScale = useTransform(smoothProgress, [0.25, 0.55], [0.93, 1]);
+  const menuPointerEvents = useTransform(smoothProgress, (v) => (v > 0.26 ? 'auto' : 'none'));
 
   const scrollToMenu = () => {
     const track = trackRef.current;
     if (track) {
-      const targetY = track.offsetTop + track.offsetHeight * 0.58;
+      const targetY = track.offsetTop + (track.offsetHeight - window.innerHeight) * 0.62;
+      window.scrollTo({ top: targetY, behavior: 'smooth' });
+    }
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const scrollToFeatures = () => {
+    const track = trackRef.current;
+    if (track) {
+      const targetY = track.offsetTop + track.offsetHeight + 10;
       window.scrollTo({ top: targetY, behavior: 'smooth' });
     }
   };
@@ -73,9 +101,9 @@ export const LandingPage: React.FC = () => {
   return (
     <div className="relative w-full">
       {/* ========================================================
-          APPLE STICKY SCROLL SECTION (220vh Pinning Track)
+          APPLE STICKY SCROLL SECTION (190vh Pinning Track)
           ======================================================== */}
-      <div ref={trackRef} className="relative h-[220vh] w-full">
+      <div ref={trackRef} className="relative h-[190vh] w-full">
         <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
           {/* Centered Celestial Sphere (Scales & transforms with Apple inertia) */}
           <motion.div
@@ -95,6 +123,7 @@ export const LandingPage: React.FC = () => {
               opacity: titleOpacity,
               y: titleY,
               scale: titleScale,
+              pointerEvents: titlePointerEvents,
             }}
             className="relative z-10 flex flex-col items-center justify-center text-center select-none px-4 max-w-2xl mt-48 sm:mt-56"
           >
@@ -109,7 +138,10 @@ export const LandingPage: React.FC = () => {
           {/* Minimal Scroll Cue Button */}
           <motion.button
             onClick={scrollToMenu}
-            style={{ opacity: scrollPromptOpacity }}
+            style={{
+              opacity: scrollPromptOpacity,
+              pointerEvents: scrollPromptPointerEvents,
+            }}
             className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center space-y-1.5 text-xs font-mono text-zinc-500 hover:text-white transition-colors cursor-pointer group"
           >
             <span className="text-[11px] tracking-wider uppercase text-zinc-500 group-hover:text-zinc-300">
@@ -123,15 +155,28 @@ export const LandingPage: React.FC = () => {
             </motion.div>
           </motion.button>
 
-          {/* STAGE 2: Main Menu Hub (Revealed smoothly on Apple scroll) */}
+          {/* STAGE 2: Main Menu Hub (Revealed smoothly on Apple scroll & reverses smoothly on scroll up) */}
           <motion.div
             style={{
               opacity: menuOpacity,
               y: menuY,
               scale: menuScale,
+              pointerEvents: menuPointerEvents,
             }}
-            className="absolute z-20 flex flex-col items-center justify-center text-center px-4 sm:px-6 max-w-3xl mx-auto space-y-8 pointer-events-auto"
+            className="absolute z-20 flex flex-col items-center justify-center text-center px-4 sm:px-6 max-w-3xl mx-auto space-y-6"
           >
+            {/* Quick upward cue to return back to hero planet */}
+            <motion.button
+              type="button"
+              onClick={scrollToTop}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-flex items-center space-x-1.5 px-3.5 py-1 rounded-full text-[11px] font-mono uppercase tracking-wider text-zinc-400 hover:text-white hover:bg-white/10 border border-zinc-800 transition-all cursor-pointer group mb-1"
+            >
+              <ChevronUp className="w-3.5 h-3.5 text-zinc-400 group-hover:text-white group-hover:-translate-y-0.5 transition-transform" />
+              <span>Scroll back to orbit</span>
+            </motion.button>
+
             <div className="space-y-4">
               <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight drop-shadow-[0_0_30px_rgba(255,255,255,0.25)]">
                 Schedule meetings without the back-and-forth.
@@ -174,9 +219,39 @@ export const LandingPage: React.FC = () => {
                 </motion.div>
               )}
             </div>
+
+            {/* Downward prompt to scroll down to feature overview */}
+            <button
+              type="button"
+              onClick={scrollToFeatures}
+              className="flex items-center space-x-1.5 text-[11px] font-mono text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer group pt-2"
+            >
+              <span>Explore timetable features</span>
+              <ChevronDown className="w-3.5 h-3.5 text-zinc-500 group-hover:text-white group-hover:translate-y-0.5 transition-transform" />
+            </button>
           </motion.div>
         </div>
       </div>
+
+      {/* Floating Apple-Style "Back to Top" Action */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            key="floating-back-to-top"
+            initial={{ opacity: 0, y: 16, scale: 0.88 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 16, scale: 0.88 }}
+            whileHover={{ scale: 1.06, y: -2 }}
+            whileTap={{ scale: 0.94 }}
+            onClick={scrollToTop}
+            className="fixed bottom-6 right-6 z-50 flex items-center space-x-2 px-4 py-2.5 rounded-full bg-black/85 hover:bg-zinc-900 border border-zinc-700 text-white shadow-[0_4px_30px_rgba(255,255,255,0.18)] backdrop-blur-xl transition-all cursor-pointer group"
+            aria-label="Scroll back to top"
+          >
+            <ChevronUp className="w-4 h-4 text-white group-hover:-translate-y-0.5 transition-transform" />
+            <span className="text-xs font-semibold tracking-tight">Back to top</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* ========================================================
           POST-SCROLL SECTIONS (Natural Document Flow)

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 
 export const HeroPlanet: React.FC = () => {
@@ -8,31 +8,28 @@ export const HeroPlanet: React.FC = () => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  const springX = useSpring(mouseX, { stiffness: 100, damping: 24 });
-  const springY = useSpring(mouseY, { stiffness: 100, damping: 24 });
+  const springX = useSpring(mouseX, { stiffness: 90, damping: 25, mass: 0.1 });
+  const springY = useSpring(mouseY, { stiffness: 90, damping: 25, mass: 0.1 });
 
   const rotateX = useTransform(springY, [-0.5, 0.5], [12, -12]);
   const rotateY = useTransform(springX, [-0.5, 0.5], [-14, 14]);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const xPct = (e.clientX - rect.left) / rect.width - 0.5;
-    const yPct = (e.clientY - rect.top) / rect.height - 0.5;
-    mouseX.set(xPct);
-    mouseY.set(yPct);
-  };
+  // Track cursor movement across window with passive listener for seamless 3D perspective
+  useEffect(() => {
+    const handleWindowMouseMove = (e: MouseEvent) => {
+      const xPct = e.clientX / window.innerWidth - 0.5;
+      const yPct = e.clientY / window.innerHeight - 0.5;
+      mouseX.set(xPct);
+      mouseY.set(yPct);
+    };
 
-  const handleMouseLeave = () => {
-    mouseX.set(0);
-    mouseY.set(0);
-  };
+    window.addEventListener('mousemove', handleWindowMouseMove, { passive: true });
+    return () => window.removeEventListener('mousemove', handleWindowMouseMove);
+  }, [mouseX, mouseY]);
 
   return (
     <div
       ref={containerRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
       className="relative w-full max-w-lg h-[380px] sm:h-[420px] flex items-center justify-center mx-auto select-none perspective-[1000px]"
     >
       {/* Central Celestial Orb with 3D Parallax */}
