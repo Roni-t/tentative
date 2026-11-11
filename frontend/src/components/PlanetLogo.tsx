@@ -36,45 +36,45 @@ export const PlanetLogo: React.FC<PlanetLogoProps> = ({ size = 32, className = '
         {/* Outer glowing aura */}
         <circle cx="32" cy="32" r="18" fill="#FFFFFF" opacity="0.22" filter="url(#planetGlow)" />
 
-        {/* Back of the tilted ring */}
+        {/* Back of the tilted ring (rendered behind planet sphere) */}
         <path
-          d="M 6 32 C 6 22, 58 14, 58 24"
+          d="M 6 32 A 26 7.5 0 0 1 58 32"
           stroke="url(#ringGrad)"
-          strokeWidth="3.5"
+          strokeWidth="3.2"
           strokeLinecap="round"
-          opacity="0.45"
-          transform="rotate(-20 32 32)"
+          opacity="0.4"
+          transform="rotate(-22 32 32)"
         />
 
-        {/* Planet Sphere */}
+        {/* Planet Sphere (dead-center at 32, 32) */}
         <circle
           cx="32"
           cy="32"
-          r="16"
+          r="15"
           fill="url(#planetGrad)"
           filter="url(#planetGlow)"
         />
 
         {/* Atmosphere specular highlight */}
         <path
-          d="M 20 24 A 14 14 0 0 1 42 20"
-          stroke="rgba(255,255,255,0.45)"
-          strokeWidth="2"
+          d="M 21 25 A 13 13 0 0 1 41 21"
+          stroke="rgba(255,255,255,0.55)"
+          strokeWidth="1.8"
           strokeLinecap="round"
         />
 
-        {/* Front of the tilted ring with smooth rotation if spinning */}
+        {/* Front of the tilted ring (rendered in front of planet sphere) */}
         <motion.g
           animate={isSpinning ? { rotate: [0, 360] } : undefined}
           transition={isSpinning ? { duration: 3, repeat: Infinity, ease: 'linear' } : undefined}
           style={{ originX: '32px', originY: '32px' }}
         >
           <path
-            d="M 58 24 C 58 38, 6 42, 6 32"
+            d="M 58 32 A 26 7.5 0 0 1 6 32"
             stroke="url(#ringGrad)"
-            strokeWidth="3.5"
+            strokeWidth="3.2"
             strokeLinecap="round"
-            transform="rotate(-20 32 32)"
+            transform="rotate(-22 32 32)"
           />
         </motion.g>
       </svg>

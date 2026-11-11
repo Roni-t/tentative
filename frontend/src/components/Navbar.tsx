@@ -18,16 +18,17 @@ export const Navbar: React.FC = () => {
         <Link
           to="/"
           onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })}
-          className="flex items-center space-x-2.5 group"
+          className="inline-flex items-center space-x-2.5 group cursor-pointer"
         >
           <motion.div
             whileHover={{ scale: 1.06, rotate: 6 }}
             whileTap={{ scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+            className="flex items-center justify-center shrink-0"
           >
-            <PlanetLogo size={32} isSpinning={false} />
+            <PlanetLogo size={28} isSpinning={false} />
           </motion.div>
-          <span className="text-lg font-bold tracking-tight text-white group-hover:text-zinc-300 transition-all">
+          <span className="text-lg font-bold tracking-tight text-white group-hover:text-zinc-300 transition-all leading-none inline-flex items-center -translate-y-[0.5px]">
             Tentative
           </span>
         </Link>

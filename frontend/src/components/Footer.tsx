@@ -8,8 +8,10 @@ export const Footer: React.FC = () => {
     <footer className="mt-auto border-t border-zinc-800 bg-black/90 backdrop-blur-md py-8 px-4 sm:px-8 text-xs text-zinc-500">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center space-x-2.5">
-          <PlanetLogo size={20} />
-          <span className="font-semibold text-white">Tentative</span>
+          <div className="flex items-center justify-center shrink-0">
+            <PlanetLogo size={20} />
+          </div>
+          <span className="font-semibold text-white leading-none -translate-y-[0.5px]">Tentative</span>
           <span className="text-zinc-600">·</span>
           <span>Fostering Community Anywhere in the Galaxy</span>
         </div>
