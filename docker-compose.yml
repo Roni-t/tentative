@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tentative_backend
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=sqlite:////app/data/tentative.db
+      - SECRET_KEY=tentative-celestial-production-secret-key-2026
+      - FERNET_KEY=dGVudGF0aXZlLWZlcm5ldC1zZWNyZXQtMzItYnl0ZXMh
+      - PHONE_HASH_SALT=tentative_space_salt_2026
+      - SMS_PROVIDER=console
+      - DEFAULT_SEMESTER_END_DATE=2026-12-18
+      - ADMIN_NAME=Admin Commander
+      - ADMIN_PHONE=+19725550100
+      - SEED_ON_STARTUP=true
+      - ENVIRONMENT=production
+    volumes:
+      - tentative_data:/app/data
+    expose:
+      - "8000"
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tentative_frontend
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  tentative_data:
+    driver: local
