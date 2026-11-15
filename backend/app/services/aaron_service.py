@@ -3,14 +3,12 @@ Module: backend/app/services/aaron_service.py
 Project: Tentative — Group Scheduling Web App (CS 3354 Fall 2026)
 Author / Contributor: Aaron (ahines214)
 Selected Use Cases Implemented:
-    - UC-03: Host Recurring Event Schedule Expansion
-    - UC-04: Co-Host Event Window & Capacity Alterations
-    - UC-13: Invitee Event Inquiries & Host Reply Badging
-    - UC-14: Host Event Poll Aggregation & Overlap Heatmap Calculation
+    - UC-11: Host can set recurring events (e.g., weekly meetings)
+    - UC-12: Allow a Co-Host to add/alter events
+    - UC-13: Invitees can comment or inquire
 """
 
 from datetime import datetime, timedelta
-from collections import defaultdict
 from typing import Optional
 
 
@@ -44,35 +42,6 @@ class AaronSchedulingAndPollService:
             "window_start": window_start,
             "window_end": window_end,
             "capacity": capacity,
-        }
-
-    @staticmethod
-    def compute_poll_heatmap(all_participants: list[str], submissions: dict[str, list[str]]) -> dict:
-        total_count = len(all_participants)
-        slot_tally = defaultdict(list)
-
-        for participant, slots in submissions.items():
-            for slot in set(slots):
-                slot_tally[slot].append(participant)
-
-        cells = []
-        for slot_iso, avail_list in sorted(slot_tally.items()):
-            avail_sorted = sorted(avail_list)
-            busy_sorted = sorted([p for p in all_participants if p not in avail_sorted])
-            cells.append({
-                "slot_iso": slot_iso,
-                "available_count": len(avail_sorted),
-                "total_participants": total_count,
-                "intensity": round(len(avail_sorted) / total_count, 4) if total_count else 0.0,
-                "available_participants": avail_sorted,
-                "busy_participants": busy_sorted,
-            })
-
-        ranked = sorted(cells, key=lambda c: (-c["available_count"], c["slot_iso"]))
-        return {
-            "total_responded": len(submissions),
-            "best_slot": ranked[0] if ranked else None,
-            "ranked_slots": ranked,
         }
 
     @staticmethod

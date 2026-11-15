@@ -2,7 +2,7 @@
 Module: backend/app/routers/aaron_router.py
 Project: Tentative — Group Scheduling Web App (CS 3354 Fall 2026)
 Author / Contributor: Aaron (ahines214)
-Description: FastAPI router endpoints for UC-03, UC-04, UC-13, and UC-14.
+Description: FastAPI router endpoints for UC-11, UC-12, and UC-13.
 """
 
 from typing import Optional
@@ -10,7 +10,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from app.services.aaron_service import AaronSchedulingAndPollService
 
-router = APIRouter(prefix="/api/aaron", tags=["Aaron Use Cases (UC-03, UC-04, UC-13, UC-14)"])
+router = APIRouter(prefix="/api/aaron", tags=["Aaron Use Cases (UC-11, UC-12, UC-13)"])
 
 
 class RecurrenceRequest(BaseModel):
@@ -24,11 +24,6 @@ class CoHostAlterationRequest(BaseModel):
     window_start: str
     window_end: str
     capacity: Optional[int] = None
-
-
-class PollHeatmapRequest(BaseModel):
-    all_participants: list[str]
-    submissions: dict[str, list[str]]
 
 
 class InquiryRequest(BaseModel):
@@ -58,13 +53,6 @@ def alter_event_as_cohost(payload: CoHostAlterationRequest):
         raise HTTPException(status_code=403, detail=str(exc))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-
-
-@router.post("/polls/heatmap")
-def generate_poll_heatmap(payload: PollHeatmapRequest):
-    return AaronSchedulingAndPollService.compute_poll_heatmap(
-        payload.all_participants, payload.submissions
-    )
 
 
 @router.post("/inquiries/format")
