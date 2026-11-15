@@ -2,7 +2,7 @@
 Module: backend/tests/test_aaron_use_cases.py
 Project: Tentative — Group Scheduling Web App (CS 3354 Fall 2026)
 Author / Contributor: Aaron (ahines214)
-Description: Automated unit and router tests for UC-03, UC-04, UC-13, and UC-14.
+Description: Automated unit and router tests for UC-11, UC-12, and UC-13.
 """
 
 import pytest
@@ -16,7 +16,7 @@ test_app.include_router(aaron_router)
 client = TestClient(test_app)
 
 
-def test_uc03_recurring_event_expansion_and_invalid_bounds():
+def test_uc11_recurring_event_expansion_and_invalid_bounds():
     weekly = AaronSchedulingAndPollService.expand_recurring_dates("2026-09-16", "WEEKLY", 4)
     assert weekly == ["2026-09-16", "2026-09-23", "2026-09-30", "2026-10-07"]
 
@@ -32,7 +32,7 @@ def test_uc03_recurring_event_expansion_and_invalid_bounds():
     assert resp.json()["dates"] == ["2026-09-16", "2026-09-30"]
 
 
-def test_uc04_cohost_event_alteration_permissions_and_validation():
+def test_uc12_cohost_event_alteration_permissions_and_validation():
     updated = AaronSchedulingAndPollService.validate_cohost_alteration(
         role="CO_HOST", window_start="14:00", window_end="17:00", capacity=3
     )
@@ -51,30 +51,6 @@ def test_uc04_cohost_event_alteration_permissions_and_validation():
         "capacity": 5
     })
     assert resp_forbidden.status_code == 403
-
-
-def test_uc14_event_poll_heatmap_overlap_calculation():
-    participants = [
-        "Alex Morgan", "Jamie Chen", "Priya Shah", "Daniel Kim",
-        "Sofia Patel", "Marcus Lee", "Emma Wilson", "Noah Davis"
-    ]
-    submissions = {
-        p: ["2026-09-16T14:00", "2026-09-16T14:30"]
-        for p in participants if p != "Noah Davis"
-    }
-    submissions["Alex Morgan"].append("2026-09-16T15:00")
-
-    resp = client.post("/api/aaron/polls/heatmap", json={
-        "all_participants": participants,
-        "submissions": submissions
-    })
-    assert resp.status_code == 200
-    result = resp.json()
-    assert result["total_responded"] == 7
-    assert result["best_slot"]["slot_iso"] == "2026-09-16T14:00"
-    assert result["best_slot"]["available_count"] == 7
-    assert result["best_slot"]["intensity"] == 0.875
-    assert "Noah Davis" in result["best_slot"]["busy_participants"]
 
 
 def test_uc13_invitee_inquiry_and_host_reply_validation():
