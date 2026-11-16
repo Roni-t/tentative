@@ -113,6 +113,9 @@ class EventService:
         if not self.is_host_or_cohost(event, user, db):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only host or co-host can finalize.")
 
+        # UC-15 (Divyam): validate the chosen meeting time before locking it in.
+        self._validate_finalize_time(event, start_time, end_time)
+
         event.status = "finalized"
         event.finalized_start_time = start_time
         event.finalized_end_time = end_time
@@ -128,6 +131,34 @@ class EventService:
             db
         )
         return event
+
+    @staticmethod
+    def _validate_finalize_time(event: Event, start_time: datetime, end_time: datetime) -> None:
+        """UC-15 (Divyam): reject finalize requests that are invalid for this event.
+
+        Rules:
+          1. A canceled event cannot be finalized.
+          2. The end time must be after the start time.
+          3. The time must fall on one of the event's candidate dates and
+             inside its daily window (times are stored and compared in UTC).
+        """
+        if event.status == "canceled":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot finalize a canceled event.")
+
+        # Treat timezone-less datetimes as UTC so comparisons are consistent.
+        st = start_time.replace(tzinfo=timezone.utc) if start_time.tzinfo is None else start_time.astimezone(timezone.utc)
+        et = end_time.replace(tzinfo=timezone.utc) if end_time.tzinfo is None else end_time.astimezone(timezone.utc)
+
+        if et <= st:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="End time must be after start time.")
+
+        if st.strftime("%Y-%m-%d") not in (event.candidate_dates or []) or st.date() != et.date():
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Selected time must be on one of the event's candidate dates.")
+
+        window_start = event.daily_start_time or "00:00"
+        window_end = event.daily_end_time or "23:59"
+        if st.strftime("%H:%M") < window_start or et.strftime("%H:%M") > window_end:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Selected time must be within the event's daily time window.")
 
     def cancel_event(self, event_id: int, user: User, db: Session) -> Event:
         event = self.get_event(event_id, user, db)
