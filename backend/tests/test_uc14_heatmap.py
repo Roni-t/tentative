@@ -83,3 +83,26 @@ def test_tc14_05_deleted_event_not_served_from_cache(client, db_session):
     data = client.get(f"/api/events/{new_id}/heatmap").json()
     assert data["total_respondents"] == 0
     assert "Alice" not in data["respondent_names"]
+
+
+def test_nf15_heatmap_50_participants_under_2_seconds(client, db_session):
+    """NF-15 (non-functional): heatmap for 50 participants across 3 dates loads in < 2 s."""
+    import time
+
+    host = login(client, "+19725550251", "Host")
+    event = {**EVENT, "candidate_dates": ["2026-11-25", "2026-11-26", "2026-11-27"],
+             "daily_start_time": "09:00", "daily_end_time": "21:00"}
+    event_id = client.post("/api/events", json=event, headers=host).json()["id"]
+    for i in range(50):
+        hour = 9 + (i % 10)
+        submit(client, event_id, f"Participant {i:02d}",
+               f"2026-11-25T{hour:02d}:00:00Z", f"2026-11-25T{hour + 2:02d}:00:00Z")
+
+    start = time.perf_counter()
+    res = client.get(f"/api/events/{event_id}/heatmap", params={"refresh": True})
+    elapsed = time.perf_counter() - start
+
+    assert res.status_code == 200
+    assert res.json()["total_respondents"] == 50
+    print(f"NF-15 heatmap time: {elapsed:.3f}s")
+    assert elapsed < 2.0, f"Heatmap took {elapsed:.2f}s"
