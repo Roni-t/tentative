@@ -52,6 +52,13 @@ class Settings(BaseSettings):
         "http://frontend:80",
     ]
 
+    # Links in outgoing texts point here
+    PUBLIC_APP_URL: str = os.getenv("PUBLIC_APP_URL", "http://localhost:8080")
+
+    # FR-18: remind non-responders this many hours before the response deadline
+    REMINDER_LEAD_HOURS: int = 24
+    HOST_UPDATE_MAX_LENGTH: int = 320
+
     # Verification codes & sessions (UC-1 / UC-2)
     VERIFICATION_CODE_TTL_SECONDS: int = 300
     VERIFICATION_MAX_ATTEMPTS: int = 3

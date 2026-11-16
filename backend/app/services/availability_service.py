@@ -24,6 +24,9 @@ class AvailabilityService:
 
         if event.status == "canceled":
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Event has been canceled.")
+        if event.status == "finalized":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                detail="This event's time has been finalized; availability is locked.")
 
         # Check deadline
         if event.deadline and datetime.now(timezone.utc) > ensure_utc(event.deadline):
@@ -67,6 +70,10 @@ class AvailabilityService:
         # Invalidate heatmap cache
         from app.services.heatmap_service import heatmap_service
         heatmap_service.invalidate_cache(event_id)
+
+        # If this is an invited participant (personal link token), mark them responded (FR-20)
+        from app.services.invitee_service import invitee_service
+        invitee_service.record_response(event, edit_token, db)
 
         return AvailabilitySubmitResponse(
             message="Availability successfully saved.",

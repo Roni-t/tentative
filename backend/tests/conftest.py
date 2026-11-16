@@ -50,3 +50,24 @@ def reset_in_memory_state():
     rate_limiter._requests.clear()
     dev_sms_cache.clear()
     yield
+
+
+@pytest.fixture
+def sms_outbox(monkeypatch):
+    """Capture every SMS the app sends as {"kind", "phone", "message"} dicts, in send order."""
+    from app.adapters import sms_adapter
+
+    sent = []
+    real_send_code = sms_adapter.ConsoleSMSAdapter.send_verification_code
+
+    def capture_code(self, phone, code):
+        sent.append({"kind": "verification", "phone": phone, "message": code})
+        return real_send_code(self, phone, code)
+
+    def capture_notification(self, phone, message):
+        sent.append({"kind": "notification", "phone": phone, "message": message})
+        return True
+
+    monkeypatch.setattr(sms_adapter.ConsoleSMSAdapter, "send_verification_code", capture_code)
+    monkeypatch.setattr(sms_adapter.ConsoleSMSAdapter, "send_notification", capture_notification)
+    return sent

@@ -3,6 +3,7 @@ from typing import List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.encryption import hash_phone, normalize_phone
+from app.core.timefmt import is_valid_timezone, to_utc
 from app.models.event import BlockedUser, Event, EventCoHost, Group
 from app.models.changelog import ChangeLogEntry
 from app.models.shareable_url import ShareableURL
@@ -14,6 +15,8 @@ from app.services.share_link_service import share_link_service
 class EventService:
     def create_event(self, payload: EventCreatePayload, creator: User, db: Session) -> Event:
         now = datetime.now(timezone.utc)
+        if not is_valid_timezone(payload.timezone):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unknown timezone '{payload.timezone}'.")
         
         group_id = None
         if payload.group_name and payload.group_name.strip():
@@ -32,7 +35,7 @@ class EventService:
             daily_start_time=payload.daily_start_time,
             daily_end_time=payload.daily_end_time,
             slot_duration_minutes=payload.slot_duration_minutes,
-            deadline=payload.deadline,
+            deadline=to_utc(payload.deadline) if payload.deadline else None,
             capacity_limit=payload.capacity_limit,
             is_hidden_details=payload.is_hidden_details,
             status="collecting",
@@ -92,7 +95,7 @@ class EventService:
             event.location = payload.location
         if payload.deadline is not None:
             changes.append(f"Deadline updated")
-            event.deadline = payload.deadline
+            event.deadline = to_utc(payload.deadline)
         if payload.capacity_limit is not None:
             changes.append(f"Capacity limit updated to {payload.capacity_limit}")
             event.capacity_limit = payload.capacity_limit

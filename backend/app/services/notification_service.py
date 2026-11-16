@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import Optional
 from sqlalchemy.orm import Session
 from app.adapters.sms_adapter import get_sms_adapter
-from app.core.encryption import decrypt_phone
+from app.core.encryption import decrypt_phone, mask_phone
 from app.models.event import Event
 from app.models.notification import Notification
 from app.models.rsvp import RSVP
@@ -21,7 +21,7 @@ class NotificationService:
         notif = Notification(
             user_id=host.id,
             event_id=event.id,
-            recipient=plain_phone or host.name,
+            recipient=f"{host.name} ({mask_phone(plain_phone)})" if plain_phone else host.name,
             message=message,
             notification_type=notification_type,
             sent_at=datetime.now(timezone.utc)
@@ -35,9 +35,10 @@ class NotificationService:
             sms.send_notification(plain_phone, message)
 
     def notify_participant(self, recipient: str, event: Event, message: str, notification_type: str, db: Session):
+        is_phone = recipient.startswith("+") or recipient.replace("-", "").isdigit()
         notif = Notification(
             event_id=event.id,
-            recipient=recipient,
+            recipient=mask_phone(recipient) if is_phone else recipient,
             message=message,
             notification_type=notification_type,
             sent_at=datetime.now(timezone.utc)

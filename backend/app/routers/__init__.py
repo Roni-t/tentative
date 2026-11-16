@@ -6,6 +6,7 @@ from app.routers.rsvp import router as rsvp_router
 from app.routers.comments import router as comments_router
 from app.routers.admin import router as admin_router
 from app.routers.bug_reports import router as bug_reports_router
+from app.routers.invitees import router as invitees_router
 
 __all__ = [
     "auth_router",
@@ -16,4 +17,5 @@ __all__ = [
     "comments_router",
     "admin_router",
     "bug_reports_router",
+    "invitees_router",
 ]

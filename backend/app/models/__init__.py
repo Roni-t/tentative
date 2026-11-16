@@ -27,3 +27,4 @@ __all__ = [
     "RecurrenceRule",
     "BugReport",
 ]
+from app.models.invitee import Invitee, SmsOptOut
