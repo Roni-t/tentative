@@ -40,3 +40,13 @@ def client(db_session):
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def reset_in_memory_state():
+    """Rate-limiter windows and the dev SMS cache are module-global; isolate tests."""
+    from app.adapters.sms_adapter import dev_sms_cache
+    from app.core.rate_limiter import rate_limiter
+    rate_limiter._requests.clear()
+    dev_sms_cache.clear()
+    yield

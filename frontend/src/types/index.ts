@@ -9,7 +9,15 @@ export interface User {
 export interface AuthResponse {
   token: string;
   token_type: string;
+  expires_at: string;
   user: User;
+}
+
+export interface CodeSentResponse {
+  message: string;
+  phone_masked: string;
+  expires_in_seconds: number;
+  dev_code?: string | null;
 }
 
 export interface DevSmsNotice {

@@ -1,3 +1,5 @@
+import type { AuthResponse, CodeSentResponse, DevSmsNotice, User } from '../types';
+
 const API_BASE = '/api';
 
 class ApiClient {
@@ -65,36 +67,55 @@ class ApiClient {
     return res.text() as unknown as T;
   }
 
-  // Auth
-  async requestCode(phone: string, name?: string) {
-    return this.request<{ message: string; phone_masked: string; is_existing_account: boolean; dev_code?: string; expires_in_seconds: number }>(
-      '/auth/request-code',
-      { method: 'POST', body: JSON.stringify({ phone, name }) }
-    );
+  // Auth — UC-1 (account creation)
+  async registerRequestCode(name: string, phone: string) {
+    return this.request<CodeSentResponse>('/auth/register/request-code', {
+      method: 'POST',
+      body: JSON.stringify({ name, phone }),
+    });
   }
 
-  async verifyCode(phone: string, code: string, name?: string) {
-    const data = await this.request<any>('/auth/verify-code', {
+  async registerVerify(name: string, phone: string, code: string) {
+    const data = await this.request<AuthResponse>('/auth/register/verify', {
       method: 'POST',
-      body: JSON.stringify({ phone, code, name }),
+      body: JSON.stringify({ name, phone, code }),
     });
-    if (data.token) {
-      this.setToken(data.token);
-    }
+    this.setToken(data.token);
+    return data;
+  }
+
+  // Auth — UC-2 (login)
+  async loginRequestCode(phone: string) {
+    return this.request<CodeSentResponse>('/auth/login/request-code', {
+      method: 'POST',
+      body: JSON.stringify({ phone }),
+    });
+  }
+
+  async loginVerify(phone: string, code: string, keepSignedIn: boolean) {
+    const data = await this.request<AuthResponse>('/auth/login/verify', {
+      method: 'POST',
+      body: JSON.stringify({ phone, code, keep_signed_in: keepSignedIn }),
+    });
+    this.setToken(data.token);
     return data;
   }
 
   async getMe() {
-    return this.request<any>('/auth/me');
+    return this.request<User>('/auth/me');
   }
 
   async logout() {
-    this.setToken(null);
-    return this.request<{ message: string }>('/auth/logout', { method: 'POST' });
+    try {
+      // Send the token so the server can revoke this session, then forget it locally.
+      return await this.request<{ message: string }>('/auth/logout', { method: 'POST' });
+    } finally {
+      this.setToken(null);
+    }
   }
 
-  async getDevBannerCode(phone?: string) {
-    return this.request<any>(phone ? `/auth/dev-banner-code?phone=${encodeURIComponent(phone)}` : '/auth/dev-banner-code');
+  async getDevBannerCode(phone: string) {
+    return this.request<DevSmsNotice | null>(`/auth/dev-banner-code?phone=${encodeURIComponent(phone)}`);
   }
 
   // Events

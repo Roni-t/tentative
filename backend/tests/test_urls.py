@@ -1,3 +1,4 @@
+from tests.helpers import register_user
 from datetime import datetime, timedelta, timezone
 from app.models.shareable_url import ShareableURL
 
@@ -5,10 +6,7 @@ from app.models.shareable_url import ShareableURL
 def test_create_and_rotate_url(client, db_session):
     # Log in host
     phone = "+19725550142"
-    client.post("/api/auth/request-code", json={"phone": phone, "name": "Host Kaelan"})
-    v_resp = client.post("/api/auth/verify-code", json={"phone": phone, "code": client.get("/api/auth/dev-banner-code").json()["code"]})
-    token = v_resp.json()["token"]
-    headers = {"Authorization": f"Bearer {token}"}
+    headers = register_user(client, phone=phone, name="Host Kaelan")
 
     # Create event
     event_payload = {
@@ -48,9 +46,7 @@ def test_create_and_rotate_url(client, db_session):
 def test_expired_url_returns_410(client, db_session):
     # Create event
     phone = "+19725550142"
-    client.post("/api/auth/request-code", json={"phone": phone})
-    v_resp = client.post("/api/auth/verify-code", json={"phone": phone, "code": client.get("/api/auth/dev-banner-code").json()["code"]})
-    headers = {"Authorization": f"Bearer {v_resp.json()['token']}"}
+    headers = register_user(client, phone=phone, name="Test Host")
 
     resp = client.post("/api/events", json={
         "title": "Expiring Star",

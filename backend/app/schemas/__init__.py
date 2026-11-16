@@ -1,6 +1,9 @@
 from app.schemas.auth import (
-    RequestCodePayload,
-    VerifyCodePayload,
+    RegisterRequestCodePayload,
+    RegisterVerifyPayload,
+    LoginRequestCodePayload,
+    LoginVerifyPayload,
+    CodeSentResponse,
     UserOut,
     AuthResponse,
     DevSmsNotice,
@@ -44,8 +47,11 @@ from app.schemas.bug_report import (
 )
 
 __all__ = [
-    "RequestCodePayload",
-    "VerifyCodePayload",
+    "RegisterRequestCodePayload",
+    "RegisterVerifyPayload",
+    "LoginRequestCodePayload",
+    "LoginVerifyPayload",
+    "CodeSentResponse",
     "UserOut",
     "AuthResponse",
     "DevSmsNotice",

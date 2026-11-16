@@ -1,9 +1,8 @@
+from tests.helpers import register_user
 def test_capacity_limit_and_waitlist_auto_promotion(client, db_session):
     # Host creates event with capacity limit = 2
     phone = "+19725550142"
-    client.post("/api/auth/request-code", json={"phone": phone})
-    v_resp = client.post("/api/auth/verify-code", json={"phone": phone, "code": client.get("/api/auth/dev-banner-code").json()["code"]})
-    headers = {"Authorization": f"Bearer {v_resp.json()['token']}"}
+    headers = register_user(client, phone=phone, name="Test Host")
 
     create_resp = client.post("/api/events", json={
         "title": "VIP Orbit Summit",
