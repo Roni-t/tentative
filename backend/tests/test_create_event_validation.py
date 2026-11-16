@@ -1,7 +1,7 @@
 
 # Create event input validation
 import sys
-def create_event_validation (uID, eventT, eventD, dateStart, dateEnd, month):
+def test_create_event_validation (uID, eventT, eventD, dateStart, dateEnd, month):
     #testing input will come from the console because we don't have a database yet
     #uID = input("User ID")
     #eventT = input("Event Title")
