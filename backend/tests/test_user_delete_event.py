@@ -1,5 +1,5 @@
 import sys
-def user_delete_event (uID, eventID)
+def test_user_delete_event (uID, eventID)
     #Backend would pull eventUID from the database using eventID, but we don't have a database
     #uID = input("User ID ")
     #eventUID = input("Event creator's ID ")
