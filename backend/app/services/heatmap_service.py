@@ -9,18 +9,24 @@ from app.schemas.availability import HeatmapResponse, HeatmapSlotOut
 
 class HeatmapService:
     def __init__(self):
-        self._cache: Dict[int, HeatmapResponse] = {}
+        # UC-14 (Divyam): each cache entry remembers which event it was built for
+        # (its created_at), so a deleted event's heatmap is never served again,
+        # even if SQLite reuses the same event ID for a new event.
+        self._cache: Dict[int, Tuple[datetime, HeatmapResponse]] = {}
 
     def invalidate_cache(self, event_id: int):
         self._cache.pop(event_id, None)
 
     def calculate_heatmap(self, event_id: int, db: Session, force_refresh: bool = False) -> HeatmapResponse:
-        if not force_refresh and event_id in self._cache:
-            return self._cache[event_id]
-
+        # UC-14 (Divyam): always confirm the event still exists before using the cache.
         event = db.query(Event).filter(Event.id == event_id).first()
         if not event:
+            self.invalidate_cache(event_id)
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+
+        cached = self._cache.get(event_id)
+        if not force_refresh and cached and cached[0] == event.created_at:
+            return cached[1]
 
         # Fetch all availability entries
         availabilities = db.query(Availability).filter(Availability.event_id == event_id).all()
@@ -115,7 +121,7 @@ class HeatmapService:
             cached_at=datetime.now(timezone.utc)
         )
 
-        self._cache[event_id] = response
+        self._cache[event_id] = (event.created_at, response)
         return response
 
 
