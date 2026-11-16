@@ -2,7 +2,7 @@
 Module: backend/app/routers/aaron_router.py
 Project: Tentative — Group Scheduling Web App (CS 3354 Fall 2026)
 Author / Contributor: Aaron (ahines214)
-Description: FastAPI router endpoints for UC-11, UC-12, and UC-13.
+Description: FastAPI router endpoints for FR-1, FR-2, FR-3, FR-4, NF-6, and NF-8.
 """
 
 from typing import Optional
@@ -10,7 +10,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from app.services.aaron_service import AaronSchedulingAndPollService
 
-router = APIRouter(prefix="/api/aaron", tags=["Aaron Use Cases (UC-11, UC-12, UC-13)"])
+router = APIRouter(prefix="/api/aaron", tags=["Aaron Requirements (FR-1..4, NF-6, NF-8)"])
 
 
 class RecurrenceRequest(BaseModel):
@@ -30,6 +30,20 @@ class InquiryRequest(BaseModel):
     author: str
     content: str
     is_host_reply: bool = False
+
+
+class EventPollRequest(BaseModel):
+    question: str
+    options: list[str]
+    category: str = "General"
+
+
+class EventBackupRequest(BaseModel):
+    event_data: dict
+
+
+class AccessibilityCheckRequest(BaseModel):
+    component: dict
 
 
 @router.post("/recurrence/expand")
@@ -61,5 +75,31 @@ def post_event_inquiry(payload: InquiryRequest):
         return AaronSchedulingAndPollService.format_event_inquiry(
             payload.author, payload.content, payload.is_host_reply
         )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@router.post("/polls/create")
+def create_poll(payload: EventPollRequest):
+    try:
+        return AaronSchedulingAndPollService.create_event_poll(
+            payload.question, payload.options, payload.category
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@router.post("/backups/create")
+def create_backup(payload: EventBackupRequest):
+    try:
+        return AaronSchedulingAndPollService.create_event_backup(payload.event_data)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@router.post("/accessibility/validate")
+def validate_accessibility(payload: AccessibilityCheckRequest):
+    try:
+        return AaronSchedulingAndPollService.validate_wcag_aa_and_screen_reader(payload.component)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
