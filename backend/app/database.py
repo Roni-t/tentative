@@ -1,36 +1,31 @@
-import sqlite3
-from sqlalchemy import create_engine, event
-from sqlalchemy.engine import Engine
-from sqlalchemy.orm import declarative_base, sessionmaker
-from app.config import settings
-
-# Prepare connect args for SQLite
-connect_args = {}
-if settings.DATABASE_URL.startswith("sqlite"):
-    connect_args["check_same_thread"] = False
-
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args=connect_args,
-    echo=False
-)
+import os
+from typing import Optional
+from sqlalchemy import String
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
 
 
-@event.listens_for(Engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
-    if isinstance(dbapi_connection, sqlite3.Connection):
-        cursor = dbapi_connection.cursor()
-        cursor.execute("PRAGMA foreign_keys=ON")
-        cursor.close()
+dbloc = os.getenv("DATABASE_URL", "sqlite:///")
+globengine = None
+
+class Base(DeclarativeBase):
+    pass
+
+class User(Base):
+    __tablename__ = "user_acc"
+
+    id: Mapped[int] = mapped_column(primary_key = True)
+    name: Mapped[str] = mapped_column(String(50))
+    login: Mapped[Optional[str]]
+    email_login: Mapped[bool] = mapped_column(default = False)
 
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+def newSession():
+    if globengine == None:
+        engine = create_engine(dbloc, echo = True)
+        Base.metadata.create_all(engine)
+    
+    return Session(engine)
