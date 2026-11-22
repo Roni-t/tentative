@@ -25,6 +25,7 @@ import { AdminPage } from './pages/AdminPage';
 import { BugReportPage } from './pages/BugReportPage';
 import { ExpiredOrbitPage } from './pages/ExpiredOrbitPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { AaronRequirementsPage } from './pages/AaronRequirementsPage';
 
 // Helper component that redirects /share/:token to /share/:token/heatmap
 const ShareRedirect: React.FC = () => {
@@ -62,6 +63,7 @@ const AnimatedRoutes: React.FC = () => {
           <Route path="/register" element={<CreateAccountPage />} />
           <Route path="/events" element={<MyEventsPage />} />
           <Route path="/create" element={<CreateEventPage />} />
+          <Route path="/aaron" element={<AaronRequirementsPage />} />
 
           {/* Event Details & Functional Views */}
           <Route path="/events/:id" element={<EventDetailsPage />} />

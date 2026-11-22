@@ -16,6 +16,11 @@ def test_fr1_uc11_recurring_event_expansion_and_invalid_bounds():
     with pytest.raises(ValueError, match="between 1 and 52"):
         AaronSchedulingAndPollService.expand_recurring_dates("2026-09-16", "WEEKLY", 0)
 
+    selected_days = AaronSchedulingAndPollService.expand_weekly_recurrence(
+        "2026-11-23", "WEEKLY", 2, ["WE"], 3
+    )
+    assert selected_days == ["2026-11-25", "2026-12-09", "2026-12-23"]
+
 
 def test_fr2_uc12_cohost_event_alteration_permissions_and_validation():
     updated = AaronSchedulingAndPollService.validate_cohost_alteration(

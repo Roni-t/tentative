@@ -97,6 +97,99 @@ class ApiClient {
     return this.request<any>(phone ? `/auth/dev-banner-code?phone=${encodeURIComponent(phone)}` : '/auth/dev-banner-code');
   }
 
+  // Aaron-owned event features
+  async createAaronEvent(payload: {
+    title: string;
+    start_date: string;
+    window_start: string;
+    window_end: string;
+    capacity: number | null;
+  }) {
+    return this.request<any>('/aaron/events', { method: 'POST', body: JSON.stringify(payload) });
+  }
+
+  async getAaronEvent(eventId: number | string) {
+    return this.request<any>(`/aaron/events/${eventId}`);
+  }
+
+  async alterAaronEvent(eventId: number | string, accessToken: string, payload: {
+    window_start: string;
+    window_end: string;
+    capacity: number | null;
+  }) {
+    return this.request<any>(`/aaron/events/${eventId}`, {
+      method: 'PATCH',
+      headers: { 'X-Aaron-Access-Token': accessToken },
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async addAaronCohost(eventId: number | string, accessToken: string, name: string) {
+    return this.request<{ name: string; access_token: string }>(`/aaron/events/${eventId}/cohosts`, {
+      method: 'POST',
+      headers: { 'X-Aaron-Access-Token': accessToken },
+      body: JSON.stringify({ name }),
+    });
+  }
+
+  async setAaronRecurrence(eventId: number | string, accessToken: string, payload: {
+    frequency: string;
+    interval: number;
+    days_of_week: string[];
+    end_date: string | null;
+  }) {
+    return this.request<any>(`/aaron/events/${eventId}/recurrence`, {
+      method: 'PUT',
+      headers: { 'X-Aaron-Access-Token': accessToken },
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async expandAaronRecurrence(startDate: string, frequency: string, occurrences: number, interval = 1, daysOfWeek: string[] = []) {
+    return this.request<string[]>('/aaron/recurrence/expand', {
+      method: 'POST',
+      body: JSON.stringify({ start_date_str: startDate, frequency, occurrences, interval, days_of_week: daysOfWeek }),
+    });
+  }
+
+  async createAaronPoll(eventId: number | string, accessToken: string, payload: {
+    question: string;
+    options: string[];
+    category: string;
+  }) {
+    return this.request<any>(`/aaron/events/${eventId}/polls`, {
+      method: 'POST',
+      headers: { 'X-Aaron-Access-Token': accessToken },
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async voteAaronPoll(eventId: number | string, pollId: number, voterName: string, option: string) {
+    return this.request<any>(`/aaron/events/${eventId}/polls/${pollId}/votes`, {
+      method: 'POST',
+      body: JSON.stringify({ voter_name: voterName, option }),
+    });
+  }
+
+  async recordAaronParticipant(eventId: number | string, name: string, response: string) {
+    return this.request<any>(`/aaron/events/${eventId}/participants`, {
+      method: 'POST',
+      body: JSON.stringify({ name, response }),
+    });
+  }
+
+  async downloadAaronBackup(eventId: number | string, accessToken: string): Promise<Blob> {
+    const res = await fetch(`${API_BASE}/aaron/events/${eventId}/backup.json`, {
+      headers: { 'X-Aaron-Access-Token': accessToken },
+      credentials: 'include',
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({ detail: 'Backup download failed.' }));
+      throw new Error(data.detail || 'Backup download failed.');
+    }
+    return res.blob();
+  }
+
   // Events
   async createEvent(payload: any) {
     return this.request<any>('/events', { method: 'POST', body: JSON.stringify(payload) });
