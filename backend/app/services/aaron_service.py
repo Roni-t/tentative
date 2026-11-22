@@ -5,7 +5,6 @@ Author / Contributor: Aaron (ahines214)
 Implemented Requirements:
     - FR-1 (UC-11): Allow host to set recurring events
     - FR-2 (UC-12): Allow a co-host who can add events or alter
-    - FR-3 (UC-13): Allow invitees to comment or inquire about the event
     - FR-4 (UC-3): Create an event poll or event category option
     - NF-6: A backup of the event information, participants/responses
     - NF-8: AA accessibility options, screen reader compatible
@@ -48,20 +47,6 @@ class AaronSchedulingAndPollService:
             "window_start": window_start,
             "window_end": window_end,
             "capacity": capacity,
-        }
-
-    @staticmethod
-    def format_event_inquiry(author: str, content: str, is_host_reply: bool = False) -> dict:
-        cleaned_author = author.strip()
-        cleaned_content = content.strip()
-        if not cleaned_author or not cleaned_content:
-            raise ValueError("Inquiry author and content cannot be empty.")
-        if len(cleaned_content) > 1000:
-            raise ValueError("Inquiry exceeds 1000 character limit.")
-        return {
-            "author": cleaned_author,
-            "content": cleaned_content,
-            "badge": "HOST" if is_host_reply else "INVITEE",
         }
 
     @staticmethod

@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 import app.database as db
+from app.routers.aaron_router import router as aaron_router
 from sqlalchemy import select
 
 app = FastAPI()
+app.include_router(aaron_router)
 
 @app.get("/api/health")
 async def hp():

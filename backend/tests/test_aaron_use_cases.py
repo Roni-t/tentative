@@ -2,7 +2,7 @@
 Module: backend/tests/test_aaron_use_cases.py
 Project: Tentative — Group Scheduling Web App (CS 3354 Fall 2026)
 Author / Contributor: Aaron (ahines214)
-Description: Automated unit tests for FR-1, FR-2, FR-3, FR-4, NF-6, and NF-8.
+Description: Automated unit tests for FR-1, FR-2, FR-4, NF-6, and NF-8.
 """
 
 import pytest
@@ -28,17 +28,6 @@ def test_fr2_uc12_cohost_event_alteration_permissions_and_validation():
         AaronSchedulingAndPollService.validate_cohost_alteration(
             role="INVITEE", window_start="14:00", window_end="17:00", capacity=3
         )
-
-
-def test_fr3_uc13_invitee_inquiry_and_host_reply_validation():
-    inquiry = AaronSchedulingAndPollService.format_event_inquiry(
-        author="Emma Wilson", content="  Is attendance mandatory?  ", is_host_reply=False
-    )
-    assert inquiry == {
-        "author": "Emma Wilson",
-        "content": "Is attendance mandatory?",
-        "badge": "INVITEE",
-    }
 
 
 def test_fr4_event_poll_and_category_creation():

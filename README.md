@@ -21,12 +21,12 @@ Tentative strictly adheres to the 4-tier layered architecture specified in the e
 ┌────────────────────────────────────────────────────────────────────────┐
 │                   Layer 1: Web Client (React 18 + TS)                  │
 │   LandingPage · AuthPages · EventDashboard · AvailabilityGrid ·        │
-│   HeatmapGrid · FinalizePage · RsvpReview · Discussion · AdminConsole │
+│   HeatmapGrid · FinalizePage · RsvpReview · AdminConsole              │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │ HTTP / JSON
 ┌───────────────────────────────────▼────────────────────────────────────┐
 │                  Layer 2: API Layer (FastAPI Routers)                  │
-│   /api/auth · /api/events · /api/share · /api/rsvp · /api/comments ·   │
+│   /api/auth · /api/events · /api/share · /api/rsvp ·                  │
 │   RateLimiter · SessionMiddleware · AdminGuard · OpenAPI docs          │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
@@ -82,7 +82,7 @@ The project includes ready-to-run defaults in `docker-compose.yml` and `.env.exa
 
 ## 🚀 2-Minute Demo Script
 
-Follow these steps to experience all 15 use cases in 2 minutes:
+Follow these steps to experience the supported use cases in 2 minutes:
 
 ### 1. View the Landing Page & Celestial Hero
 1. Navigate to `http://localhost:8080`.
@@ -126,12 +126,7 @@ Follow these steps to experience all 15 use cases in 2 minutes:
 2. Click **"Rotate Token"**. Notice the share token changes immediately and the old link dies.
 3. Visiting an expired token routes to the friendly **"This orbit has ended"** page.
 
-### 7. Event Discussion & Inquiries (UC-13)
-1. Click **"Discussion & Inquiries"**.
-2. See existing attendee questions and host answers.
-3. Post a new question ("Is attendance mandatory?") and reply to it in real-time.
-
-### 8. Admin Console (UC-6)
+### 7. Admin Console (UC-6)
 1. Log in with admin phone `+19725550100` (code in dev banner).
 2. Visit **"Admin"** in the nav.
 3. View server uptime telemetry, database path, active events, and account management tools.
