@@ -13,6 +13,7 @@ class AaronEvent(AaronBase):
     __tablename__ = "aaron_events"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    source_event_id: Mapped[Optional[int]] = mapped_column(Integer, unique=True, index=True, nullable=True)
     title: Mapped[str] = mapped_column(String(200))
     start_date: Mapped[str] = mapped_column(String(10))
     window_start: Mapped[str] = mapped_column(String(5))

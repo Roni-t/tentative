@@ -29,7 +29,9 @@ class AaronSchedulingAndPollService:
 
     @staticmethod
     def _event_or_404(event_id: int, db: Session) -> AaronEvent:
-        event = db.query(AaronEvent).filter(AaronEvent.id == event_id).first()
+        event = db.query(AaronEvent).filter(
+            (AaronEvent.id == event_id) | (AaronEvent.source_event_id == event_id)
+        ).first()
         if event is None:
             raise LookupError("Event not found.")
         return event
@@ -66,7 +68,7 @@ class AaronSchedulingAndPollService:
     def event_out(event: AaronEvent) -> dict:
         recurrence = event.recurrence
         return {
-            "id": event.id,
+            "id": event.source_event_id or event.id,
             "title": event.title,
             "start_date": event.start_date,
             "window_start": event.window_start,
@@ -125,6 +127,31 @@ class AaronSchedulingAndPollService:
         return AaronSchedulingAndPollService.event_out(
             AaronSchedulingAndPollService._event_or_404(event_id, db)
         )
+
+    @staticmethod
+    def initialize_shared_event(
+        source_event_id: int,
+        title: str,
+        start_date: str,
+        window_start: str,
+        window_end: str,
+        capacity: Optional[int],
+        db: Session,
+    ) -> dict:
+        if source_event_id < 1:
+            raise ValueError("Event ID must be a positive integer.")
+        existing = db.query(AaronEvent).filter(AaronEvent.source_event_id == source_event_id).first()
+        if existing:
+            return {"event": AaronSchedulingAndPollService.event_out(existing), "access_token": None}
+        created = AaronSchedulingAndPollService.create_event(
+            title, start_date, window_start, window_end, capacity, db
+        )
+        event = db.query(AaronEvent).filter(AaronEvent.id == created["event"]["id"]).first()
+        event.source_event_id = source_event_id
+        db.commit()
+        db.refresh(event)
+        created["event"] = AaronSchedulingAndPollService.event_out(event)
+        return created
 
     @staticmethod
     def add_cohost(event_id: int, name: str, access_token: str, db: Session) -> dict:

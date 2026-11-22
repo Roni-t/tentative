@@ -112,6 +112,20 @@ class ApiClient {
     return this.request<any>(`/aaron/events/${eventId}`);
   }
 
+  async initializeSharedAaronEvent(payload: {
+    source_event_id: number;
+    title: string;
+    start_date: string;
+    window_start: string;
+    window_end: string;
+    capacity: number | null;
+  }) {
+    return this.request<any>('/aaron/shared-events/initialize', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
   async alterAaronEvent(eventId: number | string, accessToken: string, payload: {
     window_start: string;
     window_end: string;

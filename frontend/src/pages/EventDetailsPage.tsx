@@ -371,7 +371,7 @@ export const EventDetailsPage: React.FC = () => {
 
         {/* Recurrence */}
         <Link
-          to={`/events/${event.id}/recurrence`}
+          to={`/events/${event.id}/aaron`}
           className="glass-panel p-6 rounded-3xl border border-white/10 hover:border-white/30 transition-all flex flex-col justify-between group"
         >
           <div className="space-y-3">

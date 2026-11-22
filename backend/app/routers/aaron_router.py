@@ -24,6 +24,10 @@ class EventCreateRequest(BaseModel):
     capacity: Optional[int] = Field(default=None, ge=1)
 
 
+class SharedEventInitializeRequest(EventCreateRequest):
+    source_event_id: int = Field(gt=0)
+
+
 class EventAlterationRequest(BaseModel):
     window_start: str
     window_end: str
@@ -96,6 +100,20 @@ def create_event(payload: EventCreateRequest, db: Session = Depends(get_db)):
 @router.get("/events/{event_id}")
 def get_event(event_id: int, db: Session = Depends(get_db)):
     return _call_service(AaronService.get_event, event_id, db)
+
+
+@router.post("/shared-events/initialize")
+def initialize_shared_event(payload: SharedEventInitializeRequest, db: Session = Depends(get_db)):
+    return _call_service(
+        AaronService.initialize_shared_event,
+        payload.source_event_id,
+        payload.title,
+        payload.start_date,
+        payload.window_start,
+        payload.window_end,
+        payload.capacity,
+        db,
+    )
 
 
 @router.patch("/events/{event_id}")

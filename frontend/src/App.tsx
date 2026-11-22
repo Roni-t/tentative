@@ -73,6 +73,7 @@ const AnimatedRoutes: React.FC = () => {
           <Route path="/events/:id/rsvps" element={<RsvpListPage />} />
           <Route path="/events/:id/share" element={<ShareExpiryPage />} />
           <Route path="/events/:id/recurrence" element={<RecurrencePage />} />
+          <Route path="/events/:id/aaron" element={<AaronRequirementsPage />} />
 
           {/* Shareable Link Routes (Invitee Anonymous Routes) */}
           <Route path="/share/:token" element={<ShareRedirect />} />

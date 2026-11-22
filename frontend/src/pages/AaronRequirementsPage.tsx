@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { api } from '../api/client';
 
 type AaronPoll = {
@@ -39,6 +40,7 @@ const WEEKDAYS = [
 ];
 
 export const AaronRequirementsPage: React.FC = () => {
+  const { id: sourceEventId } = useParams<{ id: string }>();
   const [event, setEvent] = useState<AaronEvent | null>(null);
   const [accessToken, setAccessToken] = useState('');
   const [eventIdInput, setEventIdInput] = useState('');
@@ -89,19 +91,44 @@ export const AaronRequirementsPage: React.FC = () => {
   };
 
   useEffect(() => {
-    const saved = localStorage.getItem(ACCESS_STORAGE_KEY);
-    if (!saved) return;
-    try {
-      const parsed = JSON.parse(saved) as { eventId: number; accessToken: string };
-      setAccessToken(parsed.accessToken);
-      setEventIdInput(String(parsed.eventId));
-      api.getAaronEvent(parsed.eventId).then(setEvent).catch(() => {
-        localStorage.removeItem(ACCESS_STORAGE_KEY);
+    if (!sourceEventId) return;
+    let active = true;
+    const attachToSharedEvent = async () => {
+      const shared = await api.getEvent(sourceEventId);
+      const dates = shared.candidate_dates || [];
+      const savedToken = localStorage.getItem(`${ACCESS_STORAGE_KEY}:${sourceEventId}`) || '';
+      const initialized = await api.initializeSharedAaronEvent({
+        source_event_id: Number(sourceEventId),
+        title: shared.title,
+        start_date: dates[0] || shared.start_date,
+        window_start: shared.daily_start_time || shared.window_start,
+        window_end: shared.daily_end_time || shared.window_end,
+        capacity: shared.capacity_limit ?? shared.capacity ?? null,
       });
-    } catch {
-      localStorage.removeItem(ACCESS_STORAGE_KEY);
-    }
-  }, []);
+      const token = initialized.access_token || savedToken;
+      if (token) localStorage.setItem(`${ACCESS_STORAGE_KEY}:${sourceEventId}`, token);
+      const data = await api.getAaronEvent(sourceEventId);
+      if (!active) return;
+      setEvent(data);
+      setEventIdInput(String(sourceEventId));
+      setTitle(data.title);
+      setStartDate(data.start_date);
+      setWindowStart(data.window_start);
+      setWindowEnd(data.window_end);
+      setCapacity(data.capacity == null ? '' : String(data.capacity));
+      setAccessToken(token);
+      if (data.recurrence) {
+        setFrequency(data.recurrence.frequency as 'WEEKLY' | 'BIWEEKLY');
+        setInterval(String(data.recurrence.interval));
+        setSelectedDays(data.recurrence.days_of_week);
+        setRecurrenceEnd(data.recurrence.end_date || '');
+      }
+    };
+    attachToSharedEvent().catch((error) => {
+      if (active) setMessage(error instanceof Error ? error.message : 'Could not connect Aaron tools to this event.');
+    });
+    return () => { active = false; };
+  }, [sourceEventId]);
 
   const runAction = async (action: () => Promise<void>) => {
     setBusy(true);
@@ -134,10 +161,7 @@ export const AaronRequirementsPage: React.FC = () => {
       setEvent(created.event);
       setEventIdInput(String(created.event.id));
       setAccessToken(created.access_token);
-      localStorage.setItem(ACCESS_STORAGE_KEY, JSON.stringify({
-        eventId: created.event.id,
-        accessToken: created.access_token,
-      }));
+      localStorage.setItem(`${ACCESS_STORAGE_KEY}:${created.event.id}`, created.access_token);
       setMessage(`Event ${created.event.id} created and saved.`);
     });
   };
@@ -276,13 +300,15 @@ export const AaronRequirementsPage: React.FC = () => {
       <header className="space-y-2">
         <h1 className="text-3xl font-extrabold text-white">Aaron’s Event Tools</h1>
         <p className="text-sm text-slate-400">
-          Create and manage an event with recurring dates, co-host access, polls, responses, and JSON backup.
+          {sourceEventId
+            ? <>Manage recurrence, co-host access, polls, responses, and backups for event {sourceEventId}. <Link className="text-cosmic-cyan underline" to={`/events/${sourceEventId}`}>Return to event details</Link></>
+            : 'Choose an event from My Events to manage its Aaron requirements.'}
         </p>
       </header>
 
       <p role="status" aria-live="polite" className="min-h-5 text-sm text-cosmic-cyan">{message}</p>
 
-      {!event && (
+      {!event && !sourceEventId && (
         <section aria-labelledby="aaron-create-event-heading" className="glass-panel rounded-3xl border border-white/10 p-6 space-y-5">
           <h2 id="aaron-create-event-heading" className="text-lg font-bold text-white">Create an event</h2>
           <form onSubmit={handleCreateEvent} className="grid gap-4 sm:grid-cols-2">
@@ -313,7 +339,7 @@ export const AaronRequirementsPage: React.FC = () => {
         </section>
       )}
 
-      {!event && (
+      {!event && !sourceEventId && (
         <form onSubmit={handleLoadEvent} className="glass-panel rounded-3xl border border-white/10 p-6 flex flex-wrap items-end gap-3">
           <div>
             <label htmlFor="aaron-event-id" className="block text-sm text-slate-300 mb-1">Load an existing event ID</label>

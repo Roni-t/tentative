@@ -6,6 +6,10 @@ Description: Automated unit tests for FR-1, FR-2, FR-4, NF-6, and NF-8.
 """
 
 import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from app.aaron_models import AaronBase
 from app.services.aaron_service import AaronSchedulingAndPollService
 
 
@@ -73,3 +77,34 @@ def test_nf8_wcag_aa_accessibility_and_screen_reader():
     res = AaronSchedulingAndPollService.validate_wcag_aa_and_screen_reader(ui_element)
     assert res["wcag_level"] == "AA_COMPLIANT"
     assert res["screen_reader_ready"] is True
+
+
+def test_aaron_tools_attach_to_an_existing_shared_event_id():
+    engine = create_engine("sqlite:///:memory:")
+    AaronBase.metadata.create_all(engine)
+    session = sessionmaker(bind=engine, expire_on_commit=False)()
+    initialized = AaronSchedulingAndPollService.initialize_shared_event(
+        source_event_id=71,
+        title="Existing team event",
+        start_date="2026-11-23",
+        window_start="14:00",
+        window_end="16:00",
+        capacity=8,
+        db=session,
+    )
+
+    assert initialized["event"]["id"] == 71
+    assert initialized["access_token"]
+    assert AaronSchedulingAndPollService.get_event(71, session)["title"] == "Existing team event"
+    repeated = AaronSchedulingAndPollService.initialize_shared_event(
+        source_event_id=71,
+        title="Existing team event",
+        start_date="2026-11-23",
+        window_start="14:00",
+        window_end="16:00",
+        capacity=8,
+        db=session,
+    )
+    assert repeated["access_token"] is None
+    session.close()
+    engine.dispose()
