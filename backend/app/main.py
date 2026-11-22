@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 import app.database as db
 from sqlalchemy import select
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -9,13 +10,20 @@ async def hp():
     return {"message": "hp: 1225/1225"}
 
 
+class UserCreate(BaseModel):
+    id: int = 0
+    name: str
+    login: str
+    email_login: bool = False
 
-@app.get("/api/user/new")
-def newUser():
+@app.post("/api/user/new")
+def newUser(user: UserCreate):
     with db.newSession() as session:
-        foo = db.User(id = None, name = "foo bar", login = "example@example.com", email_login = True)
+        foo = db.User(id = user.id, name = user.name, login = user.login, email_login = user.email_login)
         session.add_all([foo])
         session.commit()
+    
+    return user
 
 @app.get("/api/user/id/{uid}")
 def userID(uid: int):
