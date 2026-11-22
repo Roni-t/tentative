@@ -27,12 +27,12 @@ def newUser(user: UserCreate):
 
 @app.get("/api/user/id/{uid}")
 def userID(uid: int):
-    pass
+    cell = select(db.User).where(db.User.id == uid)
+    return [x for x in db.newSession().scalars(cell)]
 
 @app.get("/api/user/list")
 def userList():
     cell = select(db.User)
-    
     return [x for x in db.newSession().scalars(cell)]
 
 
