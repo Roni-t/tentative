@@ -28,19 +28,38 @@ def newUser(user: UserCreate):
 @app.get("/api/user/id/{uid}")
 def userID(uid: int):
     cell = select(db.User).where(db.User.id == uid)
-    return [x for x in db.newSession().scalars(cell)]
+    return db.newSelection(cell)
 
 @app.get("/api/user/list")
 def userList():
     cell = select(db.User)
-    return [x for x in db.newSession().scalars(cell)]
+    return db.newSelection(cell)
 
 
 
-@app.post("/api/event/new")
+@app.get("/api/event/new")
 def newEvent():
-    pass
+    foo = db.Event(manager_id = 1, name = "silly meeting", description = "the silly", location = "Online")
+    with db.newSession() as session:
+        session.add_all([foo])
+        session.commit()
+    
+    return foo
 
 @app.get("/api/event/id/{eid}")
 def eventID(eid: int):
-    pass
+    cell = select(db.Event).where(db.Event.id == uid)
+    return db.newSelection(cell)
+
+@app.get("/api/event/list")
+def eventList():
+    cell = select(db.Event)
+    return db.newSelection(cell)
+
+
+@app.get("/api/test")
+def test():
+    t = UserCreate(name = "foo", login = "example@example.org")
+    newUser(t)
+    newEvent()
+    return eventList()
