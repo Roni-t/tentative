@@ -28,7 +28,7 @@ class User(Base):
     
     manages: Mapped[List["Event"]] = relationship()
 
-#This needs a time/date start. Both are ints. I can handle the conversion -Trinity
+#This needs a time and date start and end. All ints. I can handle the conversion/authentication. Also needs a min/max attendees field. Both ints. -Trinity
 class Event(Base):
     __tablename__ = "events"
     
