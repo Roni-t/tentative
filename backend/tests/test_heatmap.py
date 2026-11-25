@@ -1,12 +1,11 @@
+from tests.helpers import register_user
 import time
 
 
 def test_heatmap_calculation_and_caching(client, db_session):
     # Setup host & event
     phone = "+19725550142"
-    client.post("/api/auth/request-code", json={"phone": phone, "name": "Host"})
-    v_resp = client.post("/api/auth/verify-code", json={"phone": phone, "code": client.get("/api/auth/dev-banner-code").json()["code"]})
-    headers = {"Authorization": f"Bearer {v_resp.json()['token']}"}
+    headers = register_user(client, phone=phone, name="Host")
 
     create_resp = client.post("/api/events", json={
         "title": "Quantum Orbit Meeting",

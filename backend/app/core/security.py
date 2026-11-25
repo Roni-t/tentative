@@ -1,4 +1,3 @@
-import random
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
@@ -7,8 +6,8 @@ from app.config import settings
 
 
 def generate_verification_code() -> str:
-    """Generate a 6-digit numeric verification code."""
-    return f"{random.randint(100000, 999999)}"
+    """Generate a 6-digit numeric verification code from a CSPRNG."""
+    return f"{secrets.randbelow(1_000_000):06d}"
 
 
 def generate_secure_token(nbytes: int = 16) -> str:

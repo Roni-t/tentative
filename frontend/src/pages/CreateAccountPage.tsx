@@ -1,61 +1,118 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { api } from '../api/client';
 import { PlanetLogo } from '../components/PlanetLogo';
 import { DevSmsBanner } from '../components/DevSmsBanner';
-import { User, Phone, KeyRound, ArrowRight, ShieldCheck } from 'lucide-react';
+import { CodeEntry } from '../components/auth/CodeEntry';
+import { AuthOutcome, Outcome } from '../components/auth/AuthOutcome';
+import { User, Phone, ArrowRight, Lock } from 'lucide-react';
 
+const inputClass =
+  'w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-zinc-500 text-sm focus:border-white focus:ring-1 focus:ring-white transition-all';
+const primaryButton =
+  'w-full py-3 rounded-2xl text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_20px_rgba(255,255,255,0.35)] flex items-center justify-center space-x-2 transition-all disabled:opacity-50 cursor-pointer';
+
+/** UC-1: Account creation — name + phone, verify via SMS code, then the account is stored. */
 export const CreateAccountPage: React.FC = () => {
-  const [step, setStep] = useState<1 | 2>(1);
-  const [name, setName] = useState('Ronit Dhaliwal');
-  const [phone, setPhone] = useState('+1 (972) 555-0142');
-  const [code, setCode] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [maskedPhone, setMaskedPhone] = useState('');
+  const location = useLocation();
+  const prefillPhone = (location.state as { phone?: string } | null)?.phone ?? '';
 
-  const { login, pollDevCode } = useAuth();
+  const [step, setStep] = useState<'details' | 'verify'>('details');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState(prefillPhone);
+  const [code, setCode] = useState('');
+  const [maskedPhone, setMaskedPhone] = useState('');
+  const [expiresAt, setExpiresAt] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [outcome, setOutcome] = useState<Outcome | null>(null);
+
+  const { register, pollDevCode, clearDevNotice } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  const handleRequestCode = async (e: React.FormEvent) => {
+  const alreadyRegistered = (message: string): Outcome => ({
+    title: 'This number already has an account',
+    message,
+    action: { label: 'Log in instead', onClick: () => navigate('/login', { state: { phone } }) },
+  });
+
+  const sendCode = async () => {
+    const res = await api.registerRequestCode(name, phone);
+    setMaskedPhone(res.phone_masked);
+    setExpiresAt(Date.now() + res.expires_in_seconds * 1000);
+    setCode('');
+    await pollDevCode(phone);
+  };
+
+  const handleSubmitDetails = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !phone.trim()) return;
+    setOutcome(null);
     setLoading(true);
     try {
-      const res = await api.requestCode(phone, name);
-      setMaskedPhone(res.phone_masked);
-      setStep(2);
-      showToast('Verification code dispatched via SMS', 'info');
-      await pollDevCode(phone);
+      await sendCode();
+      setStep('verify');
     } catch (err: any) {
-      showToast(err.message || 'Failed to dispatch verification code', 'error');
+      setOutcome(
+        err.status === 409
+          ? alreadyRegistered(err.message)
+          : { title: "We couldn't send a code", message: err.message || 'Please check your details and try again.' }
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerifyCode = async (e: React.FormEvent) => {
+  const handleResend = async () => {
+    setOutcome(null);
+    setResending(true);
+    try {
+      await sendCode();
+      showToast('A new code is on its way.', 'info');
+    } catch (err: any) {
+      setOutcome({ title: "We couldn't send a code", message: err.message || 'Please try again.' });
+    } finally {
+      setResending(false);
+    }
+  };
+
+  const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!code.trim()) return;
+    setOutcome(null);
     setLoading(true);
     try {
-      const user = await login(phone, code, name);
-      showToast(`Account created! Welcome, ${user.name}!`, 'success');
+      const user = await register(name, phone, code);
+      showToast(`You're all set, ${user.name}!`, 'success');
       navigate('/events');
     } catch (err: any) {
-      showToast(err.message || 'Invalid or expired verification code', 'error');
+      setCode('');
+      setOutcome(
+        err.status === 409
+          ? alreadyRegistered(err.message)
+          : {
+              title: "That code didn't work",
+              message: err.message || 'The code doesn’t match or has expired.',
+              action: { label: 'Resend code', onClick: handleResend },
+            }
+      );
     } finally {
       setLoading(false);
     }
+  };
+
+  const backToDetails = () => {
+    setStep('details');
+    setCode('');
+    setOutcome(null);
+    clearDevNotice();
   };
 
   return (
     <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md space-y-6">
-        {/* Header */}
         <div className="text-center space-y-2">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
@@ -64,149 +121,132 @@ export const CreateAccountPage: React.FC = () => {
           >
             <PlanetLogo size={52} className="mx-auto" isSpinning={loading} />
           </motion.div>
-          <h2 className="text-2xl font-bold tracking-tight text-white">
-            {step === 1 ? 'Create Host Account' : 'Verify Your Phone Number'}
-          </h2>
-          <p className="text-xs text-slate-400">
-            {step === 1
-              ? 'Required to create and manage events. Invitees do not need an account.'
-              : `Step 2 of 2: We sent a 6-digit code to ${maskedPhone || phone}`}
+          <h2 className="text-2xl font-bold tracking-tight text-white">Create your account</h2>
+          <p className="text-xs text-zinc-400">
+            {step === 'details'
+              ? 'Step 1 of 2: Your details. Hosts need an account; invitees can respond without one.'
+              : 'Step 2 of 2: Verify your phone number'}
           </p>
         </div>
 
-        {/* Card with step transition */}
-        <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
+        <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden space-y-4">
           <AnimatePresence mode="wait">
-            {step === 1 ? (
+            {step === 'details' ? (
               <motion.form
-                key="step1"
+                key="details"
                 initial={{ opacity: 0, x: -16 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 16 }}
                 transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                onSubmit={handleRequestCode}
+                onSubmit={handleSubmitDetails}
                 className="space-y-4"
               >
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                    Full Name
+                  <label htmlFor="full-name" className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    Full name
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500">
                       <User className="w-4 h-4" />
                     </div>
                     <input
+                      id="full-name"
                       type="text"
+                      autoComplete="name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="e.g. Ronit Dhaliwal"
+                      placeholder="e.g. Kaelan Nguyen"
+                      maxLength={128}
                       required
-                      className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-zinc-500 text-sm focus:border-white focus:ring-1 focus:ring-white transition-all"
+                      autoFocus={!prefillPhone}
+                      className={inputClass}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
-                    Phone Number
+                  <label htmlFor="phone" className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    Phone number
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500">
                       <Phone className="w-4 h-4" />
                     </div>
                     <input
+                      id="phone"
                       type="tel"
+                      autoComplete="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+1 (972) 555-0142"
+                      placeholder="(972) 555-0142"
                       required
-                      className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-zinc-500 text-sm focus:border-white focus:ring-1 focus:ring-white transition-all"
+                      className={inputClass}
                     />
                   </div>
-                  <p className="text-[11px] text-zinc-400 mt-1.5 flex items-center space-x-1">
-                    <ShieldCheck className="w-3.5 h-3.5 text-zinc-300 shrink-0" />
-                    <span>Phone number is encrypted at rest using 256-bit Fernet cipher.</span>
-                  </p>
                 </div>
 
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3 rounded-2xl text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_20px_rgba(255,255,255,0.35)] flex items-center justify-center space-x-2 transition-all disabled:opacity-50 cursor-pointer"
-                >
-                  <span>{loading ? 'Sending code...' : 'Continue with SMS Code'}</span>
+                <button type="submit" disabled={loading} className={primaryButton}>
+                  <span>{loading ? 'Sending code…' : 'Text me a code'}</span>
                   <ArrowRight className="w-4 h-4 text-black" />
-                </motion.button>
+                </button>
               </motion.form>
             ) : (
               <motion.form
-                key="step2"
+                key="verify"
                 initial={{ opacity: 0, x: 16 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -16 }}
                 transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                onSubmit={handleVerifyCode}
+                onSubmit={handleVerify}
                 className="space-y-4"
               >
-                <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
-                    6-Digit Verification Code
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500">
-                      <KeyRound className="w-4 h-4" />
-                    </div>
-                    <input
-                      type="text"
-                      maxLength={6}
-                      value={code}
-                      onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                      placeholder="123456"
-                      required
-                      autoFocus
-                      className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-zinc-500 text-lg font-mono tracking-widest text-center focus:border-white focus:ring-1 focus:ring-white transition-all"
-                    />
+                <div className="flex items-center justify-between rounded-2xl bg-white/5 border border-white/10 px-3.5 py-2.5 text-xs">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-white truncate">{name.trim()}</p>
+                    <p className="text-zinc-400 font-mono">{maskedPhone}</p>
                   </div>
-                  <div className="flex items-center justify-between text-[11px] text-zinc-400 mt-2">
-                    <span>Valid for 5 minutes</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setStep(1);
-                        setCode('');
-                      }}
-                      className="text-white hover:underline cursor-pointer"
-                    >
-                      Change phone
-                    </button>
-                  </div>
+                  <button type="button" onClick={backToDetails} className="text-white font-semibold hover:underline cursor-pointer">
+                    Edit
+                  </button>
                 </div>
 
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  type="submit"
-                  disabled={loading || code.length < 6}
-                  className="w-full py-3 rounded-2xl text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_20px_rgba(255,255,255,0.35)] flex items-center justify-center space-x-2 transition-all disabled:opacity-50 cursor-pointer"
-                >
-                  <span>{loading ? 'Creating account...' : 'Create Account & Enter'}</span>
+                <CodeEntry
+                  code={code}
+                  onChange={setCode}
+                  expiresAt={expiresAt}
+                  maskedPhone={maskedPhone}
+                  onResend={handleResend}
+                  resending={resending}
+                  disabled={loading}
+                />
+
+                <p className="flex items-start space-x-2 text-[11px] text-zinc-400">
+                  <Lock className="w-3.5 h-3.5 text-zinc-300 shrink-0 mt-px" />
+                  <span>
+                    Your phone number is encrypted before it's saved. It's only used to sign you in and send event
+                    invites. Your account isn't created until you verify.
+                  </span>
+                </p>
+
+                <button type="submit" disabled={loading || code.length < 6} className={primaryButton}>
+                  <span>{loading ? 'Creating account…' : 'Verify & create account'}</span>
                   <ArrowRight className="w-4 h-4 text-black" />
-                </motion.button>
+                </button>
               </motion.form>
             )}
           </AnimatePresence>
 
-          <div className="mt-6 pt-4 border-t border-white/10 text-center text-xs text-zinc-400">
+          {outcome && <AuthOutcome outcome={outcome} />}
+
+          <div className="pt-4 border-t border-white/10 text-center text-xs text-zinc-400">
             Already have an account?{' '}
-            <Link to="/login" className="text-white hover:underline font-semibold transition-colors">
-              Sign in
+            <Link to="/login" state={{ phone }} className="text-white hover:underline font-semibold transition-colors">
+              Log in
             </Link>
           </div>
         </div>
 
-        <DevSmsBanner onFillCode={(c) => setCode(c)} />
+        {step === 'verify' && <DevSmsBanner onFillCode={setCode} />}
       </div>
     </div>
   );

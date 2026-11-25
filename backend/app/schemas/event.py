@@ -68,6 +68,8 @@ class EventOut(BaseModel):
     is_cohost: bool = False
     respondents_count: int = 0
     co_hosts: List[str] = []
+    deadline_display: Optional[str] = None  # deadline in the event's timezone, e.g. "Wed, Nov 25, 5:00 PM CST"
+    ready_to_finalize: bool = False  # every invitee has responded (FR-20)
 
     class Config:
         from_attributes = True

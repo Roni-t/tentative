@@ -33,6 +33,34 @@ def normalize_phone(phone: str) -> str:
     return f"+{cleaned}"
 
 
+_E164 = re.compile(r"\+[1-9]\d{9,14}")
+# A name starts with a letter and may contain letters, spaces, apostrophes, hyphens and periods.
+_NAME = re.compile(r"[^\W\d_](?:[^\W\d_]|[ '.\-])*")
+NAME_MAX_LENGTH = 128
+
+
+def validate_phone(phone: str) -> str:
+    """Return the E.164 form of a phone number, or raise ValueError if it is not a valid number."""
+    if not phone or re.search(r"[^\d+()\-.\s]", phone):
+        raise ValueError("Enter a valid phone number, e.g. (972) 555-0142.")
+    normalized = normalize_phone(phone)
+    if not _E164.fullmatch(normalized) or (normalized.startswith("+1") and len(normalized) != 12):
+        raise ValueError("Enter a valid phone number, e.g. (972) 555-0142.")
+    return normalized
+
+
+def validate_name(name: str) -> str:
+    """Return a cleaned full name, or raise ValueError if it is not a valid name."""
+    cleaned = " ".join((name or "").split())
+    if not cleaned:
+        raise ValueError("Enter your full name.")
+    if len(cleaned) > NAME_MAX_LENGTH:
+        raise ValueError(f"Name must be {NAME_MAX_LENGTH} characters or fewer.")
+    if not _NAME.fullmatch(cleaned):
+        raise ValueError("Name can only contain letters, spaces, apostrophes, hyphens and periods.")
+    return cleaned
+
+
 def hash_phone(phone: str) -> str:
     """Deterministic hash used for uniqueness lookup without revealing plain phone."""
     normalized = normalize_phone(phone)

@@ -17,7 +17,9 @@ from app.schemas.event import (
     FinalizeEventPayload,
 )
 from app.services.event_service import event_service
+from app.services.invitee_service import invitee_service
 from app.services.notification_service import notification_service
+from app.core.timefmt import format_local
 
 router = APIRouter(prefix="/api/events", tags=["Events"])
 
@@ -58,6 +60,7 @@ def _format_event_out(event: Event, current_user: Optional[User], db: Session) -
         daily_end_time=event.daily_end_time,
         slot_duration_minutes=event.slot_duration_minutes,
         deadline=event.deadline,
+        deadline_display=format_local(event.deadline, event.timezone) if event.deadline else None,
         capacity_limit=event.capacity_limit,
         is_hidden_details=event.is_hidden_details,
         status=event.status,
@@ -72,7 +75,8 @@ def _format_event_out(event: Event, current_user: Optional[User], db: Session) -
         is_host=is_host,
         is_cohost=is_cohost,
         respondents_count=unique_respondents,
-        co_hosts=cohost_names
+        co_hosts=cohost_names,
+        ready_to_finalize=event.status == "collecting" and invitee_service.all_responded(event, db),
     )
 
 
@@ -147,6 +151,7 @@ def finalize_event(
             notification_type="finalized",
             db=db
         )
+        invitee_service.notify_finalized(event, db)  # FR-22: texted in each invitee's timezone
 
     return _format_event_out(event, current_user, db)
 

@@ -39,6 +39,18 @@ def run_cleanup_job():
         db.close()
 
 
+def run_reminder_job():
+    """FR-18: text invitees who haven't responded when the deadline is close."""
+    from app.services.invitee_service import invitee_service
+    db: Session = SessionLocal()
+    try:
+        sent = invitee_service.send_deadline_reminders(db)
+        if sent:
+            logger.info(f"Sent {sent} deadline reminder(s).")
+    finally:
+        db.close()
+
+
 async def start_scheduler_task():
     """Background periodic loop running every 60 seconds."""
     while True:
@@ -46,4 +58,8 @@ async def start_scheduler_task():
             run_cleanup_job()
         except Exception as e:
             logger.error(f"Scheduler loop encountered error: {e}")
+        try:
+            run_reminder_job()
+        except Exception as e:
+            logger.error(f"Reminder job encountered error: {e}")
         await asyncio.sleep(60)

@@ -44,3 +44,34 @@ def client(db_session):
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def reset_in_memory_state():
+    """Rate-limiter windows and the dev SMS cache are module-global; isolate tests."""
+    from app.adapters.sms_adapter import dev_sms_cache
+    from app.core.rate_limiter import rate_limiter
+    rate_limiter._requests.clear()
+    dev_sms_cache.clear()
+    yield
+
+
+@pytest.fixture
+def sms_outbox(monkeypatch):
+    """Capture every SMS the app sends as {"kind", "phone", "message"} dicts, in send order."""
+    from app.adapters import sms_adapter
+
+    sent = []
+    real_send_code = sms_adapter.ConsoleSMSAdapter.send_verification_code
+
+    def capture_code(self, phone, code):
+        sent.append({"kind": "verification", "phone": phone, "message": code})
+        return real_send_code(self, phone, code)
+
+    def capture_notification(self, phone, message):
+        sent.append({"kind": "notification", "phone": phone, "message": message})
+        return True
+
+    monkeypatch.setattr(sms_adapter.ConsoleSMSAdapter, "send_verification_code", capture_code)
+    monkeypatch.setattr(sms_adapter.ConsoleSMSAdapter, "send_notification", capture_notification)
+    return sent

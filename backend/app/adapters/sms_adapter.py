@@ -52,12 +52,13 @@ class TwilioSMSAdapter(SMSAdapter):
                 logger.warning(f"Failed to initialize Twilio client: {e}. Falling back to console.")
 
     def send_verification_code(self, phone: str, code: str) -> bool:
-        # Also store in dev cache so dev banner works in testing
-        dev_sms_cache[phone] = {
-            "code": code,
-            "created_at": datetime.now(timezone.utc),
-            "phone": phone
-        }
+        # Also store in dev cache so the dev banner works, but never when real codes go out in production
+        if settings.dev_sms_enabled:
+            dev_sms_cache[phone] = {
+                "code": code,
+                "created_at": datetime.now(timezone.utc),
+                "phone": phone
+            }
         if self._client and self.from_phone:
             try:
                 self._client.messages.create(
@@ -96,12 +97,6 @@ def get_sms_adapter() -> SMSAdapter:
     return ConsoleSMSAdapter()
 
 
-def get_latest_dev_code(phone: Optional[str] = None) -> Optional[Dict]:
-    """Retrieve the latest sent verification code for the dev UI banner."""
-    if not dev_sms_cache:
-        return None
-    if phone and phone in dev_sms_cache:
-        return dev_sms_cache[phone]
-    # Return the most recent entry
-    sorted_items = sorted(dev_sms_cache.values(), key=lambda x: x["created_at"], reverse=True)
-    return sorted_items[0] if sorted_items else None
+def get_latest_dev_code(phone: str) -> Optional[Dict]:
+    """Retrieve the latest verification code sent to exactly this (normalized) phone, for the dev UI banner."""
+    return dev_sms_cache.get(phone)
