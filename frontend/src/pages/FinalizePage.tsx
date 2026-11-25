@@ -198,7 +198,7 @@ export const FinalizePage: React.FC = () => {
                       id="notifySms"
                       checked={notifySms}
                       onChange={(e) => setNotifySms(e.target.checked)}
-                      className="w-4 h-4 rounded text-cosmic-purple bg-white/10 border-white/20 focus:ring-cosmic-purple cursor-pointer"
+                      className="accent-white w-4 h-4 rounded text-cosmic-purple bg-white/10 border-white/20 focus:ring-cosmic-purple cursor-pointer"
                     />
                     <label htmlFor="notifySms" className="text-xs text-slate-300 cursor-pointer flex items-center space-x-1">
                       <Send className="w-3 h-3 text-cosmic-purple" />

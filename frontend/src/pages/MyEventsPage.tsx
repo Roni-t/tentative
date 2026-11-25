@@ -161,7 +161,7 @@ export const MyEventsPage: React.FC = () => {
                   <div className="pt-2 border-t border-zinc-800/80 space-y-1.5 text-xs text-zinc-400">
                     <div className="flex items-center space-x-2">
                       <Users className="w-3.5 h-3.5 text-white" />
-                      <span>{ev.respondents_count} participants responded</span>
+                      <span>{ev.respondents_count} {ev.respondents_count === 1 ? 'participant' : 'participants'} responded</span>
                     </div>
                     {ev.location && (
                       <div className="truncate text-zinc-500">

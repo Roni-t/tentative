@@ -401,3 +401,13 @@ def test_finalize_window_is_in_the_event_timezone(client, host):
                           json={"start_time": "2026-12-02T12:00:00Z", "end_time": "2026-12-02T13:00:00Z"},
                           headers=host)
     assert outside.status_code == 400  # 12:00 UTC is 6 AM in Chicago
+
+
+def test_event_times_are_marked_as_utc(client, host):
+    """Without a UTC marker the browser reads the time as its own local time and shows the wrong hour."""
+    event = create_event(client, host, daily_start_time="12:00", daily_end_time="14:00", candidate_dates=["2026-12-02"])
+    client.post(f"/api/events/{event['id']}/finalize",
+                json={"start_time": "2026-12-02T18:00:00Z", "end_time": "2026-12-02T19:00:00Z",
+                      "notify_participants": False}, headers=host)
+    shown = client.get(f"/api/events/{event['id']}", headers=host).json()
+    assert shown["finalized_start_time"].endswith(("Z", "+00:00"))

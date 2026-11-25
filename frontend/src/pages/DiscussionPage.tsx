@@ -147,7 +147,7 @@ export const DiscussionPage: React.FC = () => {
                 onClick={() => setIsQuestion(true)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-colors ${
                   isQuestion
-                    ? 'bg-cosmic-cyan/20 text-cyan-300 border border-cosmic-cyan/40'
+                    ? 'bg-cosmic-cyan/20 text-zinc-200 border border-cosmic-cyan/40'
                     : 'bg-white/5 text-slate-400 hover:text-white'
                 }`}
               >
@@ -222,7 +222,7 @@ export const DiscussionPage: React.FC = () => {
                     <span
                       className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
                         c.is_question
-                          ? 'bg-cosmic-cyan/20 text-cyan-300 border border-cosmic-cyan/30'
+                          ? 'bg-cosmic-cyan/20 text-zinc-200 border border-cosmic-cyan/30'
                           : 'bg-white/5 text-slate-400 border border-white/10'
                       }`}
                     >
@@ -293,7 +293,7 @@ export const DiscussionPage: React.FC = () => {
                       </button>
                       <button
                         onClick={() => handlePostReply(c.id)}
-                        className="px-4 py-1.5 rounded-xl text-xs font-bold bg-cosmic-purple hover:bg-cosmic-purple/80 text-white"
+                        className="px-4 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-zinc-200 text-black transition-colors"
                       >
                         Send Reply
                       </button>

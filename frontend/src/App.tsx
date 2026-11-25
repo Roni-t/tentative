@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { StarField } from './components/StarField';
@@ -43,16 +43,21 @@ const LandingOnly: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 const AnimatedRoutes: React.FC = () => {
   const location = useLocation();
 
+  // Start every page at the top. This jumps instantly, because a smooth scroll made the landing page
+  // look blank (its hero fades out with scroll position).
+  React.useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [location.pathname]);
+
+  // The new page replaces the old one right away and fades in. Earlier the old page had to fade out first,
+  // which left the screen close to blank on every click, and clicking quickly made it worse.
   return (
-    // Jump to the top (instantly, not smoothly) once the old page has left, so the new page starts at the top.
-    // A smooth scroll here made the landing page look blank, because its hero fades out with scroll position.
-    <AnimatePresence mode="wait" onExitComplete={() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' })}>
+    <>
       <motion.div
         key={location.pathname}
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
         className="route-view w-full flex-1 flex flex-col"
       >
         <Routes location={location}>
@@ -85,7 +90,7 @@ const AnimatedRoutes: React.FC = () => {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </motion.div>
-    </AnimatePresence>
+    </>
   );
 };
 

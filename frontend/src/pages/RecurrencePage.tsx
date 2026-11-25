@@ -1,15 +1,48 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
+import { api } from '../api/client';
+import { Event } from '../types';
+import { dateKeyInZone, timeRangeInZone } from '../utils/zoned';
 import { Repeat, ArrowLeft, Calendar, Clock, Check } from 'lucide-react';
+
+const DAY_CODES = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+
+const toDateKey = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+const fromDateKey = (key: string) => {
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(y, m - 1, d);
+};
 
 export const RecurrencePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { showToast } = useToast();
 
   const [frequency, setFrequency] = useState<'weekly' | 'biweekly'>('weekly');
-  const [selectedDays, setSelectedDays] = useState<string[]>(['WE']);
-  const [endDate, setEndDate] = useState('2026-12-16');
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const [endDate, setEndDate] = useState('');
+  const [event, setEvent] = useState<Event | null>(null);
+
+  // The series starts from the event's finalized day, or its first candidate day
+  useEffect(() => {
+    if (!id) return;
+    api
+      .getEvent(id)
+      .then((ev) => {
+        setEvent(ev);
+        const first = ev.finalized_start_time
+          ? dateKeyInZone(ev.finalized_start_time, ev.timezone)
+          : ev.candidate_dates[0];
+        const start = fromDateKey(first);
+        setSelectedDays([DAY_CODES[start.getDay()]]);
+        const end = new Date(start);
+        end.setDate(end.getDate() + 56);
+        setEndDate(toDateKey(end));
+      })
+      .catch(() => {});
+  }, [id]);
 
   const days = [
     { label: 'S', code: 'SU' },
@@ -36,13 +69,29 @@ export const RecurrencePage: React.FC = () => {
     showToast('Recurring series pattern configured and saved!', 'success');
   };
 
-  // Preview occurrences
-  const occurrences = [
-    { date: 'Sep 16, 2026', time: '2:00 PM - 3:00 PM' },
-    { date: frequency === 'weekly' ? 'Sep 23, 2026' : 'Sep 30, 2026', time: '2:00 PM - 3:00 PM' },
-    { date: frequency === 'weekly' ? 'Sep 30, 2026' : 'Oct 14, 2026', time: '2:00 PM - 3:00 PM' },
-    { date: frequency === 'weekly' ? 'Oct 7, 2026' : 'Oct 28, 2026', time: '2:00 PM - 3:00 PM' },
-  ];
+  // Preview: the next dates that match the chosen days, every week or every other week
+  const buildOccurrences = () => {
+    if (!event || !endDate) return [];
+    const first = event.finalized_start_time
+      ? dateKeyInZone(event.finalized_start_time, event.timezone)
+      : event.candidate_dates[0];
+    const start = fromDateKey(first);
+    const end = fromDateKey(endDate);
+    const time = event.finalized_start_time && event.finalized_end_time
+      ? timeRangeInZone(event.finalized_start_time, event.finalized_end_time, event.timezone)
+      : `${event.daily_start_time} - ${event.daily_end_time}`;
+
+    const found: { date: string; time: string }[] = [];
+    for (let d = new Date(start), n = 0; d <= end && found.length < 4; d.setDate(d.getDate() + 1), n++) {
+      const weekNumber = Math.floor(n / 7);
+      if (frequency === 'biweekly' && weekNumber % 2 === 1) continue;
+      if (selectedDays.includes(DAY_CODES[d.getDay()])) {
+        found.push({ date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), time });
+      }
+    }
+    return found;
+  };
+  const occurrences = buildOccurrences();
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">

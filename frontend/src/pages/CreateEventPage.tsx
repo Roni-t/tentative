@@ -26,12 +26,15 @@ export const CreateEventPage: React.FC = () => {
   const [location, setLocation] = useState('');
   const [timezone, setTimezone] = useState(getUserTimezone());
 
-  // Candidate dates: defaults to next 5 days
+  // Candidate dates: defaults to the current week, Monday through Sunday
   const today = new Date();
-  const defaultDates = Array.from({ length: 5 }, (_, i) => {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i + 1);
-    return d.toISOString().split('T')[0];
+  const daysSinceMonday = (today.getDay() + 6) % 7;
+  const defaultDates = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - daysSinceMonday + i);
+    // Use the local date. toISOString() would give the UTC date, which can be a day off.
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${month}-${day}`;
   });
   const [candidateDates, setCandidateDates] = useState<string[]>(defaultDates);
   const [dateInput, setDateInput] = useState('');
@@ -101,9 +104,9 @@ export const CreateEventPage: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <div className="mb-8 space-y-2">
-        <h1 className="text-3xl font-extrabold text-white tracking-tight">Create an Orbit Event</h1>
+        <h1 className="text-3xl font-extrabold text-white tracking-tight">Create an Event</h1>
         <p className="text-xs text-slate-400">
-          Propose meeting parameters and generate an expiring cryptographic link for participants.
+          Pick the days and hours that might work. You will get a link to send to participants.
         </p>
       </div>
 
@@ -339,7 +342,7 @@ export const CreateEventPage: React.FC = () => {
                 id="surprise"
                 checked={isHiddenDetails}
                 onChange={(e) => setIsHiddenDetails(e.target.checked)}
-                className="mt-1 w-4 h-4 rounded text-cosmic-purple bg-white/10 border-white/20 focus:ring-cosmic-purple"
+                className="accent-white mt-1 w-4 h-4 rounded text-cosmic-purple bg-white/10 border-white/20 focus:ring-cosmic-purple"
               />
               <label htmlFor="surprise" className="text-xs text-slate-300 cursor-pointer">
                 <span className="font-semibold text-white block">Surprise Party Feature</span>

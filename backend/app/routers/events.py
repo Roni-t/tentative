@@ -18,9 +18,14 @@ from app.schemas.event import (
 from app.services.event_service import event_service
 from app.services.invitee_service import invitee_service
 from app.services.notification_service import notification_service
-from app.core.timefmt import format_local
+from app.core.timefmt import format_local, to_utc
 
 router = APIRouter(prefix="/api/events", tags=["Events"])
+
+
+def as_utc(dt):
+    # SQLite gives back naive times. Mark them as UTC so the browser does not read them as local time.
+    return to_utc(dt) if dt else None
 
 
 def _format_event_out(event: Event, current_user: Optional[User], db: Session) -> EventOut:
@@ -58,19 +63,19 @@ def _format_event_out(event: Event, current_user: Optional[User], db: Session) -
         daily_start_time=event.daily_start_time,
         daily_end_time=event.daily_end_time,
         slot_duration_minutes=event.slot_duration_minutes,
-        deadline=event.deadline,
+        deadline=as_utc(event.deadline),
         deadline_display=format_local(event.deadline, event.timezone) if event.deadline else None,
         capacity_limit=event.capacity_limit,
         is_hidden_details=event.is_hidden_details,
         status=event.status,
-        finalized_start_time=event.finalized_start_time,
-        finalized_end_time=event.finalized_end_time,
+        finalized_start_time=as_utc(event.finalized_start_time),
+        finalized_end_time=as_utc(event.finalized_end_time),
         created_by_id=event.created_by_id,
         creator_name=event.creator.name if event.creator else "Unknown",
         created_at=event.created_at,
         updated_at=event.updated_at,
         active_token=active_url.token if active_url else None,
-        expires_at=active_url.expires_at if active_url else None,
+        expires_at=as_utc(active_url.expires_at) if active_url else None,
         is_host=is_host,
         is_cohost=is_cohost,
         respondents_count=unique_respondents,

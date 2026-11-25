@@ -19,11 +19,11 @@ This file explains the design choices and fixes in the `Ronit-Dev` branch so the
 
 ## Intro
 
-`IntroSplash.tsx` plays on the first visit of a browser session: the planet starts zoomed in on a black screen, then zooms out into its place in the hero while the black fades away. The hero text appears after it. It plays once per session (`tentative_intro_seen` in sessionStorage), is skipped for reduced motion, and can be replayed by adding `?intro` to the address. It is drawn on the document body so it covers the top bar.
+`IntroSplash.tsx` plays when the main page loads: the planet starts zoomed in on a black screen, then zooms out into its place in the hero while the black fades away. The hero text appears after it. It plays whenever the page is loaded or refreshed while on the main page, and not when you click back to the main page from another page. It is skipped for reduced motion. It is drawn on the document body so it covers the top bar.
 
 ## Rocket launch
 
-When a host finalizes an event, `RocketLaunch.tsx` plays a countdown, a rocket lifts off with a flame and smoke, then the finalized time is shown. The finalize page waits `ROCKET_LAUNCH_MS` (5.2 seconds) before going back to the event page.
+When a host finalizes an event, `RocketLaunch.tsx` plays a countdown, a plain white rocket lifts off with a flame and smoke, then the finalized time is shown. The finalize page waits `ROCKET_LAUNCH_MS` (5.2 seconds) before going back to the event page.
 
 ## Demo
 
@@ -46,6 +46,11 @@ Event dates and the daily window (for example 12:00 to 17:00) are wall-clock tim
 - **Stars after resizing:** the star field was built once for the starting window size. It now refits when the window changes size and keeps the same density.
 - **Page widths:** page wrappers use `mx-auto` inside a flex column, which shrank each page to its content. `.route-view > *` in `index.css` makes them fill their max width.
 - **Events page redirect:** `/events` sent logged-in users to the login page on a fresh load, because it checked for a user before the login check finished. It now waits.
-- **Landing page after leaving a long page:** the scroll reset on every route change was a smooth scroll, and the landing hero fades out based on scroll position, so the hero could look missing while it scrolled. The reset is now instant and runs after the old page has left (`onExitComplete` in `App.tsx`). The logo only scrolls smoothly when you are already on the landing page.
+- **Blank screen when clicking between pages:** the route change used to fade the old page out before fading the new one in, so the screen was close to blank for about 0.7 seconds on every click, and clicking fast made it worse. The new page now replaces the old one immediately and fades in (`AnimatedRoutes` in `App.tsx`).
+- **Finalized time shown in the wrong hour:** the server sent finalized times without a UTC marker (like `2026-11-29T20:30:00`), so the browser read them as its own local time. Event times from `routers/events.py` are now marked as UTC (they end in Z).
+- **Recurrence preview:** it showed hard-coded September dates. It now starts from the event's finalized day (or first candidate day) and follows the chosen days and frequency.
+- **Default dates:** the create page now starts with the current week, Monday through Sunday.
+- **Reply button:** it used `bg-cosmic-purple` with white text, but that color is white in this theme, so the text could not be seen. It is now a white button with black text.
+- **Landing page after leaving a long page:** the scroll reset on every route change was a smooth scroll, and the landing hero fades out based on scroll position, so the hero could look missing while it scrolled. The reset is now instant and runs when the route changes. The logo only scrolls smoothly when you are already on the landing page.
 - **Availability grid:** empty cells are now visible and the day columns fill the width.
 - **Local database:** there are no migrations. After pulling model changes, run `docker compose down -v` to reset the local database.

@@ -25,22 +25,23 @@ const STEPS = [
   },
 ];
 
+// Set once when the page loads. It is true only if the page was opened on the main page.
+let loadedOnMainPage = window.location.pathname === '/';
+
 export const LandingPage: React.FC = () => {
   const { user } = useAuth();
   const planetRef = useRef<HTMLDivElement>(null);
 
-  // The intro plays once per browser session, and not for people who asked for less motion
+  // The intro plays when the page is loaded or refreshed while on the main page.
+  // It does not play when you click back to the main page from another page.
   const [showIntro, setShowIntro] = useState(
-    () =>
-      // Adding ?intro to the address plays it again
-      (!sessionStorage.getItem('tentative_intro_seen') || window.location.search.includes('intro')) &&
-      !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    () => loadedOnMainPage && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );
   const finishIntro = useCallback(() => setShowIntro(false), []);
 
   useEffect(() => {
     if (!showIntro) return;
-    sessionStorage.setItem('tentative_intro_seen', '1');
+    loadedOnMainPage = false;
     document.body.style.overflow = 'hidden'; // no scrolling while the intro plays
     return () => {
       document.body.style.overflow = '';

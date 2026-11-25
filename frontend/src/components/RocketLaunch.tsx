@@ -83,41 +83,20 @@ export const RocketLaunch: React.FC<RocketLaunchProps> = ({ dateText, timeText }
         animate={{ x: [0, -1.5, 1.5, -1.5, 1.5, 0] }}
         transition={{ duration: 0.18, repeat: 8, delay: 0.5 }}
       >
-        <svg width="60" height="210" viewBox="0 0 60 210" fill="none" aria-hidden="true">
-          <defs>
-            <linearGradient id="rk-body" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#8d8d96" />
-              <stop offset="40%" stopColor="#ffffff" />
-              <stop offset="100%" stopColor="#a1a1aa" />
-            </linearGradient>
-            <linearGradient id="rk-flame" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#ffffff" />
-              <stop offset="35%" stopColor="#fde68a" />
-              <stop offset="75%" stopColor="#f59e0b" stopOpacity="0.7" />
-              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-
-          {/* Fins */}
-          <path d="M10 92 L0 122 L12 114 Z" fill="#71717a" />
-          <path d="M50 92 L60 122 L48 114 Z" fill="#71717a" />
-          {/* Body with a pointed nose */}
-          <path d="M30 0 C44 18 48 48 46 112 L14 112 C12 48 16 18 30 0 Z" fill="url(#rk-body)" />
-          {/* Window and stripe */}
-          <circle cx="30" cy="48" r="8" fill="#09090b" stroke="#d4d4d8" strokeWidth="2.5" />
-          <circle cx="27.5" cy="45.5" r="2" fill="#fff" opacity="0.6" />
-          <rect x="14" y="88" width="32" height="5" fill="#27272a" />
-          {/* Engine nozzle */}
-          <path d="M20 112 L40 112 L36 120 L24 120 Z" fill="#52525b" />
+        {/* A plain, flat white rocket: one body, two fins, one flame */}
+        <svg width="60" height="190" viewBox="0 0 60 190" fill="none" aria-hidden="true">
+          <path d="M30 0 C42 20 46 50 44 108 L16 108 C14 50 18 20 30 0 Z" fill="#ffffff" />
+          <path d="M16 84 L2 116 L16 108 Z" fill="#ffffff" />
+          <path d="M44 84 L58 116 L44 108 Z" fill="#ffffff" />
 
           {/* Flame, flickers while the engine is on */}
           <motion.g
-            style={{ originX: '30px', originY: '120px' }}
+            style={{ originX: '30px', originY: '112px' }}
             initial={{ scaleY: 0.2, opacity: 0 }}
             animate={{ scaleY: [0.2, 1, 1.5, 1.2, 1.7, 1.3], opacity: [0, 1, 1, 1, 1, 1] }}
             transition={{ delay: 0.7, duration: 2.8, ease: 'easeOut' }}
           >
-            <path d="M22 120 C22 150 30 205 30 205 C30 205 38 150 38 120 Z" fill="url(#rk-flame)" />
+            <path d="M22 112 C22 140 30 184 30 184 C30 184 38 140 38 112 Z" fill="#fcd34d" />
           </motion.g>
         </svg>
       </motion.div>
