@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { api } from '../api/client';
+import { afterAuthPath } from '../utils/createDraft';
 import { PlanetLogo } from '../components/PlanetLogo';
 import { DevSmsBanner } from '../components/DevSmsBanner';
 import { CodeEntry } from '../components/auth/CodeEntry';
@@ -86,7 +87,7 @@ export const CreateAccountPage: React.FC = () => {
     try {
       const user = await register(name, phone, code);
       showToast(`You're all set, ${user.name}!`, 'success');
-      navigate('/events');
+      navigate(afterAuthPath());
     } catch (err: any) {
       setCode('');
       setOutcome(

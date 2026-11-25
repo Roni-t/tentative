@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Check, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
@@ -6,6 +6,7 @@ import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { COMMON_TIMEZONES, getUserTimezone } from '../utils/timezone';
+import { clearDraft, loadDraft, saveDraft } from '../utils/createDraft';
 
 // Creating an event is a short survey: one question group per screen.
 const STEPS = ['Details', 'Dates', 'Times', 'Options', 'Review'];
@@ -61,31 +62,51 @@ export const CreateEventPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
 
-  const [step, setStep] = useState(0);
+  // Answers typed earlier in this tab (before a refresh or signing in) are put back
+  const [draft] = useState(loadDraft);
+
+  const [step, setStep] = useState(draft?.step ?? 0);
   const [direction, setDirection] = useState(1);
 
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [location, setLocation] = useState('');
-  const [timezone, setTimezone] = useState(getUserTimezone());
+  const [title, setTitle] = useState(draft?.title ?? '');
+  const [description, setDescription] = useState(draft?.description ?? '');
+  const [location, setLocation] = useState(draft?.location ?? '');
+  const [timezone, setTimezone] = useState(draft?.timezone ?? getUserTimezone());
 
   // Candidate dates start as the current week, Monday through Sunday
-  const [candidateDates, setCandidateDates] = useState<string[]>(weekDates(0));
+  const [candidateDates, setCandidateDates] = useState<string[]>(draft?.candidateDates ?? weekDates(0));
   const [month, setMonth] = useState(() => {
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() };
   });
 
-  const [dailyStartTime, setDailyStartTime] = useState('09:00');
-  const [dailyEndTime, setDailyEndTime] = useState('18:00');
-  const [slotDuration, setSlotDuration] = useState(30);
+  const [dailyStartTime, setDailyStartTime] = useState(draft?.dailyStartTime ?? '09:00');
+  const [dailyEndTime, setDailyEndTime] = useState(draft?.dailyEndTime ?? '18:00');
+  const [slotDuration, setSlotDuration] = useState(draft?.slotDuration ?? 30);
 
-  const [deadline, setDeadline] = useState('');
-  const [capacityLimit, setCapacityLimit] = useState('');
-  const [isHiddenDetails, setIsHiddenDetails] = useState(false);
-  const [expiryOption, setExpiryOption] = useState<ExpiryOption>('semester');
-  const [customExpiry, setCustomExpiry] = useState('');
+  const [deadline, setDeadline] = useState(draft?.deadline ?? '');
+  const [capacityLimit, setCapacityLimit] = useState(draft?.capacityLimit ?? '');
+  const [isHiddenDetails, setIsHiddenDetails] = useState(draft?.isHiddenDetails ?? false);
+  const [expiryOption, setExpiryOption] = useState<ExpiryOption>((draft?.expiryOption as ExpiryOption) ?? 'semester');
+  const [customExpiry, setCustomExpiry] = useState(draft?.customExpiry ?? '');
   const [loading, setLoading] = useState(false);
+
+  // Save the answers whenever something changes
+  useEffect(() => {
+    saveDraft({
+      step, title, description, location, timezone, candidateDates, dailyStartTime, dailyEndTime,
+      slotDuration, deadline, capacityLimit, isHiddenDetails, expiryOption, customExpiry,
+    });
+  }, [step, title, description, location, timezone, candidateDates, dailyStartTime, dailyEndTime,
+    slotDuration, deadline, capacityLimit, isHiddenDetails, expiryOption, customExpiry]);
+
+  const toldAboutDraft = useRef(false);
+  useEffect(() => {
+    if (draft && !toldAboutDraft.current) {
+      toldAboutDraft.current = true;
+      showToast('Picked up where you left off', 'info');
+    }
+  }, [draft, showToast]);
 
   const timezones = COMMON_TIMEZONES.includes(timezone) ? COMMON_TIMEZONES : [timezone, ...COMMON_TIMEZONES];
 
@@ -124,7 +145,7 @@ export const CreateEventPage: React.FC = () => {
 
   const createEvent = async () => {
     if (!user) {
-      showToast('Please sign in to host an event', 'error');
+      showToast('Sign in to finish. Your answers are saved.', 'info');
       navigate('/login');
       return;
     }
@@ -145,6 +166,7 @@ export const CreateEventPage: React.FC = () => {
         expiry_option: expiryOption,
         custom_expiry_date: expiryOption === 'custom' && customExpiry ? new Date(customExpiry).toISOString() : null,
       } as any);
+      clearDraft();
       showToast('Event created', 'success');
       navigate(`/events/${event.id}`);
     } catch (err: any) {

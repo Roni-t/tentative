@@ -83,3 +83,4 @@ Event dates and the daily window (for example 12:00 to 17:00) are wall-clock tim
 - **Options:** the reply deadline, capacity limit, link expiry and surprise mode live on their own screen, which can be skipped.
 - **Review:** a summary of every answer with an Edit link that jumps back to that screen.
 - **Phones:** inputs are 16px below 640px wide so iOS does not zoom in when one is focused, and the buttons are large enough to tap.
+- **Draft saving:** the survey saves your answers and current step in the browser tab (`utils/createDraft.ts`) as you type. If you refresh, or press Create while signed out, you are sent to sign in and then straight back to the survey with everything filled in. The draft is cleared when the event is created, and it is not saved until a title, description or location has been typed.
