@@ -162,6 +162,37 @@ export const RespondAvailabilityPage: React.FC = () => {
           </div>
         </div>
 
+        {/* NF-10 (Reese): pre-fill from a calendar file; free slots get selected, nothing is saved yet */}
+        <div className="glass-panel p-4 rounded-3xl border border-zinc-800 flex flex-wrap items-center justify-between gap-3">
+          <div className="text-xs text-zinc-300">
+            Import your calendar (.ics from Google, Apple or Outlook) to mark the times you are free.
+            <span className="block text-[11px] text-zinc-500">Only start and end times are read. Review the grid, then save.</span>
+          </div>
+          <label className="pill pill-dark !py-2 !px-4 !text-xs cursor-pointer">
+            <span>Import calendar (.ics)</span>
+            <input
+              type="file"
+              accept=".ics,text/calendar"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                e.target.value = '';
+                if (!file || !event) return;
+                try {
+                  const res = await api.importCalendar(event.id, await file.text());
+                  setSelectedSlots(res.free_slots);
+                  showToast(
+                    `Found ${res.busy_events_found} busy events; marked ${res.free_slots.length} of ${res.total_slots} slots as free. Review, then save.`,
+                    'success',
+                  );
+                } catch (err: any) {
+                  showToast(err.message || 'Could not read that calendar file.', 'error');
+                }
+              }}
+            />
+          </label>
+        </div>
+
         {/* Availability Painter Grid */}
         <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-zinc-800">
           <AvailabilityGrid

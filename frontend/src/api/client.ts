@@ -1,4 +1,4 @@
-import type { AuthResponse, CodeSentResponse, DevSmsNotice, GroupInfo, Invitee, RecurrenceInfo, User } from '../types';
+import type { AuthResponse, CodeSentResponse, DevSmsNotice, GroupInfo, Invitee, RecurrenceInfo, TimeSlot, User } from '../types';
 
 const API_BASE = '/api';
 
@@ -176,6 +176,14 @@ class ApiClient {
 
   async getChangelog(id: number | string) {
     return this.request<any[]>(`/events/${id}/changelog`);
+  }
+
+  // NF-10 Import availability from an external calendar file (Reese)
+  async importCalendar(eventId: number | string, icsText: string) {
+    return this.request<{ busy_events_found: number; total_slots: number; free_slots: TimeSlot[] }>(
+      `/events/${eventId}/availability/import-ics`,
+      { method: 'POST', body: JSON.stringify({ ics_text: icsText }) },
+    );
   }
 
   // FR-24 Group share links (Daniel)

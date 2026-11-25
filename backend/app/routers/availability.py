@@ -13,6 +13,10 @@ from app.schemas.availability import (
 )
 from app.services.availability_service import availability_service
 from app.services.heatmap_service import heatmap_service
+from app.services.calendar_import_service import free_slots
+from app.models.event import Event
+from fastapi import HTTPException, status
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/events/{event_id}", tags=["Availability & Heatmap"])
 
@@ -77,3 +81,25 @@ def get_availability_heatmap(
 ):
     """Get the aggregated availability heatmap with overlap counts and best-fit recommendations."""
     return heatmap_service.calculate_heatmap(event_id=event_id, db=db, force_refresh=refresh)
+
+
+# NF-10 Import events from an external calendar (Reese)
+class CalendarImportPayload(BaseModel):
+    ics_text: str
+
+
+class CalendarImportResult(BaseModel):
+    busy_events_found: int
+    total_slots: int
+    free_slots: List[TimeSlot]
+
+
+@router.post("/availability/import-ics", response_model=CalendarImportResult)
+def import_calendar(event_id: int, payload: CalendarImportPayload, db: Session = Depends(get_db)):
+    """Read a .ics calendar file and return the event's slots that don't clash with it. Saves nothing."""
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+    if event.status == "canceled":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Event has been canceled.")
+    return free_slots(event, payload.ics_text)
