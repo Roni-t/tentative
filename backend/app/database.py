@@ -28,6 +28,7 @@ class User(Base):
     
     manages: Mapped[List["Event"]] = relationship()
 
+#This needs a time/date start. Both are ints. I can handle the conversion -Trinity
 class Event(Base):
     __tablename__ = "events"
     
@@ -36,6 +37,21 @@ class Event(Base):
     name: Mapped[str] = mapped_column(String(50))
     description: Mapped[str]
     location: Mapped[str]
+
+#I don't know if I'm doing this right but these were the databases I needed, so please check over -Trinity
+#List of users who cannot see x event
+class DisbarredEvent(Base):
+    __tablename__ = "disbarred_from_event"
+
+    eId: Mapped[int] = mapped_column(primary_key = true)
+    uID: Mapped[int] = mapped_column(ForeginKey("user_acc.id"))
+
+#Block list
+class BlockedUsers(Base):
+    __tablename__ = "users_blocked"
+
+    blockerID: Mapped[int] = mapped_column(primary_key = true)
+    blockedID: Mapped[int] = mapped_column(ForeginKey("user_acc.id"))
 
 def newSession():
     global globengine
