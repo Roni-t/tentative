@@ -206,8 +206,9 @@ class InviteeService:
         Once everyone has responded, the host gets a text.
         """
         invitee = db.query(Invitee).filter(Invitee.event_id == event.id, Invitee.response_token == edit_token).first()
+        is_host = user is not None and event_service.is_host_or_cohost(event, user, db)
         if not invitee:
-            if user and event_service.is_host_or_cohost(event, user, db):
+            if is_host:
                 return
             invitee = Invitee(event_id=event.id, name=user.name if user else name.strip(), joined_via_link=True,
                               response_token=edit_token, created_at=datetime.now(timezone.utc))
@@ -216,6 +217,11 @@ class InviteeService:
                 invitee.phone_hash = user.phone_hash
             db.add(invitee)
         elif invitee.responded_at is not None:
+            if user and not is_host and invitee.joined_via_link and not invitee.phone_hash:
+                # They answered as a guest and have since logged in, so the response is theirs
+                invitee.phone_encrypted = user.phone_number_encrypted
+                invitee.phone_hash = user.phone_hash
+                db.commit()
             return
         invitee.responded_at = datetime.now(timezone.utc)
         db.commit()
