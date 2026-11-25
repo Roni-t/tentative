@@ -23,6 +23,7 @@ import { RsvpListPage } from './pages/RsvpListPage';
 import { DiscussionPage } from './pages/DiscussionPage';
 import { ShareExpiryPage } from './pages/ShareExpiryPage';
 import { RecurrencePage } from './pages/RecurrencePage';
+import { GroupsPage, GroupSharePage } from './pages/GroupsPage';
 import { AdminPage } from './pages/AdminPage';
 import { BugReportPage } from './pages/BugReportPage';
 import { ExpiredOrbitPage } from './pages/ExpiredOrbitPage';
@@ -76,6 +77,8 @@ const AnimatedRoutes: React.FC = () => {
           <Route path="/events/:id/discussion" element={<DiscussionPage />} />
           <Route path="/events/:id/share" element={<ShareExpiryPage />} />
           <Route path="/events/:id/recurrence" element={<RecurrencePage />} />
+          <Route path="/groups" element={<GroupsPage />} />
+          <Route path="/groups/:token" element={<GroupSharePage />} />
 
           {/* Shareable Link Routes (Invitee Anonymous Routes) */}
           <Route path="/share/:token" element={<ShareRedirect />} />

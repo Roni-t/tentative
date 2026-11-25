@@ -1,4 +1,4 @@
-import type { AuthResponse, CodeSentResponse, DevSmsNotice, Invitee, RecurrenceInfo, User } from '../types';
+import type { AuthResponse, CodeSentResponse, DevSmsNotice, GroupInfo, Invitee, RecurrenceInfo, User } from '../types';
 
 const API_BASE = '/api';
 
@@ -176,6 +176,23 @@ class ApiClient {
 
   async getChangelog(id: number | string) {
     return this.request<any[]>(`/events/${id}/changelog`);
+  }
+
+  // FR-24 Group share links (Daniel)
+  async listGroups() {
+    return this.request<GroupInfo[]>('/groups');
+  }
+
+  async createGroup(name: string, eventIds: number[]) {
+    return this.request<GroupInfo>('/groups', { method: 'POST', body: JSON.stringify({ name, event_ids: eventIds }) });
+  }
+
+  async rotateGroupLink(groupId: number) {
+    return this.request<GroupInfo>(`/groups/${groupId}/share/rotate`, { method: 'POST' });
+  }
+
+  async openGroupLink(token: string) {
+    return this.request<GroupInfo>(`/share/group/${token}`);
   }
 
   // UC-11 Recurring events (FR-1, Aaron)

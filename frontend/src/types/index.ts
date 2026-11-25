@@ -193,3 +193,22 @@ export interface RecurrenceInfo {
   end_date: string | null;
   occurrences: string[];
 }
+
+// FR-24 Group share links (Daniel)
+export interface GroupEvent {
+  id: number;
+  title: string;
+  status: string;
+  location?: string | null;
+  candidate_dates: string[];
+  finalized_start_time?: string | null;
+  share_token?: string | null;
+}
+
+export interface GroupInfo {
+  id: number;
+  name: string;
+  share_token: string | null;
+  share_url: string | null;
+  events: GroupEvent[];
+}
