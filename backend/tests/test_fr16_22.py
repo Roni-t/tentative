@@ -295,12 +295,12 @@ def test_fr22_invitees_notified_in_their_timezone_on_finalization(client, host, 
     sms_outbox.clear()
 
     client.post(f"/api/events/{event['id']}/finalize",
-                json={"start_time": SLOT[0]["start_time"], "end_time": SLOT[0]["end_time"]}, headers=host)
+                json={"start_time": HEATMAP_SLOT[0]["start_time"], "end_time": HEATMAP_SLOT[0]["end_time"]}, headers=host)
 
     (central,) = _texts_to(sms_outbox, INVITEES[0][1])
     (pacific,) = _texts_to(sms_outbox, INVITEES[2][1])
-    assert '"Team Dinner" is set for Fri, Dec 4, 7:00 PM CST' in central
-    assert '"Team Dinner" is set for Fri, Dec 4, 5:00 PM PST' in pacific
+    assert '"Team Dinner" is set for Fri, Dec 4, 1:00 PM CST' in central
+    assert '"Team Dinner" is set for Fri, Dec 4, 11:00 AM PST' in pacific
     assert "ECSS 2.410" in central
     assert _texts_to(sms_outbox, INVITEES[1][1]) == []  # opted out
 
@@ -309,7 +309,7 @@ def test_fr22_host_can_finalize_without_notifying(client, host, event_with_invit
     event, _ = event_with_invitees
     sms_outbox.clear()
     client.post(f"/api/events/{event['id']}/finalize",
-                json={"start_time": SLOT[0]["start_time"], "end_time": SLOT[0]["end_time"],
+                json={"start_time": HEATMAP_SLOT[0]["start_time"], "end_time": HEATMAP_SLOT[0]["end_time"],
                       "notify_participants": False}, headers=host)
     assert [m for m in sms_outbox if m["kind"] == "notification"] == []
 

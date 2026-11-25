@@ -5,6 +5,8 @@ These tests cover the empty, error, and caching conditions.
 Test IDs match the test case tables in the SE Document.
 """
 
+from tests.helpers import register_user
+
 EVENT = {
     "title": "Study Group",
     "candidate_dates": ["2026-11-25"],
@@ -15,11 +17,8 @@ EVENT = {
 
 
 def login(client, phone, name):
-    """Log in through the passwordless SMS flow and return auth headers."""
-    client.post("/api/auth/request-code", json={"phone": phone, "name": name})
-    code = client.get("/api/auth/dev-banner-code", params={"phone": phone}).json()["code"]
-    token = client.post("/api/auth/verify-code", json={"phone": phone, "code": code}).json()["token"]
-    return {"Authorization": f"Bearer {token}"}
+    """Create an account and return auth headers."""
+    return register_user(client, phone=phone, name=name)
 
 
 def submit(client, event_id, name, start, end):
