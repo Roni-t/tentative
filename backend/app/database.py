@@ -43,15 +43,16 @@ class Event(Base):
 class DisbarredEvent(Base):
     __tablename__ = "disbarred_from_event"
 
-    eId: Mapped[int] = mapped_column(primary_key = true)
-    uID: Mapped[int] = mapped_column(ForeginKey("user_acc.id"))
+    eId: Mapped[int] = mapped_column(primary_key = True)
+    uID: Mapped[int] = mapped_column(ForeignKey("user_acc.id"))
 
 #Block list
+#wait is this part of the reqs -reese
 class BlockedUsers(Base):
     __tablename__ = "users_blocked"
 
-    blockerID: Mapped[int] = mapped_column(primary_key = true)
-    blockedID: Mapped[int] = mapped_column(ForeginKey("user_acc.id"))
+    blockerID: Mapped[int] = mapped_column(primary_key = True)
+    blockedID: Mapped[int] = mapped_column(ForeignKey("user_acc.id"))
 
 def newSession():
     global globengine

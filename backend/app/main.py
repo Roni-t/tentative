@@ -11,15 +11,21 @@ async def hp():
 
 
 class UserCreate(BaseModel):
-    id: int = 0
     name: str
     login: str
     email_login: bool = False
 
+class EventCreate(BaseModel):
+    name: str
+    manager: int
+    description: str = "default description"
+    location: str = "Online"
+
+
 @app.post("/api/user/new")
 def newUser(user: UserCreate):
     with db.newSession() as session:
-        foo = db.User(id = user.id, name = user.name, login = user.login, email_login = user.email_login)
+        foo = db.User(id = None, name = user.name, login = user.login, email_login = user.email_login)
         session.add_all([foo])
         session.commit()
     
@@ -38,8 +44,8 @@ def userList():
 
 
 @app.get("/api/event/new")
-def newEvent():
-    foo = db.Event(manager_id = 1, name = "silly meeting", description = "the silly", location = "Online")
+def newEvent(event: EventCreate):
+    foo = db.Event(manager_id = event.manager, name = event.name, description = event.description, location = event.location)
     with db.newSession() as session:
         session.add_all([foo])
         session.commit()
@@ -59,7 +65,6 @@ def eventList():
 
 @app.get("/api/test")
 def test():
-    t = UserCreate(name = "foo", login = "example@example.org")
-    newUser(t)
-    newEvent()
+    newUser(UserCreate(name = "foo", login = "example@example.org"))
+    newEvent(EventCreate(manager = 1, name = "silly event"))
     return eventList()
