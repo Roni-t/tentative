@@ -172,7 +172,7 @@ export const DiscussionPage: React.FC = () => {
             <button
               type="submit"
               disabled={posting}
-              className="px-6 py-2 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_15px_rgba(255,255,255,0.3)] flex items-center space-x-1.5 transition-all disabled:opacity-50 cursor-pointer"
+              className="px-6 py-2 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 flex items-center space-x-1.5 transition-all disabled:opacity-50 cursor-pointer"
             >
               <Send className="w-3.5 h-3.5 text-black" />
               <span>{posting ? 'Posting...' : 'Post Message'}</span>

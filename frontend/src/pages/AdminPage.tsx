@@ -163,7 +163,7 @@ export const AdminPage: React.FC = () => {
                 <span className="text-xs text-zinc-400">Server Status</span>
                 <span
                   className={`w-2.5 h-2.5 rounded-full ${
-                    status.status === 'online' ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'bg-amber-400'
+                    status.status === 'online' ? 'bg-white' : 'bg-amber-400'
                   }`}
                 />
               </div>

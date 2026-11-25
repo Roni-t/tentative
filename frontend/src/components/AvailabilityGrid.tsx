@@ -320,7 +320,7 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
                           <motion.div
                             initial={{ scale: 0.95 }}
                             animate={{ scale: 1 }}
-                            className="w-full h-full rounded-md bg-white text-black font-semibold text-[11px] flex items-center justify-between px-2 shadow-[0_0_10px_rgba(255,255,255,0.4)] border-l-4 border-black"
+                            className="w-full h-full rounded-md bg-white text-black font-semibold text-[11px] flex items-center justify-between px-2 border-l-4 border-black"
                           >
                             <span className="tracking-tight">Available</span>
                             <span className="text-[10px] font-mono opacity-70">on</span>
@@ -348,7 +348,7 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
         <motion.div
           animate={{ scale: selectedSet.size > 0 ? [1, 1.04, 1] : 1 }}
           transition={{ duration: 0.2 }}
-          className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white text-black font-mono font-bold shadow-[0_0_15px_rgba(255,255,255,0.3)] text-xs"
+          className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white text-black font-mono font-bold text-xs"
         >
           <Sparkles className="w-3.5 h-3.5 text-black" />
           <span>{selectedSet.size} slots selected ({totalHours} hrs)</span>

@@ -209,7 +209,7 @@ export const ShareExpiryPage: React.FC = () => {
             <button
               type="submit"
               disabled={updatingExpiry}
-              className="px-6 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-colors cursor-pointer"
+              className="px-6 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 transition-colors cursor-pointer"
             >
               {updatingExpiry ? 'Saving...' : 'Apply Expiry Setting'}
             </button>

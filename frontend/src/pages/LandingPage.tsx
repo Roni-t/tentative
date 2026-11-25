@@ -1,72 +1,153 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
 import { HeroPlanet } from '../components/HeroPlanet';
+import { Reveal } from '../components/Reveal';
 import { useAuth } from '../context/AuthContext';
-import { ArrowRight, Clock, Lock, Users } from 'lucide-react';
 
-const features = [
+const STEPS = [
   {
-    icon: Users,
-    title: 'No account needed to respond',
-    text: 'Invitees open their personal link and paint when they are free. They can add a phone number afterward if they want a text.',
+    number: '01',
+    title: 'Make an event',
+    text: 'Pick the days you might meet and the hours that work. It takes about a minute.',
   },
   {
-    icon: Clock,
-    title: 'See the best time right away',
-    text: 'Every response goes into one heatmap that shows when the most people are free.',
+    number: '02',
+    title: 'Send each person a link',
+    text: 'Every invitee gets their own link. They paint when they are free. No account needed.',
   },
   {
-    icon: Lock,
-    title: 'Private by default',
-    text: 'Phone numbers are encrypted, and hosts only see who can be texted, never the numbers.',
+    number: '03',
+    title: 'Pick the best time',
+    text: 'One heatmap shows when the most people are free. Lock it in and everyone is told.',
   },
 ];
 
 export const LandingPage: React.FC = () => {
   const { user } = useAuth();
 
+  // The planet drifts up and softens as you scroll past the first screen
+  const { scrollYProgress } = useScroll();
+  const planetY = useTransform(scrollYProgress, [0, 0.25], [0, -70]);
+  const planetScale = useTransform(scrollYProgress, [0, 0.25], [1, 0.9]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
+
   return (
     <div className="w-full">
-      <section className="flex flex-col items-center text-center px-4 pt-10 pb-16 sm:pt-16">
-        <HeroPlanet />
-        <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight text-white mt-6">Tentative</h1>
-        <p className="text-sm sm:text-base text-zinc-400 mt-3 max-w-md">
-          Find a time that works for everyone. Share a link, collect availability, pick the best slot.
-        </p>
+      <section className="relative min-h-[calc(100vh-4.5rem)] flex flex-col items-center justify-center text-center px-4">
+        <motion.div style={{ y: planetY, scale: planetScale }}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.94 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <HeroPlanet />
+          </motion.div>
+        </motion.div>
 
-        <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
-          <Link
-            to={user ? '/create' : '/login'}
-            className="px-6 py-3 rounded-full text-sm font-bold bg-white text-black hover:bg-zinc-200 transition-colors flex items-center space-x-2"
+        <motion.div style={{ opacity: heroOpacity }} className="flex flex-col items-center">
+          <motion.h1
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.1, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="text-6xl sm:text-8xl lg:text-9xl font-semibold text-white tracking-[-0.05em] leading-none mt-4"
           >
-            <span>{user ? 'Create an event' : 'Get started'}</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-          <Link
-            to="/share/demo-orbit-2026/heatmap"
-            className="px-6 py-3 rounded-full text-sm font-semibold text-zinc-200 border border-white/20 hover:bg-white/10 transition-colors"
+            Tentative
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.1, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            className="eyebrow mt-6 !text-xs sm:!text-sm"
           >
-            View demo heatmap
-          </Link>
-          {user && (
-            <Link
-              to="/events"
-              className="px-6 py-3 rounded-full text-sm font-semibold text-zinc-200 border border-white/20 hover:bg-white/10 transition-colors"
-            >
-              My events
+            Group scheduling in perfect orbit
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.1, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="flex flex-wrap items-center justify-center gap-3 mt-10"
+          >
+            <Link to={user ? '/create' : '/login'} className="pill pill-light">
+              <span>{user ? 'Create an event' : 'Get started'}</span>
+              <ArrowRight className="w-4 h-4" />
             </Link>
-          )}
+            <Link to="/share/demo-orbit-2026/heatmap" className="pill pill-dark">
+              View demo heatmap
+            </Link>
+          </motion.div>
+        </motion.div>
+
+        <div className="absolute bottom-8 eyebrow">Scroll</div>
+      </section>
+
+      <section className="max-w-5xl mx-auto px-4 sm:px-8 py-28">
+        <Reveal>
+          <div className="flex items-center gap-4">
+            <span className="eyebrow !text-emerald-300/80">01</span>
+            <span className="hairline w-10" />
+            <span className="eyebrow">How it works</span>
+          </div>
+          <h2 className="display-serif text-5xl sm:text-6xl text-white mt-6 max-w-2xl leading-[1.05]">
+            Find a time without the group chat.
+          </h2>
+        </Reveal>
+
+        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-5">
+          {STEPS.map((step, i) => (
+            <Reveal key={step.number} delay={i * 0.12}>
+              <div className="glass-card rounded-3xl p-7 h-full">
+                <span className="font-mono text-xs text-zinc-500">{step.number}</span>
+                <h3 className="text-xl font-semibold text-white mt-10">{step.title}</h3>
+                <p className="text-sm text-zinc-400 leading-relaxed mt-3">{step.text}</p>
+              </div>
+            </Reveal>
+          ))}
         </div>
       </section>
 
-      <section className="max-w-5xl mx-auto px-4 pb-20 grid grid-cols-1 sm:grid-cols-3 gap-5">
-        {features.map(({ icon: Icon, title, text }) => (
-          <div key={title} className="glass-card p-6 rounded-2xl space-y-3">
-            <Icon className="w-5 h-5 text-white" />
-            <h3 className="text-sm font-bold text-white">{title}</h3>
-            <p className="text-xs text-zinc-400 leading-relaxed">{text}</p>
+      <section className="max-w-5xl mx-auto px-4 sm:px-8 pb-28">
+        <div className="hairline mb-28" />
+        <Reveal>
+          <div className="flex items-center gap-4">
+            <span className="eyebrow !text-emerald-300/80">02</span>
+            <span className="hairline w-10" />
+            <span className="eyebrow">Private by default</span>
           </div>
-        ))}
+        </Reveal>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mt-6">
+          <Reveal>
+            <h2 className="display-serif text-5xl sm:text-6xl text-white leading-[1.05]">
+              Your guests never need an account.
+            </h2>
+          </Reveal>
+          <Reveal delay={0.15}>
+            <div className="space-y-6 text-zinc-400 leading-relaxed md:pt-3">
+              <p>
+                Invitees respond from their personal link and can come back to edit it. If they want a text when the
+                time is set, they can add a phone number and verify it.
+              </p>
+              <p>
+                Phone numbers are encrypted. As the host you see who can be texted, never the numbers themselves.
+              </p>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      <section className="px-4 pb-32 text-center">
+        <Reveal>
+          <h2 className="text-4xl sm:text-6xl font-semibold text-white tracking-[-0.04em]">Ready when you are.</h2>
+          <div className="flex justify-center gap-3 mt-10">
+            <Link to={user ? '/create' : '/login'} className="pill pill-light">
+              <span>{user ? 'Create an event' : 'Get started'}</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </Reveal>
       </section>
     </div>
   );

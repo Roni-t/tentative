@@ -85,7 +85,7 @@ export const RecurrencePage: React.FC = () => {
                     onClick={() => toggleDay(d.code)}
                     className={`w-9 h-9 rounded-full text-xs font-bold transition-all ${
                       active
-                        ? 'bg-white text-black shadow-[0_0_12px_rgba(255,255,255,0.4)]'
+                        ? 'bg-white text-black'
                         : 'bg-white/5 text-zinc-400 hover:text-white border border-white/10'
                     }`}
                   >
@@ -109,7 +109,7 @@ export const RecurrencePage: React.FC = () => {
           <div className="pt-2 flex justify-end">
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_15px_rgba(255,255,255,0.3)] flex items-center space-x-1.5 transition-all cursor-pointer"
+              className="px-6 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 flex items-center space-x-1.5 transition-all cursor-pointer"
             >
               <Check className="w-4 h-4 text-black" />
               <span>Save Recurrence</span>

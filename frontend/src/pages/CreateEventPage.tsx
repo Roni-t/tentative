@@ -354,7 +354,7 @@ export const CreateEventPage: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="px-8 py-3.5 rounded-full text-sm font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_20px_rgba(255,255,255,0.35)] flex items-center space-x-2 transition-all disabled:opacity-50 cursor-pointer"
+            className="px-8 py-3.5 rounded-full text-sm font-bold bg-white text-black hover:bg-zinc-200 flex items-center space-x-2 transition-all disabled:opacity-50 cursor-pointer"
           >
             <span>{loading ? 'Aligning Orbits...' : 'Schedule Orbit'}</span>
             <ArrowRight className="w-4 h-4 text-black" />

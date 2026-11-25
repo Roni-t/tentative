@@ -154,7 +154,7 @@ export const RespondAvailabilityPage: React.FC = () => {
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_20px_rgba(255,255,255,0.35)] flex items-center space-x-2 transition-all disabled:opacity-50 cursor-pointer"
+              className="px-6 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 flex items-center space-x-2 transition-all disabled:opacity-50 cursor-pointer"
             >
               <Check className="w-4 h-4 text-black" />
               <span>{submitting ? 'Saving...' : 'Save Availability'}</span>
@@ -180,7 +180,7 @@ export const RespondAvailabilityPage: React.FC = () => {
           <button
             type="submit"
             disabled={submitting}
-            className="px-8 py-3.5 rounded-full text-sm font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_20px_rgba(255,255,255,0.35)] flex items-center space-x-2 transition-all disabled:opacity-50 cursor-pointer"
+            className="px-8 py-3.5 rounded-full text-sm font-bold bg-white text-black hover:bg-zinc-200 flex items-center space-x-2 transition-all disabled:opacity-50 cursor-pointer"
           >
             <span>{submitting ? 'Saving Orbit...' : 'Confirm & Save Availability'}</span>
             <ArrowRight className="w-4 h-4 text-black" />

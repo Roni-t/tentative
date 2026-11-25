@@ -282,7 +282,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                   <div className="w-3 h-3 rounded bg-zinc-900 border border-zinc-700" title="25%" />
                   <div className="w-3 h-3 rounded bg-zinc-700 border border-zinc-500" title="50%" />
                   <div className="w-3 h-3 rounded bg-zinc-300 border border-zinc-200" title="75%" />
-                  <div className="w-3 h-3 rounded bg-white border border-white shadow-[0_0_8px_rgba(255,255,255,0.6)]" title="100%" />
+                  <div className="w-3 h-3 rounded bg-white border border-white" title="100%" />
                   <span className="text-[10px] text-white font-bold">100%</span>
                 </div>
               </div>
@@ -316,7 +316,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                       onClick={() => handleCellClick(slot)}
                       className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-150 relative ${
                         isSelected
-                          ? 'bg-zinc-900 border-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                          ? 'bg-zinc-900 border-white'
                           : 'bg-zinc-950/80 hover:bg-zinc-900/90 border-zinc-800'
                       }`}
                       style={{ borderLeftWidth: '5px', borderLeftColor: idx === 0 ? '#FFFFFF' : '#A1A1AA' }}
@@ -449,7 +449,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => onSelectSlot(activeSlot)}
-                        className="w-full mt-4 py-3 rounded-xl font-bold text-xs bg-white text-black hover:bg-zinc-200 shadow-[0_0_20px_rgba(255,255,255,0.4)] flex items-center justify-center space-x-2 transition-all cursor-pointer"
+                        className="w-full mt-4 py-3 rounded-xl font-bold text-xs bg-white text-black hover:bg-zinc-200 flex items-center justify-center space-x-2 transition-all cursor-pointer"
                       >
                         <CheckCircle className="w-4 h-4 text-black" />
                         <span>Lock In & Finalize This Time</span>

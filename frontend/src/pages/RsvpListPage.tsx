@@ -219,7 +219,7 @@ export const RsvpListPage: React.FC = () => {
             <button
               type="submit"
               disabled={submittingRsvp}
-              className="px-6 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-all disabled:opacity-50 cursor-pointer"
+              className="px-6 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 transition-all disabled:opacity-50 cursor-pointer"
             >
               {submittingRsvp ? 'Saving...' : 'Save Response'}
             </button>

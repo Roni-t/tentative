@@ -1,88 +1,117 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 
+// The ring is drawn in two halves so the planet can sit between them.
+const ringBack = (rx: number, ry: number) => `M ${200 - rx} 130 A ${rx} ${ry} 0 0 1 ${200 + rx} 130`;
+const ringFront = (rx: number, ry: number) => `M ${200 - rx} 130 A ${rx} ${ry} 0 0 0 ${200 + rx} 130`;
+
+const RINGS = [
+  { rx: 178, ry: 38, opacity: 0.9, width: 1.6 },
+  { rx: 164, ry: 34.5, opacity: 0.5, width: 1 },
+  { rx: 148, ry: 31, opacity: 0.7, width: 2.4 },
+];
+
 export const HeroPlanet: React.FC = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  // The planet moves less than the ring when the cursor moves, which gives some depth
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const ringX = useSpring(useTransform(mx, (v) => v * 14), { stiffness: 50, damping: 20 });
+  const ringY = useSpring(useTransform(my, (v) => v * 14), { stiffness: 50, damping: 20 });
+  const bodyX = useSpring(useTransform(mx, (v) => v * 5), { stiffness: 50, damping: 20 });
+  const bodyY = useSpring(useTransform(my, (v) => v * 5), { stiffness: 50, damping: 20 });
 
-  // Smooth mouse coordinates for subtle 3D tilt
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-
-  const springX = useSpring(mouseX, { stiffness: 90, damping: 25, mass: 0.1 });
-  const springY = useSpring(mouseY, { stiffness: 90, damping: 25, mass: 0.1 });
-
-  const rotateX = useTransform(springY, [-0.5, 0.5], [12, -12]);
-  const rotateY = useTransform(springX, [-0.5, 0.5], [-14, 14]);
-
-  // Track cursor movement across window with requestAnimationFrame throttling for seamless 60fps 3D perspective
   useEffect(() => {
-    let ticking = false;
-    const handleWindowMouseMove = (e: MouseEvent) => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          const xPct = e.clientX / window.innerWidth - 0.5;
-          const yPct = e.clientY / window.innerHeight - 0.5;
-          mouseX.set(xPct);
-          mouseY.set(yPct);
-          ticking = false;
-        });
-        ticking = true;
-      }
+    const onMove = (e: MouseEvent) => {
+      mx.set(e.clientX / window.innerWidth - 0.5);
+      my.set(e.clientY / window.innerHeight - 0.5);
     };
-
-    window.addEventListener('mousemove', handleWindowMouseMove, { passive: true });
-    return () => window.removeEventListener('mousemove', handleWindowMouseMove);
-  }, [mouseX, mouseY]);
+    window.addEventListener('mousemove', onMove, { passive: true });
+    return () => window.removeEventListener('mousemove', onMove);
+  }, [mx, my]);
 
   return (
-    <div
-      ref={containerRef}
-      className="relative w-full max-w-md h-[250px] sm:h-[280px] flex items-center justify-center mx-auto select-none perspective-[1000px]"
+    <motion.div
+      animate={{ y: [0, -8, 0] }}
+      transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+      className="relative mx-auto w-[340px] sm:w-[520px] select-none pointer-events-none"
     >
-      {/* Central Celestial Orb with 3D Parallax */}
-      <motion.div
-        style={{ rotateX, rotateY }}
-        animate={{ y: [-6, 6, -6] }}
-        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
-        className="relative flex items-center justify-center transform-gpu"
-      >
-        {/* Pure white radiant ambient glow */}
-        <div className="absolute w-72 h-72 rounded-full bg-white/20 blur-3xl opacity-60 animate-pulse-glow" />
+      <svg viewBox="0 0 400 260" className="w-full overflow-visible" aria-hidden="true">
+        <defs>
+          <radialGradient id="hp-body" cx="34%" cy="28%" r="85%">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="28%" stopColor="#dcdce0" />
+            <stop offset="58%" stopColor="#8d8d96" />
+            <stop offset="82%" stopColor="#2c2c32" />
+            <stop offset="100%" stopColor="#0a0a0c" />
+          </radialGradient>
+          <radialGradient id="hp-shade" cx="30%" cy="26%" r="95%">
+            <stop offset="55%" stopColor="#000" stopOpacity="0" />
+            <stop offset="100%" stopColor="#000" stopOpacity="0.75" />
+          </radialGradient>
+          <radialGradient id="hp-glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+          </radialGradient>
+          <linearGradient id="hp-ring" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#fff" stopOpacity="0.05" />
+            <stop offset="30%" stopColor="#fff" stopOpacity="0.9" />
+            <stop offset="70%" stopColor="#d4d4d8" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#fff" stopOpacity="0.05" />
+          </linearGradient>
+          <clipPath id="hp-sphere">
+            <circle cx="200" cy="130" r="78" />
+          </clipPath>
+        </defs>
 
-        {/* Planet Sphere (Pure White Luminous Celestial Body) */}
-        <div className="relative w-52 h-52 sm:w-56 sm:h-56 rounded-full p-[1.5px] shadow-[0_0_45px_rgba(255,255,255,0.4)] border border-white/50 overflow-hidden bg-gradient-to-br from-white via-zinc-200 to-zinc-950">
-          {/* Internal volumetric white-to-charcoal gradients */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_32%_28%,#FFFFFF_0%,#F4F4F5_30%,#D4D4D8_55%,#52525B_80%,#09090B_100%)]" />
+        <circle cx="200" cy="130" r="170" fill="url(#hp-glow)" />
 
-          {/* Crisp specular white rim highlight */}
-          <div className="absolute top-2 left-6 w-32 h-16 rounded-full bg-white/60 blur-sm transform -rotate-12 pointer-events-none" />
+        {/* Back half of the ring, behind the planet */}
+        <motion.g style={{ x: ringX, y: ringY }}>
+          <g transform="rotate(-17 200 130)">
+            {RINGS.map((r) => (
+              <path
+                key={`back-${r.rx}`}
+                d={ringBack(r.rx, r.ry)}
+                fill="none"
+                stroke="url(#hp-ring)"
+                strokeWidth={r.width}
+                opacity={r.opacity * 0.45}
+              />
+            ))}
+          </g>
+        </motion.g>
 
-          {/* Subtle lunar crater / atmospheric micro-texture */}
-          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_45%_40%,rgba(0,0,0,0.5)_4px,transparent_6px),radial-gradient(circle_at_60%_65%,rgba(0,0,0,0.4)_6px,transparent_8px),radial-gradient(circle_at_25%_60%,rgba(0,0,0,0.3)_3px,transparent_5px)]" />
+        {/* Planet */}
+        <motion.g style={{ x: bodyX, y: bodyY }}>
+          <circle cx="200" cy="130" r="78" fill="url(#hp-body)" />
+          <g clipPath="url(#hp-sphere)">
+            <circle cx="200" cy="130" r="78" fill="url(#hp-shade)" />
+            {/* Soft bands across the surface */}
+            <g transform="rotate(-17 200 130)">
+              <ellipse cx="190" cy="112" rx="90" ry="7" fill="#fff" opacity="0.07" />
+              <ellipse cx="205" cy="140" rx="90" ry="10" fill="#000" opacity="0.07" />
+              <ellipse cx="200" cy="158" rx="90" ry="5" fill="#fff" opacity="0.05" />
+            </g>
+          </g>
+          <circle cx="200" cy="130" r="77.5" fill="none" stroke="#fff" strokeOpacity="0.28" />
+        </motion.g>
 
-          {/* Slow rotating orbital shadow */}
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 70, repeat: Infinity, ease: 'linear' }}
-            className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(0,0,0,0.85)_25%,transparent_65%)] pointer-events-none"
-          />
-        </div>
-
-        {/* Tilted Planetary Ring (Luminous Pure White & Platinum) */}
-        <motion.div
-          animate={{ rotate: [-24, -20, -24] }}
-          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute w-[360px] sm:w-[390px] h-[100px] sm:h-[110px] border-[3.5px] border-transparent rounded-[100%] pointer-events-none"
-          style={{
-            borderTopColor: 'rgba(255, 255, 255, 0.95)',
-            borderRightColor: 'rgba(255, 255, 255, 0.85)',
-            borderBottomColor: 'rgba(161, 161, 170, 0.4)',
-            borderLeftColor: 'rgba(255, 255, 255, 0.9)',
-            boxShadow: '0 0 35px rgba(255, 255, 255, 0.65), inset 0 0 20px rgba(255, 255, 255, 0.45)',
-            transform: 'rotate(-22deg)',
-          }}
-        />
-      </motion.div>
-    </div>
+        {/* Front half of the ring, in front of the planet */}
+        <motion.g style={{ x: ringX, y: ringY }}>
+          <g transform="rotate(-17 200 130)">
+            {RINGS.map((r) => (
+              <path
+                key={`front-${r.rx}`}
+                d={ringFront(r.rx, r.ry)}
+                fill="none"
+                stroke="url(#hp-ring)"
+                strokeWidth={r.width}
+                opacity={r.opacity}
+              />
+            ))}
+          </g>
+        </motion.g>
+      </svg>
+    </motion.div>
   );
 };
