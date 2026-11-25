@@ -31,15 +31,16 @@ class ApiClient {
     }
   }
 
-  getEditToken(): string | null {
-    return localStorage.getItem('tentative_edit_token');
+  // Each event has its own token, so answering one event does not affect another
+  getEditToken(eventId: number | string): string | null {
+    return localStorage.getItem(`tentative_edit_token_${eventId}`);
   }
 
-  setEditToken(token: string | null) {
+  setEditToken(eventId: number | string, token: string | null) {
     if (token) {
-      localStorage.setItem('tentative_edit_token', token);
+      localStorage.setItem(`tentative_edit_token_${eventId}`, token);
     } else {
-      localStorage.removeItem('tentative_edit_token');
+      localStorage.removeItem(`tentative_edit_token_${eventId}`);
     }
   }
 
@@ -232,16 +233,16 @@ class ApiClient {
   async submitAvailability(eventId: number | string, participantName: string, slots: { start_time: string; end_time: string }[], editToken?: string) {
     const data = await this.request<any>(`/events/${eventId}/availability`, {
       method: 'POST',
-      body: JSON.stringify({ participant_name: participantName, edit_token: editToken || this.getEditToken(), slots }),
+      body: JSON.stringify({ participant_name: participantName, edit_token: editToken || this.getEditToken(eventId), slots }),
     });
     if (data.edit_token) {
-      this.setEditToken(data.edit_token);
+      this.setEditToken(eventId, data.edit_token);
     }
     return data;
   }
 
   async getMyAvailability(eventId: number | string, editToken?: string) {
-    const token = editToken || this.getEditToken();
+    const token = editToken || this.getEditToken(eventId);
     return this.request<{ start_time: string; end_time: string }[]>(`/events/${eventId}/availability/me${token ? `?edit_token=${token}` : ''}`);
   }
 
@@ -256,18 +257,18 @@ class ApiClient {
       body: JSON.stringify({
         participant_name: participantName,
         participant_phone: contact,
-        edit_token: editToken || this.getEditToken(),
+        edit_token: editToken || this.getEditToken(eventId),
         status,
       }),
     });
     if (data.edit_token) {
-      this.setEditToken(data.edit_token);
+      this.setEditToken(eventId, data.edit_token);
     }
     return data;
   }
 
   async getRsvpSummary(eventId: number | string, editToken?: string) {
-    const token = editToken || this.getEditToken();
+    const token = editToken || this.getEditToken(eventId);
     return this.request<any>(`/events/${eventId}/rsvp${token ? `?edit_token=${token}` : ''}`);
   }
 

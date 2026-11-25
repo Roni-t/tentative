@@ -59,14 +59,13 @@ def submit_availability(
 def get_my_availability(
     event_id: int,
     edit_token: Optional[str] = Query(None),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     tentative_edit_token: Optional[str] = Cookie(None),
     db: Session = Depends(get_db)
 ):
-    """Retrieve saved availability slots using edit_token."""
+    """Retrieve saved availability slots for this edit_token or the logged-in account."""
     token = edit_token or tentative_edit_token
-    if not token:
-        return []
-    return availability_service.get_participant_slots(event_id, token, db)
+    return availability_service.get_participant_slots(event_id, token, current_user, db)
 
 
 @router.get("/heatmap", response_model=HeatmapResponse)
