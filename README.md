@@ -47,9 +47,10 @@ Tentative strictly adheres to the 4-tier layered architecture specified in the e
 
 ## ⚡ Quick Start
 
-Run the entire stack in one command using Docker Compose:
+Create your local `.env`, then run the entire stack using Docker Compose:
 
 ```bash
+cp .env.example .env   # first time only
 docker compose up --build
 ```
 
@@ -61,7 +62,7 @@ The web application is exposed at **[http://localhost:8080](http://localhost:808
 
 ## 🔑 Environment Variables
 
-The project includes ready-to-run defaults in `docker-compose.yml` and `.env.example`.
+Docker Compose loads these from `.env` in the project root, which is gitignored. Copy `.env.example` to create it; the sample values work for local use.
 
 | Variable | Default Value | Description |
 |---|---|---|
