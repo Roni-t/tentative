@@ -243,29 +243,24 @@ def test_f20_no_text_without_invitees(client, host, sms_outbox):
 
 # ------------------------------------------------------------------ F-21 / FR-21
 
-# The heatmap currently lays out each day's window in UTC rather than the event timezone (an FR-6 gap),
-# so F-21 uses a slot inside the 17:00-22:00 window as the heatmap sees it.
-HEATMAP_SLOT = [{"start_time": "2026-12-04T19:00:00Z", "end_time": "2026-12-04T21:00:00Z"}]
-
-
 def test_f21_host_finalizes_slot_everyone_is_free(client, db_session, host, event_with_invitees, sms_outbox):
     event, invitees = event_with_invitees
     for inv, (name, _, _) in zip(invitees, INVITEES):
-        submit_availability(client, event["id"], name, HEATMAP_SLOT, token=inv["response_token"])
-    submit_availability(client, event["id"], HOST_NAME, HEATMAP_SLOT)
+        submit_availability(client, event["id"], name, SLOT, token=inv["response_token"])
+    submit_availability(client, event["id"], HOST_NAME, SLOT)
 
     heatmap = client.get(f"/api/events/{event['id']}/heatmap?refresh=true").json()
     best = heatmap["best_slots"][0]
     assert best["count"] == best["total_participants"] == 4
 
-    assert best["start_time"].startswith("2026-12-04T19:00")
+    assert best["start_time"].startswith("2026-12-05T01:00")
     res = client.post(f"/api/events/{event['id']}/finalize",
-                      json={"start_time": best["start_time"], "end_time": "2026-12-04T21:00:00Z"}, headers=host)
+                      json={"start_time": best["start_time"], "end_time": SLOT[0]["end_time"]}, headers=host)
     assert res.status_code == 200
     page = client.get(f"/api/events/{event['id']}", headers=host).json()
     assert page["status"] == "finalized"
     assert ensure_utc(datetime.fromisoformat(page["finalized_start_time"].replace("Z", "+00:00"))) == datetime(
-        2026, 12, 4, 19, 0, tzinfo=timezone.utc
+        2026, 12, 5, 1, 0, tzinfo=timezone.utc
     )
 
     # Availability grid is locked for all invitees
@@ -295,12 +290,12 @@ def test_fr22_invitees_notified_in_their_timezone_on_finalization(client, host, 
     sms_outbox.clear()
 
     client.post(f"/api/events/{event['id']}/finalize",
-                json={"start_time": HEATMAP_SLOT[0]["start_time"], "end_time": HEATMAP_SLOT[0]["end_time"]}, headers=host)
+                json={"start_time": SLOT[0]["start_time"], "end_time": SLOT[0]["end_time"]}, headers=host)
 
     (central,) = _texts_to(sms_outbox, INVITEES[0][1])
     (pacific,) = _texts_to(sms_outbox, INVITEES[2][1])
-    assert '"Team Dinner" is set for Fri, Dec 4, 1:00 PM CST' in central
-    assert '"Team Dinner" is set for Fri, Dec 4, 11:00 AM PST' in pacific
+    assert '"Team Dinner" is set for Fri, Dec 4, 7:00 PM CST' in central
+    assert '"Team Dinner" is set for Fri, Dec 4, 5:00 PM PST' in pacific
     assert "ECSS 2.410" in central
     assert _texts_to(sms_outbox, INVITEES[1][1]) == []  # opted out
 
@@ -309,7 +304,7 @@ def test_fr22_host_can_finalize_without_notifying(client, host, event_with_invit
     event, _ = event_with_invitees
     sms_outbox.clear()
     client.post(f"/api/events/{event['id']}/finalize",
-                json={"start_time": HEATMAP_SLOT[0]["start_time"], "end_time": HEATMAP_SLOT[0]["end_time"],
+                json={"start_time": SLOT[0]["start_time"], "end_time": SLOT[0]["end_time"],
                       "notify_participants": False}, headers=host)
     assert [m for m in sms_outbox if m["kind"] == "notification"] == []
 
@@ -381,3 +376,28 @@ def test_verifying_a_phone_creates_an_account_and_links_the_response(client, db_
     # Wrong codes don't verify
     bad = client.post(f"/api/invite/{token}/phone/verify", json={"phone": "+14695550166", "code": "000000"})
     assert bad.status_code == 400
+
+
+# ------------------------------------------------------------------ Time zones in the heatmap
+
+def test_heatmap_window_is_in_the_event_timezone(client, host):
+    """A 12:00-14:00 window in Chicago (CST, UTC-6) starts at 18:00 UTC, on the same candidate date."""
+    event = create_event(client, host, daily_start_time="12:00", daily_end_time="14:00",
+                         candidate_dates=["2026-12-02"])
+    slots = client.get(f"/api/events/{event['id']}/heatmap?refresh=true").json()["slots"]
+    assert [s["start_time"][:16] for s in slots] == ["2026-12-02T18:00", "2026-12-02T19:00"]
+
+
+def test_finalize_window_is_in_the_event_timezone(client, host):
+    event = create_event(client, host, daily_start_time="12:00", daily_end_time="14:00",
+                         candidate_dates=["2026-12-02"])
+    url = f"/api/events/{event['id']}/finalize"
+    inside = client.post(url, json={"start_time": "2026-12-02T18:00:00Z", "end_time": "2026-12-02T19:00:00Z",
+                                    "notify_participants": False}, headers=host)
+    assert inside.status_code == 200
+    event2 = create_event(client, host, daily_start_time="12:00", daily_end_time="14:00",
+                          candidate_dates=["2026-12-02"])
+    outside = client.post(f"/api/events/{event2['id']}/finalize",
+                          json={"start_time": "2026-12-02T12:00:00Z", "end_time": "2026-12-02T13:00:00Z"},
+                          headers=host)
+    assert outside.status_code == 400  # 12:00 UTC is 6 AM in Chicago

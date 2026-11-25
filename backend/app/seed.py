@@ -120,7 +120,7 @@ def seed_database(db: Session) -> None:
         ("Noah Davis", "+19725550208", "token-noah-08")
     ]
 
-    # Pre-populate availability slots so Wednesday Sep 16, 2:00 PM - 3:00 PM (14:00 - 15:00 UTC) has 7 of 8 available!
+    # Pre-populate availability slots so Wednesday Sep 16, 9:00 - 10:00 AM Chicago time (14:00 - 15:00 UTC) has 7 of 8 available
     wed_date = "2026-09-16"
     y, m, d = 2026, 9, 16
 
@@ -163,8 +163,8 @@ def seed_database(db: Session) -> None:
                 event_id=event.id,
                 participant_name=name,
                 edit_token=edit_tok,
-                start_time=datetime(2026, 9, 17, 10, 0, tzinfo=timezone.utc),
-                end_time=datetime(2026, 9, 17, 11, 0, tzinfo=timezone.utc),
+                start_time=datetime(2026, 9, 17, 15, 0, tzinfo=timezone.utc),
+                end_time=datetime(2026, 9, 17, 16, 0, tzinfo=timezone.utc),
                 created_at=now - timedelta(hours=16)
             ))
 

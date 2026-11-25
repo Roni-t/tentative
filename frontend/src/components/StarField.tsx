@@ -29,25 +29,6 @@ const makeStar = (width: number, height: number): Star => ({
 
 export const StarField: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const glowRef = useRef<HTMLDivElement | null>(null);
-
-  // Cursor glow follows the mouse without re-rendering React
-  useEffect(() => {
-    let frame = 0;
-    const onMove = (e: MouseEvent) => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        if (glowRef.current) {
-          glowRef.current.style.transform = `translate3d(${e.clientX - 225}px, ${e.clientY - 225}px, 0)`;
-        }
-      });
-    };
-    window.addEventListener('mousemove', onMove, { passive: true });
-    return () => {
-      window.removeEventListener('mousemove', onMove);
-      cancelAnimationFrame(frame);
-    };
-  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -158,15 +139,6 @@ export const StarField: React.FC = () => {
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-black">
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full opacity-70" />
-
-      <div
-        ref={glowRef}
-        className="absolute w-[450px] h-[450px] rounded-full will-change-transform"
-        style={{
-          background: 'radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%)',
-          transform: 'translate3d(-1000px, -1000px, 0)',
-        }}
-      />
 
       {/* Faint light patches. These are sized in vw so they scale with the window. */}
       <div

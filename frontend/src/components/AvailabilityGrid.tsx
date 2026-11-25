@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { TimeSlot } from '../types';
 import { formatDateHeading, formatDayName, formatDateSub } from '../utils/format';
+import { zonedWallTimeToUtc } from '../utils/zoned';
 import { Clock, CheckSquare, XSquare, Sparkles, Calendar, Sun, Briefcase } from 'lucide-react';
 
 interface AvailabilityGridProps {
@@ -65,8 +66,8 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
   }, [initialSlots]);
 
   const getSlotIso = (dateStr: string, hour: number, minute: number): { startIso: string; endIso: string } => {
-    const [y, m, d] = dateStr.split('-').map(Number);
-    const startDt = new Date(Date.UTC(y, m - 1, d, hour, minute));
+    // The window (for example 12:00) is a wall-clock time in the event's time zone
+    const startDt = zonedWallTimeToUtc(dateStr, hour, minute, timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
     const endDt = new Date(startDt.getTime() + slotDurationMinutes * 60 * 1000);
     return {
       startIso: startDt.toISOString(),

@@ -10,6 +10,7 @@ from tests.helpers import register_user
 EVENT = {
     "title": "Sprint Review",
     "candidate_dates": ["2026-11-25"],
+    "timezone": "UTC",
     "daily_start_time": "14:00",
     "daily_end_time": "16:00",
     "slot_duration_minutes": 30,

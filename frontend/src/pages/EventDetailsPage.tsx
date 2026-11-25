@@ -243,7 +243,7 @@ export const EventDetailsPage: React.FC = () => {
                 Orbit Locked & Finalized
               </div>
               <div className="text-base sm:text-lg font-bold text-white mt-0.5">
-                {formatDateTimeLong(event.finalized_start_time)}
+                {formatDateTimeLong(event.finalized_start_time, event.timezone)}
               </div>
               <div className="text-xs text-slate-400 mt-0.5">
                 Location: {event.location || 'Online'}

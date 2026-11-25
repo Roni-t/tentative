@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from typing import List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -137,13 +138,13 @@ class EventService:
 
     @staticmethod
     def _validate_finalize_time(event: Event, start_time: datetime, end_time: datetime) -> None:
-        """UC-15 (Divyam): reject finalize requests that are invalid for this event.
+        """Reject finalize requests that are invalid for this event.
 
         Rules:
           1. A canceled event cannot be finalized.
           2. The end time must be after the start time.
-          3. The time must fall on one of the event's candidate dates and
-             inside its daily window (times are stored and compared in UTC).
+          3. The time must fall on one of the event's candidate dates and inside its
+             daily window. Dates and windows are in the event's time zone.
         """
         if event.status == "canceled":
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot finalize a canceled event.")
@@ -155,12 +156,16 @@ class EventService:
         if et <= st:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="End time must be after start time.")
 
-        if st.strftime("%Y-%m-%d") not in (event.candidate_dates or []) or st.date() != et.date():
+        event_tz = ZoneInfo(event.timezone or "UTC")
+        local_start = st.astimezone(event_tz)
+        local_end = et.astimezone(event_tz)
+
+        if local_start.strftime("%Y-%m-%d") not in (event.candidate_dates or []) or local_start.date() != local_end.date():
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Selected time must be on one of the event's candidate dates.")
 
         window_start = event.daily_start_time or "00:00"
         window_end = event.daily_end_time or "23:59"
-        if st.strftime("%H:%M") < window_start or et.strftime("%H:%M") > window_end:
+        if local_start.strftime("%H:%M") < window_start or local_end.strftime("%H:%M") > window_end:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Selected time must be within the event's daily time window.")
 
     def cancel_event(self, event_id: int, user: User, db: Session) -> Event:

@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
+import { CometTrail } from '../components/CometTrail';
 import { HeroPlanet } from '../components/HeroPlanet';
 import { Reveal } from '../components/Reveal';
 import { useAuth } from '../context/AuthContext';
@@ -35,6 +36,7 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div className="w-full">
+      <CometTrail />
       <section className="relative min-h-[calc(100vh-4.5rem)] flex flex-col items-center justify-center text-center px-4">
         <motion.div style={{ y: planetY, scale: planetScale }}>
           <motion.div

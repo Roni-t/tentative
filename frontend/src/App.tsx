@@ -33,22 +33,13 @@ const ShareRedirect: React.FC = () => {
   return <Navigate to={`/share/${token}/heatmap`} replace />;
 };
 
-// Automatically scrolls window to top on every route change
-const ScrollToTop: React.FC = () => {
-  const { pathname } = useLocation();
-
-  React.useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-
-  return null;
-};
-
 const AnimatedRoutes: React.FC = () => {
   const location = useLocation();
 
   return (
-    <AnimatePresence mode="wait">
+    // Jump to the top (instantly, not smoothly) once the old page has left, so the new page starts at the top.
+    // A smooth scroll here made the landing page look blank, because its hero fades out with scroll position.
+    <AnimatePresence mode="wait" onExitComplete={() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' })}>
       <motion.div
         key={location.pathname}
         initial={{ opacity: 0, y: 10 }}
@@ -90,11 +81,11 @@ const AnimatedRoutes: React.FC = () => {
   );
 };
 
-// Tells glass surfaces where the cursor is so their shine can follow it
+// Tells the glass top bar where the cursor is so its shine can follow it
 const useGlassShine = () => {
   React.useEffect(() => {
     const onMove = (e: PointerEvent) => {
-      const el = (e.target as HTMLElement).closest?.('.glass-card, .pill-dark, .glass-pill-nav') as HTMLElement | null;
+      const el = (e.target as HTMLElement).closest?.('.glass-pill-nav') as HTMLElement | null;
       if (!el) return;
       const box = el.getBoundingClientRect();
       el.style.setProperty('--mx', `${e.clientX - box.left}px`);
@@ -109,7 +100,6 @@ export const App: React.FC = () => {
   useGlassShine();
   return (
     <BrowserRouter>
-      <ScrollToTop />
       <AuthProvider>
         <ToastProvider>
           <div className="relative min-h-screen flex flex-col bg-black text-zinc-100 selection:bg-white/20 selection:text-white">

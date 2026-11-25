@@ -10,6 +10,7 @@ from tests.helpers import register_user
 EVENT = {
     "title": "Study Group",
     "candidate_dates": ["2026-11-25"],
+    "timezone": "UTC",
     "daily_start_time": "14:00",
     "daily_end_time": "16:00",
     "slot_duration_minutes": 30,
@@ -90,7 +91,7 @@ def test_nf15_heatmap_50_participants_under_2_seconds(client, db_session):
 
     host = login(client, "+19725550251", "Host")
     event = {**EVENT, "candidate_dates": ["2026-11-25", "2026-11-26", "2026-11-27"],
-             "daily_start_time": "09:00", "daily_end_time": "21:00"}
+             "daily_start_time": "09:00", "daily_end_time": "21:00", "timezone": "UTC"}
     event_id = client.post("/api/events", json=event, headers=host).json()["id"]
     for i in range(50):
         hour = 9 + (i % 10)

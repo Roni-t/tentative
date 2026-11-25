@@ -129,6 +129,7 @@ export const HeatmapPage: React.FC = () => {
 
       {/* Heatmap Grid & Inspector Component */}
       <HeatmapGrid
+        timezone={event.timezone}
         heatmap={heatmap}
         candidateDates={event.candidate_dates}
         isHostOrCohost={isHostOrCohost}

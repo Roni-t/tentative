@@ -20,7 +20,7 @@ export const Navbar: React.FC = () => {
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         <Link
           to="/"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          onClick={() => pathname === '/' && window.scrollTo({ top: 0, behavior: 'smooth' })}
           className="inline-flex items-center space-x-2.5"
         >
           <PlanetLogo size={26} />
