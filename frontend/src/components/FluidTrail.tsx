@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { CometTrail } from './CometTrail';
+import { INTRO_DONE_EVENT, introIsPending } from '../utils/intro';
 
 // A small fluid simulation. Moving the cursor pushes the "fluid" and adds a little glowing dye,
 // which swirls and slowly fades, so the cursor leaves a soft, inky smoke trail.
@@ -148,6 +149,21 @@ const FluidCanvas: React.FC<{ onUnsupported: () => void }> = ({ onUnsupported })
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
+    // Start after the intro, so setting up WebGL does not cause a stutter while the intro plays
+    let stop: (() => void) | undefined;
+    let cancelled = false;
+    const begin = () => {
+      if (!cancelled) stop = run();
+    };
+    if (introIsPending()) window.addEventListener(INTRO_DONE_EVENT, begin, { once: true });
+    else begin();
+    return () => {
+      cancelled = true;
+      window.removeEventListener(INTRO_DONE_EVENT, begin);
+      stop?.();
+    };
+
+    function run(): (() => void) | undefined {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -445,6 +461,7 @@ const FluidCanvas: React.FC<{ onUnsupported: () => void }> = ({ onUnsupported })
       window.removeEventListener('resize', onResize);
       cancelAnimationFrame(frame);
     };
+    }
   }, [onUnsupported]);
 
   return <canvas ref={canvasRef} className="fixed inset-0 w-full h-full pointer-events-none z-[1]" aria-hidden="true" />;

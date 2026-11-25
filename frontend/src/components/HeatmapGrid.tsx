@@ -277,7 +277,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
 
               {/* Monochrome Legend */}
               <div className="p-3 bg-zinc-950 border-t border-zinc-800 flex flex-wrap items-center justify-between text-xs text-zinc-400">
-                <span className="text-[11px]">Darker = fewer free · Pure white = unanimous group alignment</span>
+                <span className="text-[11px]">Darker means fewer people are free. White means everyone is free.</span>
                 <div className="flex items-center space-x-1.5">
                   <span className="text-[10px] text-zinc-500">0%</span>
                   <div className="w-3 h-3 rounded bg-black border border-zinc-800" title="0%" />
@@ -295,7 +295,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-zinc-400">
                   <Calendar className="w-4 h-4 text-white" />
-                  <span>Identified Consensus Blocks</span>
+                  <span>Best times</span>
                 </div>
                 <span className="text-xs text-zinc-500 font-mono">
                   {heatmap.best_slots.length} top options found
@@ -327,7 +327,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                         <div className="flex items-center space-x-2">
                           <Info className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
                           <span className="text-xs font-bold text-white">
-                            {idx === 0 ? 'Top Orbit Window' : `Option #${idx + 1}`}
+                            {idx === 0 ? 'Best time' : `Option #${idx + 1}`}
                           </span>
                         </div>
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white text-black font-bold">
@@ -395,7 +395,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                     </div>
 
                     <div className="p-3.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-between">
-                      <span className="text-xs text-zinc-400">Attendance Alignment</span>
+                      <span className="text-xs text-zinc-400">People free</span>
                       <span className="text-sm font-bold font-mono text-white">
                         {activeSlot.count} of {activeSlot.total_participants} free (
                         {Math.round(activeSlot.ratio * 100)}%)
@@ -478,7 +478,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
         <div className="p-6 rounded-2xl glass-panel border border-zinc-800 bg-zinc-950/80 space-y-4">
           <h3 className="text-sm font-bold text-white flex items-center space-x-2">
             <Sparkles className="w-4 h-4 text-white" />
-            <span>Ranked Schedule Alignment (Screen Reader Accessible)</span>
+            <span>Ranked list of times</span>
           </h3>
 
           <div className="divide-y divide-zinc-800">

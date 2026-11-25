@@ -40,7 +40,7 @@ export const BugReportPage: React.FC = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-white tracking-tight">Report an Issue</h1>
-            <p className="text-xs text-slate-400">Found an anomaly in the orbit? Let our team know.</p>
+            <p className="text-xs text-slate-400">Found a problem? Let us know.</p>
           </div>
         </div>
 

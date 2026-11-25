@@ -113,7 +113,7 @@ export const EventDetailsPage: React.FC = () => {
   if (loading) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-16 text-center text-slate-500 animate-pulse">
-        Loading orbit details...
+        Loading event...
       </div>
     );
   }
@@ -240,7 +240,7 @@ export const EventDetailsPage: React.FC = () => {
             </div>
             <div>
               <div className="text-[10px] uppercase font-bold tracking-wider text-emerald-400">
-                Orbit Locked & Finalized
+                Time finalized
               </div>
               <div className="text-base sm:text-lg font-bold text-white mt-0.5">
                 {formatDateTimeLong(event.finalized_start_time, event.timezone)}
@@ -250,6 +250,25 @@ export const EventDetailsPage: React.FC = () => {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* A short guide for hosts, so it is clear what to do next */}
+      {canManage && event.status === 'collecting' && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            ['1', 'Add your invitees', 'Add each person below and send them their own link.'],
+            ['2', 'Wait for responses', 'People paint when they are free. Check the heatmap any time.'],
+            ['3', 'Pick the best time', 'Choose a time on the heatmap and finalize it.'],
+          ].map(([number, title, text]) => (
+            <div key={number} className="flex items-start space-x-3 px-1 py-1">
+              <span className="font-mono text-xs text-zinc-500 pt-0.5">{number}</span>
+              <div>
+                <div className="text-sm font-semibold text-white">{title}</div>
+                <div className="text-xs text-zinc-400 mt-0.5 leading-relaxed">{text}</div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -272,7 +291,7 @@ export const EventDetailsPage: React.FC = () => {
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-white/5 text-xs text-cosmic-purple font-semibold flex items-center space-x-1">
-            <span>Explore Heatmap</span>
+            <span>See the heatmap</span>
             
           </div>
         </Link>
@@ -294,7 +313,7 @@ export const EventDetailsPage: React.FC = () => {
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-white/5 text-xs text-cosmic-cyan font-semibold flex items-center space-x-1">
-            <span>Paint Free Slots</span>
+            <span>Add my times</span>
             
           </div>
         </Link>
@@ -316,7 +335,7 @@ export const EventDetailsPage: React.FC = () => {
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-white/5 text-xs text-cosmic-pink font-semibold flex items-center space-x-1">
-            <span>View Attendance</span>
+            <span>See who's coming</span>
             
           </div>
         </Link>
@@ -338,7 +357,7 @@ export const EventDetailsPage: React.FC = () => {
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-white/5 text-xs text-zinc-200 font-semibold flex items-center space-x-1">
-            <span>Join Discussion</span>
+            <span>Open discussion</span>
             
           </div>
         </Link>
@@ -356,11 +375,11 @@ export const EventDetailsPage: React.FC = () => {
               Share & Expiry Link
             </h3>
             <p className="text-xs text-slate-400">
-              Copy shareable link, rotate token if compromised, or modify expiry date.
+              Copy the group link, replace it if it leaks, or change when it expires.
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-white/5 text-xs text-slate-300 font-semibold flex items-center space-x-1">
-            <span>Configure Link</span>
+            <span>Manage link</span>
             
           </div>
         </Link>
@@ -375,14 +394,14 @@ export const EventDetailsPage: React.FC = () => {
               <Repeat className="w-5 h-5" />
             </div>
             <h3 className="text-base font-bold text-white group-hover:text-white transition-colors">
-              Recurring Orbit Series
+              Repeat this event
             </h3>
             <p className="text-xs text-slate-400">
               Configure weekly or biweekly repeats with calendar recurrence preview.
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-white/5 text-xs text-slate-300 font-semibold flex items-center space-x-1">
-            <span>Manage Recurrence</span>
+            <span>Set up repeats</span>
             
           </div>
         </Link>

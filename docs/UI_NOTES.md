@@ -26,11 +26,14 @@ This file explains the design choices and fixes in the `Ronit-Dev` branch so the
 
 ## Intro
 
-`IntroSplash.tsx` plays when the main page loads: the planet starts zoomed in on a black screen, then zooms out into its place in the hero while the black fades away. The hero text appears after it. It takes about 2.2 seconds. Clicking, tapping, or pressing any key skips it (it fades out quickly). It plays whenever the page is loaded or refreshed while on the main page, and not when you click back to the main page from another page. It is skipped for reduced motion. It is drawn on the document body so it covers the top bar.
+`IntroSplash.tsx` plays when the main page loads: the planet starts zoomed in on a black screen, then zooms out into its place in the hero. It takes about 2.4 seconds. Clicking, tapping, or pressing any key skips it (it fades out quickly). It plays whenever the page is loaded or refreshed while on the main page, and not when you click back to the main page from another page (`utils/intro.ts` keeps track of this). It is skipped for reduced motion.
 
-## Rocket launch
-
-When a host finalizes an event, `RocketLaunch.tsx` plays a countdown, a plain white rocket lifts off with a flame and smoke, then the finalized time is shown. The finalize page waits `ROCKET_LAUNCH_MS` (5.2 seconds) before going back to the event page.
+How it stays smooth (an earlier version flashed black):
+- The intro is drawn on the document body, so it covers the top bar too.
+- The black screen fades out while the planet settles, so the real page (stars, top bar) is visible behind it.
+- When the planet is almost in place, the real hero planet and text start fading in underneath. The intro's planet stays fully visible until the real one is fully there in exactly the same spot, and is then removed. Fading both at once made the planet dim in the middle.
+- `scrollbar-gutter: stable` keeps the page from shifting sideways when scrolling is turned off during the intro.
+- The cursor smoke only starts after the intro ends, so setting up WebGL does not cause a stutter.
 
 ## Demo
 
@@ -62,3 +65,11 @@ Event dates and the daily window (for example 12:00 to 17:00) are wall-clock tim
 - **Landing page after leaving a long page:** the scroll reset on every route change was a smooth scroll, and the landing hero fades out based on scroll position, so the hero could look missing while it scrolled. The reset is now instant and runs when the route changes. The logo only scrolls smoothly when you are already on the landing page.
 - **Availability grid:** painted cells just say "Available", centered. empty cells are now visible and the day columns fill the width.
 - **Local database:** there are no migrations. After pulling model changes, run `docker compose down -v` to reset the local database.
+
+## General cleanup
+
+- **Plain wording:** space jargon in the interface was replaced with plain words, for example "New Orbit" is now "New event", "Manage Orbit" is "Manage event", "Rotate Token" is "Make new link", "Lost in Deep Space" is "Page not found", and "Consensus Blocks" is "Best times". The space look stays, and the main page tagline is still "Group scheduling in perfect orbit".
+- **Next steps for hosts:** the event page shows a short three-step guide (add invitees, wait for responses, pick the best time) while an event is collecting responses.
+- **Main page:** a short welcoming line under the tagline explains what the app does and that guests do not need an account.
+- **Readability:** the smallest text (`text-xs`) is 13px instead of 12px, and form fields are a little bigger (`index.css`).
+- **Small things:** "1 day" and "1 participant" use the singular.

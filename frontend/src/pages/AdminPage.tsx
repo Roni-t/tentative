@@ -92,7 +92,7 @@ export const AdminPage: React.FC = () => {
       <div className="max-w-md mx-auto px-4 py-20 text-center space-y-3">
         <Shield className="w-12 h-12 text-red-500 mx-auto" />
         <h2 className="text-xl font-bold text-white">Access Denied</h2>
-        <p className="text-xs text-slate-400">Admin privileges required to view this celestial console.</p>
+        <p className="text-xs text-slate-400">You need to be an admin to see this page.</p>
       </div>
     );
   }

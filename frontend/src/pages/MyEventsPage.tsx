@@ -37,7 +37,7 @@ export const MyEventsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight">My Events</h1>
-          <p className="text-xs text-slate-400 mt-1">Manage all your active and finalized scheduling orbits</p>
+          <p className="text-xs text-slate-400 mt-1">All the events you host or help host</p>
         </div>
         <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.96 }}>
           <Link
@@ -45,7 +45,7 @@ export const MyEventsPage: React.FC = () => {
             className="px-5 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 flex items-center space-x-2 transition-all self-start sm:self-auto cursor-pointer"
           >
             <PlusCircle className="w-4 h-4 text-black" />
-            <span>New Orbit</span>
+            <span>New event</span>
           </Link>
         </motion.div>
       </div>
@@ -102,8 +102,8 @@ export const MyEventsPage: React.FC = () => {
           <h3 className="text-lg font-bold text-white">No events found</h3>
           <p className="text-xs text-slate-400">
             {activeTab === 'hosted'
-              ? "You haven't created any scheduling orbits yet."
-              : "You are not listed as a co-host on any orbits."}
+              ? "You haven't created any events yet."
+              : "You are not a co-host on any events."}
           </p>
           {activeTab === 'hosted' && (
             <Link
@@ -145,7 +145,7 @@ export const MyEventsPage: React.FC = () => {
                       {ev.status}
                     </span>
                     <span className="text-[11px] text-zinc-500 font-mono">
-                      {ev.candidate_dates?.length || 0} candidate days
+                      {ev.candidate_dates?.length || 0} {ev.candidate_dates?.length === 1 ? 'day' : 'days'}
                     </span>
                   </div>
 
@@ -176,7 +176,7 @@ export const MyEventsPage: React.FC = () => {
                     to={`/events/${ev.id}`}
                     className="text-xs font-semibold text-white hover:text-zinc-300 flex items-center space-x-1 transition-colors"
                   >
-                    <span>Manage Orbit</span>
+                    <span>Manage event</span>
                     <ArrowUpRight className="w-3.5 h-3.5" />
                   </Link>
                   {ev.active_token && (
@@ -186,7 +186,7 @@ export const MyEventsPage: React.FC = () => {
                         className="px-3 py-1.5 rounded-xl bg-white text-black hover:bg-zinc-200 text-xs font-semibold flex items-center space-x-1.5 transition-colors"
                       >
                         <Sparkles className="w-3.5 h-3.5 text-black" />
-                        <span>Timetable Heatmap</span>
+                        <span>View heatmap</span>
                       </Link>
                     </motion.div>
                   )}

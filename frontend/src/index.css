@@ -9,6 +9,8 @@
 
 html {
   scroll-behavior: smooth;
+  /* Keep the scrollbar's space, so the page does not shift sideways when scrolling is turned off (during the intro) */
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -103,6 +105,18 @@ body {
 h1,
 h2 {
   text-wrap: balance;
+}
+
+/* Easier to read: the smallest text and form fields in the app are a little bigger. */
+.route-view .text-xs {
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+}
+
+.route-view input,
+.route-view select,
+.route-view textarea {
+  font-size: 0.9rem;
 }
 
 /* Small mono labels, like "01 / HOW IT WORKS" */

@@ -73,7 +73,7 @@ export const HeatmapPage: React.FC = () => {
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-16 text-center text-slate-500 animate-pulse">
-        Calculating alignment matrix and radiant heatmap...
+        Loading the heatmap...
       </div>
     );
   }

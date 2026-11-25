@@ -90,7 +90,7 @@ export const RespondAvailabilityPage: React.FC = () => {
   }
 
   if (loading) {
-    return <div className="max-w-4xl mx-auto px-4 py-16 text-center text-slate-500 animate-pulse">Loading orbit...</div>;
+    return <div className="max-w-4xl mx-auto px-4 py-16 text-center text-slate-500 animate-pulse">Loading...</div>;
   }
 
   if (!event) {
@@ -182,7 +182,7 @@ export const RespondAvailabilityPage: React.FC = () => {
             disabled={submitting}
             className="px-8 py-3.5 rounded-full text-sm font-bold bg-white text-black hover:bg-zinc-200 flex items-center space-x-2 transition-all disabled:opacity-50 cursor-pointer"
           >
-            <span>{submitting ? 'Saving Orbit...' : 'Confirm & Save Availability'}</span>
+            <span>{submitting ? 'Saving...' : 'Confirm & Save Availability'}</span>
             <ArrowRight className="w-4 h-4 text-black" />
           </button>
         </div>

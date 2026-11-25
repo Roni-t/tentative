@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { HeroPlanet } from '../components/HeroPlanet';
 import { IntroSplash } from '../components/IntroSplash';
+import { introIsPending, markIntroDone } from '../utils/intro';
 import { Reveal } from '../components/Reveal';
 import { useAuth } from '../context/AuthContext';
 
@@ -25,28 +26,30 @@ const STEPS = [
   },
 ];
 
-// Set once when the page loads. It is true only if the page was opened on the main page.
-let loadedOnMainPage = window.location.pathname === '/';
-
 export const LandingPage: React.FC = () => {
   const { user } = useAuth();
   const planetRef = useRef<HTMLDivElement>(null);
 
-  // The intro plays when the page is loaded or refreshed while on the main page.
-  // It does not play when you click back to the main page from another page.
-  const [showIntro, setShowIntro] = useState(
-    () => loadedOnMainPage && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  );
-  const finishIntro = useCallback(() => setShowIntro(false), []);
+  // The intro plays when the page is loaded or refreshed on the main page (see utils/intro.ts)
+  const [showIntro, setShowIntro] = useState(introIsPending);
+  // The page (planet and text) fades in once the intro's planet is almost in place
+  const [revealed, setRevealed] = useState(!showIntro);
+  const reveal = useCallback(() => setRevealed(true), []);
+  const finishIntro = useCallback(() => {
+    setShowIntro(false);
+    markIntroDone();
+  }, []);
 
   useEffect(() => {
     if (!showIntro) return;
-    loadedOnMainPage = false;
     document.body.style.overflow = 'hidden'; // no scrolling while the intro plays
     return () => {
       document.body.style.overflow = '';
     };
   }, [showIntro]);
+
+  // If the main page is left before the intro ends, do not play it again later
+  useEffect(() => markIntroDone, []);
 
   // The planet drifts up and softens as you scroll past the first screen
   const { scrollYProgress } = useScroll();
@@ -56,12 +59,10 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div className="w-full">
-      {showIntro && <IntroSplash targetRef={planetRef} onDone={finishIntro} />}
-
       <section className="relative min-h-[calc(100vh-4.5rem)] flex flex-col items-center justify-center text-center px-4">
         <motion.div style={{ y: planetY, scale: planetScale }}>
-          {/* While the intro plays, the intro's own planet is shown instead and this one is hidden */}
-          <div ref={planetRef} style={{ opacity: showIntro ? 0 : 1 }}>
+          {/* The intro's planet lands exactly here, then this one fades in under it */}
+          <div ref={planetRef} style={{ opacity: revealed ? 1 : 0, transition: 'opacity 0.4s ease-out' }}>
             <HeroPlanet />
           </div>
         </motion.div>
@@ -69,8 +70,8 @@ export const LandingPage: React.FC = () => {
         <motion.div style={{ opacity: heroOpacity }} className="flex flex-col items-center">
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
-            animate={showIntro ? { opacity: 0, y: 24 } : { opacity: 1, y: 0 }}
-            transition={{ duration: 1.1, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            animate={revealed ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
+            transition={{ duration: 1, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             className="text-6xl sm:text-8xl lg:text-9xl font-semibold text-white tracking-[-0.05em] leading-none mt-4"
           >
             Tentative
@@ -78,17 +79,26 @@ export const LandingPage: React.FC = () => {
 
           <motion.p
             initial={{ opacity: 0, y: 16 }}
-            animate={showIntro ? { opacity: 0, y: 24 } : { opacity: 1, y: 0 }}
-            transition={{ duration: 1.1, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            animate={revealed ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
+            transition={{ duration: 1, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
             className="eyebrow mt-6 !text-xs sm:!text-sm"
           >
             Group scheduling in perfect orbit
           </motion.p>
 
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={revealed ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
+            transition={{ duration: 1, delay: 0.32, ease: [0.22, 1, 0.36, 1] }}
+            className="text-base sm:text-lg text-zinc-400 mt-5 max-w-md leading-relaxed"
+          >
+            Send a link, see when everyone is free, and pick a time. Your friends don&apos;t even need an account.
+          </motion.p>
+
           <motion.div
             initial={{ opacity: 0, y: 16 }}
-            animate={showIntro ? { opacity: 0, y: 24 } : { opacity: 1, y: 0 }}
-            transition={{ duration: 1.1, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            animate={revealed ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
+            transition={{ duration: 1, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-wrap items-center justify-center gap-3 mt-10"
           >
             <Link to={user ? '/create' : '/login'} className="pill pill-light">
@@ -169,6 +179,9 @@ export const LandingPage: React.FC = () => {
           </div>
         </Reveal>
       </section>
+
+      {/* After the hero in the tree, so the hero's planet exists when the intro measures where to land */}
+      {showIntro && <IntroSplash targetRef={planetRef} onReveal={reveal} onDone={finishIntro} />}
     </div>
   );
 };

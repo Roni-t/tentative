@@ -92,7 +92,7 @@ export const CreateEventPage: React.FC = () => {
       };
 
       const event = await api.createEvent(payload);
-      showToast('Orbit scheduled successfully!', 'success');
+      showToast('Event created', 'success');
       navigate(`/events/${event.id}`);
     } catch (err: any) {
       showToast(err.message || 'Failed to create event', 'error');
@@ -115,7 +115,7 @@ export const CreateEventPage: React.FC = () => {
         <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-zinc-800 space-y-6">
           <h2 className="text-base font-bold text-white flex items-center space-x-2">
             <Sparkles className="w-4 h-4 text-white" />
-            <span>Event Essentials</span>
+            <span>Event details</span>
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -185,7 +185,7 @@ export const CreateEventPage: React.FC = () => {
         <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 space-y-6">
           <h2 className="text-base font-bold text-white flex items-center space-x-2">
             <Clock className="w-4 h-4 text-cosmic-cyan" />
-            <span>Candidate Schedule Matrix</span>
+            <span>Dates and times</span>
           </h2>
 
           {/* Date Selector */}
@@ -359,7 +359,7 @@ export const CreateEventPage: React.FC = () => {
             disabled={loading}
             className="px-8 py-3.5 rounded-full text-sm font-bold bg-white text-black hover:bg-zinc-200 flex items-center space-x-2 transition-all disabled:opacity-50 cursor-pointer"
           >
-            <span>{loading ? 'Aligning Orbits...' : 'Schedule Orbit'}</span>
+            <span>{loading ? 'Creating...' : 'Create event'}</span>
             <ArrowRight className="w-4 h-4 text-black" />
           </button>
         </div>
