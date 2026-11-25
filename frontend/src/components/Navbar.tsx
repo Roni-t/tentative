@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { PlanetLogo } from './PlanetLogo';
@@ -14,9 +14,35 @@ const LINKS = [
 export const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
   const { pathname } = useLocation();
+  const [hidden, setHidden] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  // The bar slides away while reading down the page and comes back when scrolling up,
+  // so it never sits on top of page content.
+  useEffect(() => {
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 12);
+      if (y > lastY && y > 90) setHidden(true);
+      else if (y < lastY) setHidden(false);
+      lastY = y;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   return (
-    <header className="sticky top-0 z-50 px-4 sm:px-8 py-4">
+    <header
+      className="sticky top-0 z-50 px-4 sm:px-8 py-4 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+      style={{ transform: hidden ? 'translateY(-120%)' : 'translateY(0)' }}
+    >
+      {/* Dark fade behind the bar so page content does not collide with the logo and buttons */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-28 -z-10 bg-gradient-to-b from-black from-50% via-black/85 to-transparent transition-opacity duration-500"
+        style={{ opacity: scrolled ? 1 : 0 }}
+      />
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         <Link
           to="/"

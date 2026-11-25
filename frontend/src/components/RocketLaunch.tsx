@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 
 interface RocketLaunchProps {
@@ -15,7 +16,8 @@ const SPEED_LINES = [8, 17, 26, 34, 43, 52, 61, 69, 78, 86, 93];
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 
-export const RocketLaunch: React.FC<RocketLaunchProps> = ({ dateText, timeText }) => (
+export const RocketLaunch: React.FC<RocketLaunchProps> = ({ dateText, timeText }) =>
+  createPortal(
   <motion.div
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
@@ -133,5 +135,6 @@ export const RocketLaunch: React.FC<RocketLaunchProps> = ({ dateText, timeText }
       <p className="font-mono text-sm text-zinc-300 mt-6">{dateText}</p>
       <p className="font-mono text-sm text-zinc-400 mt-1">{timeText}</p>
     </motion.div>
-  </motion.div>
+  </motion.div>,
+  document.body
 );

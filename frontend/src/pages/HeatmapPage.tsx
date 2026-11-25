@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { Event, HeatmapResponse, HeatmapSlot } from '../types';
 import { HeatmapGrid } from '../components/HeatmapGrid';
+import { DEMO_TOKEN } from '../utils/demo';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { ArrowLeft, RefreshCw, Sparkles, PlusCircle } from 'lucide-react';
@@ -57,9 +58,11 @@ export const HeatmapPage: React.FC = () => {
     loadData(true);
   };
 
+  const isDemo = token === DEMO_TOKEN;
+
   const handleSelectSlotForFinalize = (slot: HeatmapSlot) => {
     if (!event) return;
-    navigate(`/events/${event.id}/finalize`, {
+    navigate(isDemo ? `/share/${DEMO_TOKEN}/finalize` : `/events/${event.id}/finalize`, {
       state: {
         startTime: slot.start_time,
         endTime: slot.end_time,
@@ -86,7 +89,8 @@ export const HeatmapPage: React.FC = () => {
     );
   }
 
-  const isHostOrCohost = event.is_host || event.is_cohost;
+  // In the demo, everyone gets the finalize buttons so they can try it out
+  const isHostOrCohost = event.is_host || event.is_cohost || isDemo;
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -126,6 +130,12 @@ export const HeatmapPage: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      {isDemo && (
+        <div className="glass-panel rounded-2xl px-5 py-3 text-xs text-zinc-300">
+          This is a demo event. Pick a time and finalize it to see what happens. Nothing is saved.
+        </div>
+      )}
 
       {/* Heatmap Grid & Inspector Component */}
       <HeatmapGrid

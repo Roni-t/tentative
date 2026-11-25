@@ -173,20 +173,20 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
 
       {/* Main Grid View */}
       {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
           {/* Heatmap Matrix (University Timetable Schedule Layout) */}
-          <div className="lg:col-span-8 flex flex-col space-y-6">
+          <div className="xl:col-span-8 flex flex-col space-y-6">
             <div className="overflow-x-auto custom-scrollbar rounded-2xl border border-zinc-800 bg-black shadow-2xl">
               <div className="min-w-max w-full">
                 {/* Header Bar Across All Days (Collegiate Schedule Banner) */}
                 <div className="flex items-stretch bg-zinc-900/90 border-b border-zinc-700/80 sticky top-0 z-20">
-                  <div className="w-20 sm:w-24 shrink-0 p-3 text-right text-[11px] font-bold text-zinc-400 uppercase tracking-wider border-r border-zinc-800 flex items-center justify-end">
+                  <div className="w-16 sm:w-20 shrink-0 p-3 text-right text-[11px] font-bold text-zinc-400 uppercase tracking-wider border-r border-zinc-800 flex items-center justify-end">
                     Time
                   </div>
                   {candidateDates.map((dStr) => (
                     <div
                       key={dStr}
-                      className="flex-1 min-w-[8rem] py-3 px-3 text-center border-r border-zinc-800 last:border-r-0 flex flex-col items-center justify-center"
+                      className="flex-1 min-w-[5.5rem] py-3 px-3 text-center border-r border-zinc-800 last:border-r-0 flex flex-col items-center justify-center"
                     >
                       <span className="text-xs sm:text-sm font-bold text-white tracking-wide uppercase">
                         {formatDayName(dStr)}
@@ -210,7 +210,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                       }`}
                     >
                       {/* Left time label */}
-                      <div className="w-20 sm:w-24 shrink-0 pr-3 py-1.5 text-right border-r border-zinc-800/80 flex items-center justify-end">
+                      <div className="w-16 sm:w-20 shrink-0 pr-3 py-1.5 text-right border-r border-zinc-800/80 flex items-center justify-end">
                         <span
                           className={`font-mono text-[11px] ${
                             tItem.isTopHour ? 'font-bold text-white' : 'font-normal text-zinc-500'
@@ -228,7 +228,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                           return (
                             <div
                               key={dStr}
-                              className="flex-1 min-w-[8rem] h-9 border-r border-zinc-800/80 last:border-r-0 opacity-0"
+                              className="flex-1 min-w-[5.5rem] h-9 border-r border-zinc-800/80 last:border-r-0 opacity-0"
                             />
                           );
                         }
@@ -242,7 +242,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                         return (
                           <div
                             key={slot.start_time}
-                            className="flex-1 min-w-[8rem] h-8 sm:h-9 px-1.5 py-0.5 border-r border-zinc-800/80 last:border-r-0 flex items-center"
+                            className="flex-1 min-w-[5.5rem] h-8 sm:h-9 px-1.5 py-0.5 border-r border-zinc-800/80 last:border-r-0 flex items-center"
                           >
                             <motion.button
                               type="button"
@@ -261,7 +261,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                               }}
                             >
                               <span className="font-mono text-[11px]">
-                                {slot.count}/{slot.total_participants}
+                                {slot.count > 0 ? `${slot.count}/${slot.total_participants}` : ''}
                               </span>
                               {slot.ratio >= 0.9 && (
                                 <span className="text-[10px] font-bold">Best</span>
@@ -368,7 +368,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
           </div>
 
           {/* Slot Inspector Sidebar */}
-          <div className="lg:col-span-4 flex flex-col space-y-4">
+          <div className="xl:col-span-4 flex flex-col space-y-4">
             <div className="p-5 rounded-2xl glass-panel border border-zinc-800 bg-zinc-950/90 sticky top-24 shadow-2xl">
               <div className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 mb-2 flex items-center space-x-1.5">
                 <Clock className="w-3.5 h-3.5 text-white" />

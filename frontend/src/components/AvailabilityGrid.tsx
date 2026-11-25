@@ -240,7 +240,7 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
           {/* Header Bar Across All Days (Matches Collegiate Schedule Banner) */}
           <div className="flex items-stretch bg-zinc-900/90 border-b border-zinc-700/80 sticky top-0 z-20">
             {/* Corner time header */}
-            <div className="w-20 sm:w-24 shrink-0 p-3 text-right text-[11px] font-bold text-zinc-400 uppercase tracking-wider border-r border-zinc-800 flex items-center justify-end">
+            <div className="w-16 sm:w-20 shrink-0 p-3 text-right text-[11px] font-bold text-zinc-400 uppercase tracking-wider border-r border-zinc-800 flex items-center justify-end">
               Time
             </div>
 
@@ -252,7 +252,7 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
               return (
                 <div
                   key={dateStr}
-                  className="flex-1 min-w-[8rem] py-3 px-3 text-center border-r border-zinc-800 last:border-r-0 flex flex-col items-center justify-center"
+                  className="flex-1 min-w-[5.5rem] py-3 px-3 text-center border-r border-zinc-800 last:border-r-0 flex flex-col items-center justify-center"
                 >
                   <span className="text-xs sm:text-sm font-bold text-white tracking-wide uppercase">
                     {dayName}
@@ -281,7 +281,7 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
                   }`}
                 >
                   {/* Left-hand Time Gutter (Hours & Sub-intervals) */}
-                  <div className="w-20 sm:w-24 shrink-0 pr-3 py-1.5 text-right border-r border-zinc-800/80 flex items-center justify-end">
+                  <div className="w-16 sm:w-20 shrink-0 pr-3 py-1.5 text-right border-r border-zinc-800/80 flex items-center justify-end">
                     <span
                       className={`font-mono text-[11px] ${
                         isTopHour ? 'font-bold text-white' : 'font-normal text-zinc-500'
@@ -311,9 +311,9 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
                           setSelectedSet(next);
                           notifyChange(next);
                         }}
-                        className={`flex-1 min-w-[8rem] h-8 sm:h-9 px-1.5 py-0.5 border-r border-zinc-800/80 last:border-r-0 cursor-pointer transition-colors duration-100 flex items-center ${
+                        className={`flex-1 min-w-[5.5rem] h-8 sm:h-9 px-1.5 py-0.5 border-r border-zinc-800/80 last:border-r-0 cursor-pointer transition-colors duration-100 flex items-center ${
                           isSelected
-                            ? 'bg-zinc-800/90 text-white'
+                            ? 'text-white'
                             : 'hover:bg-zinc-900/60 text-zinc-600'
                         }`}
                       >

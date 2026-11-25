@@ -7,15 +7,19 @@ import { useToast } from '../context/ToastContext';
 import { formatDateHeading } from '../utils/format';
 import { longDateInZone, shortDateInZone, timeRangeInZone } from '../utils/zoned';
 import { RocketLaunch, ROCKET_LAUNCH_MS } from '../components/RocketLaunch';
+import { DEMO_TOKEN } from '../utils/demo';
 import { CheckCircle2, ArrowLeft, Clock, MapPin, Sparkles, Send, Lock } from 'lucide-react';
 
 export const FinalizePage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id: idParam, token } = useParams<{ id?: string; token?: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   const { showToast } = useToast();
 
+  const isDemo = token === DEMO_TOKEN;
   const [event, setEvent] = useState<Event | null>(null);
+  // Opened with a share link (the demo) the event id comes from the event itself
+  const id = idParam || (event ? String(event.id) : undefined);
   const [heatmap, setHeatmap] = useState<HeatmapResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -30,29 +34,31 @@ export const FinalizePage: React.FC = () => {
   const [isLaunching, setIsLaunching] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
-    Promise.all([api.getEvent(id), api.getHeatmap(id)])
-      .then(([ev, hm]) => {
-        setEvent(ev);
-        setHeatmap(hm);
-        if (!selectedStart && hm.best_slots.length > 0) {
-          setSelectedStart(hm.best_slots[0].start_time);
-          setSelectedEnd(hm.best_slots[0].end_time);
-        }
-      })
+    const load = async () => {
+      const ev = token ? await api.resolveShareToken(token) : await api.getEvent(idParam!);
+      const hm = await api.getHeatmap(ev.id);
+      setEvent(ev);
+      setHeatmap(hm);
+      if (!selectedStart && hm.best_slots.length > 0) {
+        setSelectedStart(hm.best_slots[0].start_time);
+        setSelectedEnd(hm.best_slots[0].end_time);
+      }
+    };
+    load()
       .catch((err) => showToast(err.message || 'Error loading finalize options', 'error'))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [idParam, token]);
 
   const handleConfirmFinalize = async () => {
     if (!id || !selectedStart || !selectedEnd) return;
     setSubmitting(true);
     try {
-      await api.finalizeEvent(id, selectedStart, selectedEnd, notifySms);
+      // The demo only plays the animation. Nothing is sent to the server.
+      if (!isDemo) await api.finalizeEvent(id, selectedStart, selectedEnd, notifySms);
       setIsLaunching(true);
       setTimeout(() => {
-        showToast('Meeting time finalized', 'success');
-        navigate(`/events/${id}`);
+        showToast(isDemo ? 'Demo only. Nothing was saved.' : 'Meeting time finalized', isDemo ? 'info' : 'success');
+        navigate(isDemo ? `/share/${DEMO_TOKEN}/heatmap` : `/events/${id}`);
       }, ROCKET_LAUNCH_MS);
     } catch (err: any) {
       showToast(err.message || 'Failed to finalize meeting time', 'error');
@@ -76,7 +82,7 @@ export const FinalizePage: React.FC = () => {
       </AnimatePresence>
 
       <Link
-        to={`/events/${event.id}/heatmap`}
+        to={isDemo ? `/share/${DEMO_TOKEN}/heatmap` : `/events/${event.id}/heatmap`}
         className="inline-flex items-center space-x-1.5 text-xs text-slate-400 hover:text-white transition-colors"
       >
         <ArrowLeft className="w-3.5 h-3.5" />

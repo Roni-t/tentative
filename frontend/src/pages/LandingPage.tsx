@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
-import { CometTrail } from '../components/CometTrail';
 import { HeroPlanet } from '../components/HeroPlanet';
+import { IntroSplash } from '../components/IntroSplash';
 import { Reveal } from '../components/Reveal';
 import { useAuth } from '../context/AuthContext';
 
@@ -27,6 +27,25 @@ const STEPS = [
 
 export const LandingPage: React.FC = () => {
   const { user } = useAuth();
+  const planetRef = useRef<HTMLDivElement>(null);
+
+  // The intro plays once per browser session, and not for people who asked for less motion
+  const [showIntro, setShowIntro] = useState(
+    () =>
+      // Adding ?intro to the address plays it again
+      (!sessionStorage.getItem('tentative_intro_seen') || window.location.search.includes('intro')) &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
+  const finishIntro = useCallback(() => setShowIntro(false), []);
+
+  useEffect(() => {
+    if (!showIntro) return;
+    sessionStorage.setItem('tentative_intro_seen', '1');
+    document.body.style.overflow = 'hidden'; // no scrolling while the intro plays
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showIntro]);
 
   // The planet drifts up and softens as you scroll past the first screen
   const { scrollYProgress } = useScroll();
@@ -36,22 +55,20 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div className="w-full">
-      <CometTrail />
+      {showIntro && <IntroSplash targetRef={planetRef} onDone={finishIntro} />}
+
       <section className="relative min-h-[calc(100vh-4.5rem)] flex flex-col items-center justify-center text-center px-4">
         <motion.div style={{ y: planetY, scale: planetScale }}>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.94 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
-          >
+          {/* While the intro plays, the intro's own planet is shown instead and this one is hidden */}
+          <div ref={planetRef} style={{ opacity: showIntro ? 0 : 1 }}>
             <HeroPlanet />
-          </motion.div>
+          </div>
         </motion.div>
 
         <motion.div style={{ opacity: heroOpacity }} className="flex flex-col items-center">
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={showIntro ? { opacity: 0, y: 24 } : { opacity: 1, y: 0 }}
             transition={{ duration: 1.1, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="text-6xl sm:text-8xl lg:text-9xl font-semibold text-white tracking-[-0.05em] leading-none mt-4"
           >
@@ -60,7 +77,7 @@ export const LandingPage: React.FC = () => {
 
           <motion.p
             initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={showIntro ? { opacity: 0, y: 24 } : { opacity: 1, y: 0 }}
             transition={{ duration: 1.1, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className="eyebrow mt-6 !text-xs sm:!text-sm"
           >
@@ -69,7 +86,7 @@ export const LandingPage: React.FC = () => {
 
           <motion.div
             initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={showIntro ? { opacity: 0, y: 24 } : { opacity: 1, y: 0 }}
             transition={{ duration: 1.1, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-wrap items-center justify-center gap-3 mt-10"
           >

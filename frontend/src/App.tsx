@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { StarField } from './components/StarField';
+import { CometTrail } from './components/CometTrail';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { ToastContainer } from './components/ToastContainer';
@@ -31,6 +32,12 @@ import { NotFoundPage } from './pages/NotFoundPage';
 const ShareRedirect: React.FC = () => {
   const { token } = useParams<{ token: string }>();
   return <Navigate to={`/share/${token}/heatmap`} replace />;
+};
+
+// Shows its children only on the landing page
+const LandingOnly: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { pathname } = useLocation();
+  return pathname === '/' ? <>{children}</> : null;
 };
 
 const AnimatedRoutes: React.FC = () => {
@@ -69,6 +76,7 @@ const AnimatedRoutes: React.FC = () => {
           <Route path="/share/:token" element={<ShareRedirect />} />
           <Route path="/share/:token/respond" element={<RespondAvailabilityPage />} />
           <Route path="/share/:token/heatmap" element={<HeatmapPage />} />
+          <Route path="/share/:token/finalize" element={<FinalizePage />} />
 
           {/* System & Extra Views */}
           <Route path="/admin" element={<AdminPage />} />
@@ -105,6 +113,9 @@ export const App: React.FC = () => {
           <div className="relative min-h-screen flex flex-col bg-black text-zinc-100 selection:bg-white/20 selection:text-white">
             {/* Ambient Celestial Starfield */}
             <StarField />
+            <LandingOnly>
+              <CometTrail />
+            </LandingOnly>
 
             {/* Sticky Navigation Bar */}
             <Navbar />

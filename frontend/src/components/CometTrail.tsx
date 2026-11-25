@@ -7,9 +7,9 @@ interface Point {
 }
 
 // How long each part of the tail stays visible, in milliseconds
-const TAIL_LIFE = 650;
+const TAIL_LIFE = 480;
 
-// A comet streak that follows the cursor. It is only meant for the landing page.
+// A faint comet streak that follows the cursor. It is drawn behind the page content, and only on the landing page.
 export const CometTrail: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -56,8 +56,8 @@ export const CometTrail: React.FC = () => {
         ctx.moveTo(prev.x, prev.y);
         ctx.lineTo(point.x, point.y);
         ctx.lineCap = 'round';
-        ctx.lineWidth = 0.5 + strength * 3.2;
-        ctx.strokeStyle = `rgba(255, 255, 255, ${strength * strength * 0.85})`;
+        ctx.lineWidth = 0.4 + strength * 1.6;
+        ctx.strokeStyle = `rgba(255, 255, 255, ${strength * strength * 0.4})`;
         ctx.stroke();
       }
 
@@ -65,12 +65,12 @@ export const CometTrail: React.FC = () => {
       const head = points[points.length - 1];
       if (head) {
         const headStrength = 1 - (now - head.time) / TAIL_LIFE;
-        const glow = ctx.createRadialGradient(head.x, head.y, 0, head.x, head.y, 9);
-        glow.addColorStop(0, `rgba(255, 255, 255, ${headStrength})`);
+        const glow = ctx.createRadialGradient(head.x, head.y, 0, head.x, head.y, 5);
+        glow.addColorStop(0, `rgba(255, 255, 255, ${headStrength * 0.5})`);
         glow.addColorStop(1, 'rgba(255, 255, 255, 0)');
         ctx.fillStyle = glow;
         ctx.beginPath();
-        ctx.arc(head.x, head.y, 9, 0, Math.PI * 2);
+        ctx.arc(head.x, head.y, 5, 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -89,5 +89,5 @@ export const CometTrail: React.FC = () => {
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="fixed inset-0 w-full h-full pointer-events-none z-20" aria-hidden="true" />;
+  return <canvas ref={canvasRef} className="fixed inset-0 w-full h-full pointer-events-none z-[1]" aria-hidden="true" />;
 };
