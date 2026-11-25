@@ -1,41 +1,35 @@
 import time
 from collections import defaultdict
-from typing import Dict, List
 from fastapi import HTTPException, Request, status
 
 
-class InMemoryRateLimiter:
-    """Simple sliding-window rate limiter per client IP / key."""
+class RateLimiter:
+    """Keeps request times per key and rejects a key that goes over the limit."""
+
     def __init__(self):
-        self._requests: Dict[str, List[float]] = defaultdict(list)
+        self._requests = defaultdict(list)
 
-    def check(self, key: str, max_requests: int, window_seconds: int = 60) -> None:
+    def check(self, key, max_requests, window_seconds=60):
         now = time.time()
-        window_start = now - window_seconds
-        
-        # Clean older requests
-        timestamps = [ts for ts in self._requests[key] if ts > window_start]
-        self._requests[key] = timestamps
+        recent = [t for t in self._requests[key] if t > now - window_seconds]
+        self._requests[key] = recent
 
-        if len(timestamps) >= max_requests:
-            retry_after = int(window_seconds - (now - timestamps[0])) + 1
+        if len(recent) >= max_requests:
+            retry_after = int(window_seconds - (now - recent[0])) + 1
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail=f"Rate limit exceeded. Try again in {retry_after} seconds.",
-                headers={"Retry-After": str(retry_after)}
+                headers={"Retry-After": str(retry_after)},
             )
-
-        self._requests[key].append(now)
-
-
-rate_limiter = InMemoryRateLimiter()
+        recent.append(now)
 
 
-def rate_limit(max_requests: int, window_seconds: int = 60):
-    """Dependency helper for endpoints."""
+rate_limiter = RateLimiter()
+
+
+def rate_limit(max_requests, window_seconds=60):
+    """Use as a route dependency to limit requests per client and path."""
     def dependency(request: Request):
-        client_host = request.client.host if request.client else "unknown"
-        path = request.url.path
-        key = f"{client_host}:{path}"
-        rate_limiter.check(key, max_requests=max_requests, window_seconds=window_seconds)
+        host = request.client.host if request.client else "unknown"
+        rate_limiter.check(f"{host}:{request.url.path}", max_requests, window_seconds)
     return dependency

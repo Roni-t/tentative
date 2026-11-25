@@ -1,102 +1,67 @@
 import logging
-from abc import ABC, abstractmethod
-from typing import Dict, Optional
 from datetime import datetime, timezone
 from app.config import settings
 
 logger = logging.getLogger("tentative.sms")
-logger.setLevel(logging.INFO)
 
-# In-memory store of recent dev verification codes for UI banner support
-dev_sms_cache: Dict[str, Dict] = {}
-
-
-class SMSAdapter(ABC):
-    @abstractmethod
-    def send_verification_code(self, phone: str, code: str) -> bool:
-        pass
-
-    @abstractmethod
-    def send_notification(self, phone: str, message: str) -> bool:
-        pass
+# Latest verification code sent to each phone, used by the dev banner in the UI
+dev_sms_cache = {}
 
 
-class ConsoleSMSAdapter(SMSAdapter):
-    def send_verification_code(self, phone: str, code: str) -> bool:
-        logger.info(f"==================================================")
-        logger.info(f"[SMS CONSOLE DISPATCH] Phone: {phone} | Code: {code}")
-        logger.info(f"==================================================")
-        dev_sms_cache[phone] = {
-            "code": code,
-            "created_at": datetime.now(timezone.utc),
-            "phone": phone
-        }
+class ConsoleSMSAdapter:
+    """Prints texts to the log instead of sending them (local development)."""
+
+    def send_verification_code(self, phone, code):
+        remember_dev_code(phone, code)
+        logger.info(f"Code for {phone}: {code}")
         return True
 
-    def send_notification(self, phone: str, message: str) -> bool:
-        logger.info(f"[SMS NOTIFICATION] Phone: {phone} | Message: {message}")
+    def send_notification(self, phone, message):
+        logger.info(f"Text to {phone}: {message}")
         return True
 
 
-class TwilioSMSAdapter(SMSAdapter):
+class TwilioSMSAdapter:
+    """Sends real texts through Twilio. Falls back to the console if Twilio isn't set up."""
+
     def __init__(self):
-        self.account_sid = settings.TWILIO_ACCOUNT_SID
-        self.auth_token = settings.TWILIO_AUTH_TOKEN
         self.from_phone = settings.TWILIO_PHONE_NUMBER
-        self._client = None
-        if self.account_sid and self.auth_token:
-            try:
-                from twilio.rest import Client
-                self._client = Client(self.account_sid, self.auth_token)
-            except Exception as e:
-                logger.warning(f"Failed to initialize Twilio client: {e}. Falling back to console.")
+        self.client = None
+        try:
+            from twilio.rest import Client
+            self.client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        except Exception as e:
+            logger.warning(f"Could not start Twilio client: {e}")
 
-    def send_verification_code(self, phone: str, code: str) -> bool:
-        # Also store in dev cache so the dev banner works, but never when real codes go out in production
+    def send_verification_code(self, phone, code):
         if settings.dev_sms_enabled:
-            dev_sms_cache[phone] = {
-                "code": code,
-                "created_at": datetime.now(timezone.utc),
-                "phone": phone
-            }
-        if self._client and self.from_phone:
-            try:
-                self._client.messages.create(
-                    to=phone,
-                    from_=self.from_phone,
-                    body=f"Your Tentative verification code is: {code}. Valid for 5 minutes."
-                )
-                logger.info(f"Sent Twilio SMS code to {phone}")
-                return True
-            except Exception as e:
-                logger.error(f"Error sending SMS via Twilio: {e}")
-                return False
-        # Fallback to console
-        logger.info(f"[TWILIO FALLBACK TO CONSOLE] Code for {phone}: {code}")
-        return True
+            remember_dev_code(phone, code)
+        return self._send(phone, f"Your Tentative verification code is: {code}. Valid for 5 minutes.")
 
-    def send_notification(self, phone: str, message: str) -> bool:
-        if self._client and self.from_phone:
-            try:
-                self._client.messages.create(
-                    to=phone,
-                    from_=self.from_phone,
-                    body=f"[Tentative] {message}"
-                )
-                return True
-            except Exception as e:
-                logger.error(f"Error sending notification via Twilio: {e}")
-                return False
-        logger.info(f"[TWILIO FALLBACK CONSOLE NOTIF] Phone: {phone} | {message}")
-        return True
+    def send_notification(self, phone, message):
+        return self._send(phone, f"[Tentative] {message}")
+
+    def _send(self, phone, body):
+        if not (self.client and self.from_phone):
+            logger.info(f"Twilio not configured. Text to {phone}: {body}")
+            return True
+        try:
+            self.client.messages.create(to=phone, from_=self.from_phone, body=body)
+            return True
+        except Exception as e:
+            logger.error(f"Twilio send failed: {e}")
+            return False
 
 
-def get_sms_adapter() -> SMSAdapter:
+def remember_dev_code(phone, code):
+    dev_sms_cache[phone] = {"code": code, "created_at": datetime.now(timezone.utc), "phone": phone}
+
+
+def get_sms_adapter():
     if settings.SMS_PROVIDER.lower() == "twilio" and settings.TWILIO_ACCOUNT_SID:
         return TwilioSMSAdapter()
     return ConsoleSMSAdapter()
 
 
-def get_latest_dev_code(phone: str) -> Optional[Dict]:
-    """Retrieve the latest verification code sent to exactly this (normalized) phone, for the dev UI banner."""
+def get_latest_dev_code(phone):
     return dev_sms_cache.get(phone)

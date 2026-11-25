@@ -16,11 +16,8 @@ def get_active_session(
     tentative_session: Optional[str] = Cookie(None),
     db: Session = Depends(get_db)
 ) -> Optional[DbSession]:
-    """Resolve the bearer token (or httpOnly cookie) to a live server-side session, if any.
-
-    Tokens are signed JWTs carrying `sid`, the id of a row in `sessions`. A token stops
-    working as soon as that row is deleted (logout) or expires, even if the JWT is still valid.
-    """
+    # The token is a JWT holding the id of a row in the sessions table, so logging out
+    # (deleting that row) stops it working even if the JWT has not expired.
     token = None
     if authorization and authorization.lower().startswith("bearer "):
         token = authorization[7:].strip()
@@ -45,7 +42,6 @@ def get_current_user_optional(
     db_sess: Optional[DbSession] = Depends(get_active_session),
     db: Session = Depends(get_db)
 ) -> Optional[User]:
-    """Retrieve the current user without raising if unauthenticated."""
     if not db_sess:
         return None
     return db.query(User).filter(User.id == db_sess.user_id).first()
@@ -54,7 +50,6 @@ def get_current_user_optional(
 def get_current_user(
     current_user: Optional[User] = Depends(get_current_user_optional)
 ) -> User:
-    """Enforce authentication, raising 401 if missing."""
     if not current_user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -66,7 +61,6 @@ def get_current_user(
 def require_admin(
     current_user: User = Depends(get_current_user)
 ) -> User:
-    """Enforce admin privileges."""
     if not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

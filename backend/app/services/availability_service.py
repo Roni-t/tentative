@@ -71,9 +71,9 @@ class AvailabilityService:
         from app.services.heatmap_service import heatmap_service
         heatmap_service.invalidate_cache(event_id)
 
-        # If this is an invited participant (personal link token), mark them responded (FR-20)
+        # Update the invitee list (personal link or general link)
         from app.services.invitee_service import invitee_service
-        invitee_service.record_response(event, edit_token, db)
+        invitee_service.record_response(event, edit_token, payload.participant_name, current_user, db)
 
         return AvailabilitySubmitResponse(
             message="Availability successfully saved.",

@@ -1,4 +1,4 @@
-"""Shared helpers for tests that need an authenticated host, events, and invitees."""
+"""Helpers for tests that need a logged-in host, events, and invitees."""
 
 
 def register_user(client, phone: str = "+19725550142", name: str = "Test Host") -> dict:
@@ -41,14 +41,23 @@ def create_event(client, headers: dict, **overrides) -> dict:
     return res.json()
 
 
-def add_invitee(client, headers: dict, event_id: int, name: str, phone: str, timezone: str = None) -> dict:
-    """Add an invitee (texts them an invite) and return the invitee JSON, including their response token."""
-    body = {"name": name, "phone": phone}
-    if timezone:
-        body["timezone"] = timezone
-    res = client.post(f"/api/events/{event_id}/invitees", json=body, headers=headers)
+def add_invitee(client, headers: dict, event_id: int, name: str, phone: str = None, timezone: str = None) -> dict:
+    """Add an invitee by name. If a phone is given, the invitee also verifies it through their link."""
+    res = client.post(f"/api/events/{event_id}/invitees", json={"name": name}, headers=headers)
     assert res.status_code == 201, res.text
-    return res.json()
+    invitee = res.json()
+    if phone:
+        token = invitee["response_token"]
+        req = client.post(f"/api/invite/{token}/phone/request-code", json={"phone": phone})
+        assert req.status_code == 200, req.text
+        body = {"phone": phone, "code": req.json()["dev_code"]}
+        if timezone:
+            body["timezone"] = timezone
+        verify = client.post(f"/api/invite/{token}/phone/verify", json=body)
+        assert verify.status_code == 200, verify.text
+        invitee = next(i for i in client.get(f"/api/events/{event_id}/invitees", headers=headers).json()
+                       if i["id"] == invitee["id"])
+    return invitee
 
 
 def submit_availability(client, event_id: int, name: str, slots: list, token: str = None) -> dict:

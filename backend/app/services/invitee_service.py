@@ -1,27 +1,25 @@
-"""Invitees and the SMS flows built on them.
+"""Invitees and the texts we send them.
 
-FR-18  remind invitees who haven't responded, REMINDER_LEAD_HOURS before the deadline
-FR-19  host/co-host broadcasts an update by SMS to opted-in invitees
-FR-20  text the host once every invitee has responded
-FR-22  text invitees the finalized time
-Opt-outs (reply STOP) are honored by every flow.
+Invitees are added by name and get a personal link. We only text people who
+verified their own phone number. Opt-outs (STOP) are honored everywhere.
 """
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 
 from fastapi import HTTPException, status
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.adapters.sms_adapter import get_sms_adapter
 from app.config import settings
-from app.core.encryption import decrypt_phone, encrypt_phone, hash_phone, mask_phone, validate_phone
+from app.core.encryption import decrypt_phone, encrypt_phone, hash_phone, validate_name, validate_phone
 from app.core.security import generate_secure_token
 from app.core.timefmt import format_local, is_valid_timezone, to_utc
+from app.models.availability import Availability
 from app.models.event import Event
 from app.models.invitee import Invitee, SmsOptOut
 from app.models.notification import Notification
 from app.models.user import User
+from app.services.auth_service import auth_service
 from app.services.event_service import event_service
 from app.services.notification_service import notification_service
 
@@ -52,15 +50,15 @@ class InviteeService:
         return db.query(SmsOptOut).filter(SmsOptOut.phone_hash == phone_hash).first() is not None
 
     def _text(self, event: Event, invitee: Invitee, message: str, notification_type: str, db: Session) -> bool:
-        """Text one invitee unless they opted out. Logs a Notification without storing the phone number."""
-        if self.is_opted_out(invitee.phone_hash, db):
+        """Text one invitee. Does nothing if they have no verified number or opted out."""
+        if not invitee.phone_hash or self.is_opted_out(invitee.phone_hash, db):
             return False
         phone = decrypt_phone(invitee.phone_encrypted)
         if not phone:
             return False
         db.add(Notification(
             event_id=event.id,
-            recipient=f"{invitee.name} ({mask_phone(phone)})",
+            recipient=invitee.name,
             message=message,
             notification_type=notification_type,
             sent_at=datetime.now(timezone.utc),
@@ -73,65 +71,117 @@ class InviteeService:
 
     # ------------------------------------------------------------ invitees
 
-    def add_invitee(self, event_id: int, name: str, phone: str, tz: Optional[str], user: User, db: Session) -> Invitee:
+    def add_invitee(self, event_id: int, name: str, user: User, db: Session) -> Invitee:
         event = self._require_host(event_id, user, db)
         if event.status != "collecting":
             raise _bad_request("Invitees can only be added while the event is collecting responses.")
-        # Invitee names are labels the host types ("Alex", "Invitee1"), so they are looser than account names
+        # The host types a label like "Alex", so this is looser than an account name
         clean_name = " ".join((name or "").split())
         if not clean_name or len(clean_name) > 128 or any(ord(ch) < 32 for ch in clean_name):
             raise _bad_request("Enter the invitee's name (up to 128 characters).")
+
+        invitee = Invitee(
+            event_id=event.id,
+            name=clean_name,
+            response_token=generate_secure_token(24),
+            created_at=datetime.now(timezone.utc),
+        )
+        db.add(invitee)
+        db.commit()
+        db.refresh(invitee)
+        return invitee
+
+    def list_invitees(self, event_id: int, user: User, db: Session) -> List[Dict]:
+        event = self._require_host(event_id, user, db)
+        rows = db.query(Invitee).filter(Invitee.event_id == event_id).order_by(Invitee.created_at, Invitee.id).all()
+        return [self.to_out(event, inv, db) for inv in rows]
+
+    def to_out(self, event: Event, inv: Invitee, db: Session) -> Dict:
+        # Phone numbers are never returned, only whether we can text this person
+        opted_out = bool(inv.phone_hash) and self.is_opted_out(inv.phone_hash, db)
+        return {
+            "id": inv.id,
+            "name": inv.name,
+            "responded_at": inv.responded_at,
+            "reminder_sent_at": inv.reminder_sent_at,
+            "joined_via_link": inv.joined_via_link,
+            "can_text": bool(inv.phone_hash) and not opted_out,
+            "sms_opted_out": opted_out,
+            "response_token": inv.response_token,
+            "link": self.respond_link(event, inv),
+        }
+
+    def regenerate_link(self, event_id: int, invitee_id: int, user: User, db: Session) -> Dict:
+        event = self._require_host(event_id, user, db)
+        invitee = db.query(Invitee).filter(Invitee.id == invitee_id, Invitee.event_id == event_id).first()
+        if not invitee:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invitee not found.")
+        old_token = invitee.response_token
+        invitee.response_token = generate_secure_token(24)
+        # Keep their saved availability attached to the new link
+        db.query(Availability).filter(
+            Availability.event_id == event_id, Availability.edit_token == old_token
+        ).update({"edit_token": invitee.response_token})
+        db.commit()
+        return self.to_out(event, invitee, db)
+
+    # ------------------------------------------------------------ invitee adds their own phone
+
+    def _find_by_token(self, token: str, db: Session) -> Invitee:
+        invitee = db.query(Invitee).filter(Invitee.response_token == token).first()
+        if not invitee:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="This link is not valid.")
+        return invitee
+
+    def request_phone_code(self, token: str, phone: str, db: Session) -> Dict:
+        self._find_by_token(token, db)
+        try:
+            normalized = validate_phone(phone)
+        except ValueError as e:
+            raise _bad_request(str(e))
+        return auth_service.send_code(normalized, db)
+
+    def verify_phone(self, token: str, phone: str, code: str, tz: Optional[str], db: Session):
+        """Check the code, save the number on the invitee, and create or link their account."""
+        invitee = self._find_by_token(token, db)
         try:
             normalized = validate_phone(phone)
         except ValueError as e:
             raise _bad_request(str(e))
         if tz and not is_valid_timezone(tz):
             raise _bad_request(f"Unknown timezone '{tz}'.")
+        auth_service.consume_code(normalized, code, db)
 
-        invitee = Invitee(
-            event_id=event.id,
-            name=clean_name,
-            phone_encrypted=encrypt_phone(normalized),
-            phone_hash=hash_phone(normalized),
-            timezone=tz,
-            response_token=generate_secure_token(24),
-            created_at=datetime.now(timezone.utc),
-        )
-        db.add(invitee)
-        try:
-            db.commit()
-        except IntegrityError:
-            db.rollback()
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="That number is already invited to this event.")
-        db.refresh(invitee)
+        phone_hash = hash_phone(normalized)
+        taken = db.query(Invitee).filter(
+            Invitee.event_id == invitee.event_id, Invitee.phone_hash == phone_hash, Invitee.id != invitee.id
+        ).first()
+        if taken:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="That number is already on this event.")
+        invitee.phone_encrypted = encrypt_phone(normalized)
+        invitee.phone_hash = phone_hash
+        invitee.timezone = tz or invitee.timezone
 
-        if event.deadline:
-            action = f"Respond by {format_local(event.deadline, self._tz(event, invitee))}:"
-        else:
-            action = "Share your availability:"
-        message = (f'Tentative: {self._host_name(event)} invited you to "{event.title}". {action} '
-                   f"{self.respond_link(event, invitee)} Reply STOP to opt out.")
-        self._text(event, invitee, message, "invite", db)
-        return invitee
+        user = db.query(User).filter(User.phone_hash == phone_hash).first()
+        created = user is None
+        if created:
+            try:
+                account_name = validate_name(invitee.name)
+            except ValueError:
+                account_name = "Tentative User"
+            user = User(name=account_name, phone_number_encrypted=invitee.phone_encrypted, phone_hash=phone_hash,
+                        created_at=datetime.now(timezone.utc))
+            db.add(user)
+            db.flush()
+        # Their response now belongs to the account
+        db.query(Availability).filter(
+            Availability.event_id == invitee.event_id, Availability.edit_token == token
+        ).update({"user_id": user.id})
+        db.commit()
 
-    def list_invitees(self, event_id: int, user: User, db: Session) -> List[Dict]:
-        self._require_host(event_id, user, db)
-        rows = db.query(Invitee).filter(Invitee.event_id == event_id).order_by(Invitee.created_at, Invitee.id).all()
-        return [self.to_out(inv, db) for inv in rows]
-
-    def to_out(self, inv: Invitee, db: Session, include_token: bool = False) -> Dict:
-        out = {
-            "id": inv.id,
-            "name": inv.name,
-            "phone_masked": mask_phone(decrypt_phone(inv.phone_encrypted) or ""),
-            "timezone": inv.timezone,
-            "responded_at": inv.responded_at,
-            "reminder_sent_at": inv.reminder_sent_at,
-            "sms_opted_out": self.is_opted_out(inv.phone_hash, db),
-        }
-        if include_token:
-            out["response_token"] = inv.response_token
-        return out
+        session_token, _ = auth_service.start_session(user, keep_signed_in=True, db=db)
+        return {"message": "Done. Log in with this number anytime to see all your events.",
+                "account_created": created, "token": session_token}
 
     def opt_out(self, phone: str, db: Session) -> None:
         try:
@@ -149,10 +199,23 @@ class InviteeService:
         invitees = db.query(Invitee).filter(Invitee.event_id == event.id).all()
         return bool(invitees) and all(i.responded_at is not None for i in invitees)
 
-    def record_response(self, event: Event, edit_token: str, db: Session) -> None:
-        """Called after availability is saved. Marks the invitee responded; texts the host once all have."""
+    def record_response(self, event: Event, edit_token: str, name: str, user: Optional[User], db: Session) -> None:
+        """Called after availability is saved. Marks the invitee as responded.
+
+        Someone who answers through the general link is added to the list as "joined via link".
+        Once everyone has responded, the host gets a text.
+        """
         invitee = db.query(Invitee).filter(Invitee.event_id == event.id, Invitee.response_token == edit_token).first()
-        if not invitee or invitee.responded_at is not None:
+        if not invitee:
+            if user and event_service.is_host_or_cohost(event, user, db):
+                return
+            invitee = Invitee(event_id=event.id, name=user.name if user else name.strip(), joined_via_link=True,
+                              response_token=edit_token, created_at=datetime.now(timezone.utc))
+            if user:
+                invitee.phone_encrypted = user.phone_number_encrypted
+                invitee.phone_hash = user.phone_hash
+            db.add(invitee)
+        elif invitee.responded_at is not None:
             return
         invitee.responded_at = datetime.now(timezone.utc)
         db.commit()
@@ -209,8 +272,8 @@ class InviteeService:
 
         text = f"Tentative – {event.title} update from {user.name}: {body}"
         invitees = db.query(Invitee).filter(Invitee.event_id == event.id).all()
-        opted_out = [i for i in invitees if self.is_opted_out(i.phone_hash, db)]
-        recipients = [i for i in invitees if i not in opted_out]
+        opted_out = [i for i in invitees if i.phone_hash and self.is_opted_out(i.phone_hash, db)]
+        recipients = [i for i in invitees if i.phone_hash and i not in opted_out]
 
         def plural(n: int) -> str:
             return f"{n} invitee" + ("" if n == 1 else "s")

@@ -45,7 +45,7 @@ def event_with_invitees(client, host):
 
 # ------------------------------------------------------------------ F-16 / FR-16
 
-def test_f16_deadline_saved_in_utc_and_shown_in_each_timezone(client, db_session, host, sms_outbox):
+def test_f16_deadline_saved_in_utc_and_shown_in_each_timezone(client, db_session, host):
     event = create_event(client, host, deadline="2026-11-25T17:00:00-06:00")
     assert event["status"] == "collecting"
 
@@ -59,14 +59,6 @@ def test_f16_deadline_saved_in_utc_and_shown_in_each_timezone(client, db_session
         2026, 11, 25, 23, 0, tzinfo=timezone.utc
     )
     assert fetched["deadline_display"] == "Wed, Nov 25, 5:00 PM CST"
-
-    # Each invite SMS carries the deadline in that invitee's own timezone
-    add_invitee(client, host, event["id"], "Invitee1", "+14695550101", "America/Chicago")
-    add_invitee(client, host, event["id"], "Invitee2", "+13105550102", "America/Los_Angeles")
-    (invite1,) = _texts_to(sms_outbox, "+14695550101")
-    (invite2,) = _texts_to(sms_outbox, "+13105550102")
-    assert "Respond by Wed, Nov 25, 5:00 PM CST" in invite1
-    assert "Respond by Wed, Nov 25, 3:00 PM PST" in invite2
 
 
 def test_f16_deadline_update_is_normalized_to_utc(client, db_session, host):
@@ -326,17 +318,66 @@ def test_fr22_host_can_finalize_without_notifying(client, host, event_with_invit
 
 def test_invitee_management_rules(client, db_session, host, event_with_invitees):
     event, invitees = event_with_invitees
-    # Duplicate phone on the same event is rejected; invalid phones are rejected
-    dup = client.post(f"/api/events/{event['id']}/invitees", json={"name": "Again", "phone": "(469) 555-0101"},
-                      headers=host)
+    # The same number can't be verified twice on one event
+    token = client.post(f"/api/events/{event['id']}/invitees", json={"name": "Again"}, headers=host).json()["response_token"]
+    code = client.post(f"/api/invite/{token}/phone/request-code", json={"phone": "(469) 555-0101"}).json()["dev_code"]
+    dup = client.post(f"/api/invite/{token}/phone/verify", json={"phone": "(469) 555-0101", "code": code})
     assert dup.status_code == 409
-    bad = client.post(f"/api/events/{event['id']}/invitees", json={"name": "Bad", "phone": "555"}, headers=host)
+    # Invalid phones and bad links are rejected
+    bad = client.post(f"/api/invite/{token}/phone/request-code", json={"phone": "555"})
     assert bad.status_code == 400
-    # Only host/co-host can add or list invitees
+    assert client.post("/api/invite/nope/phone/request-code", json={"phone": "+14695550177"}).status_code == 404
+    # Only the host or a co-host can list invitees
     stranger = register_user(client, phone="+12145550177", name="Not The Host")
     assert client.get(f"/api/events/{event['id']}/invitees", headers=stranger).status_code == 403
-    # Phone numbers are masked in API output and encrypted at rest
+    # The list says who can be texted but never includes a phone number
     listed = client.get(f"/api/events/{event['id']}/invitees", headers=host).json()
-    assert all("555" not in i["phone_masked"] for i in listed)
-    row = db_session.query(Invitee).first()
+    assert all("phone" not in key for i in listed for key in i)
+    assert listed[0]["can_text"] is True
+    assert listed[-1]["can_text"] is False  # "Again" has no number yet
+    # Numbers are encrypted in the database
+    row = db_session.query(Invitee).filter(Invitee.phone_encrypted.isnot(None)).first()
     assert "4695550101" not in row.phone_encrypted
+
+
+def test_invitee_added_by_name_has_personal_link_and_no_texts(client, host):
+    event = create_event(client, host)
+    invitee = add_invitee(client, host, event["id"], "Sam")
+    assert invitee["can_text"] is False
+    assert invitee["joined_via_link"] is False
+    assert invitee["link"].endswith(f"/events/{event['id']}/respond?invite={invitee['response_token']}")
+
+
+def test_new_link_replaces_old_one_and_keeps_response(client, host):
+    event = create_event(client, host)
+    invitee = add_invitee(client, host, event["id"], "Sam")
+    submit_availability(client, event["id"], "Sam", SLOT, token=invitee["response_token"])
+    res = client.post(f"/api/events/{event['id']}/invitees/{invitee['id']}/new-link", headers=host)
+    assert res.status_code == 200
+    assert res.json()["response_token"] != invitee["response_token"]
+    mine = client.get(f"/api/events/{event['id']}/availability/me", params={"edit_token": res.json()["response_token"]})
+    assert len(mine.json()) == 1
+
+
+def test_general_link_response_is_listed_as_joined_via_link(client, host):
+    event = create_event(client, host)
+    client.cookies.clear()
+    submit_availability(client, event["id"], "Walk-in", SLOT)
+    listed = client.get(f"/api/events/{event['id']}/invitees", headers=host).json()
+    assert [(i["name"], i["joined_via_link"], i["can_text"]) for i in listed] == [("Walk-in", True, False)]
+    assert listed[0]["responded_at"] is not None
+
+
+def test_verifying_a_phone_creates_an_account_and_links_the_response(client, db_session, host):
+    event = create_event(client, host)
+    invitee = add_invitee(client, host, event["id"], "Sam")
+    submit_availability(client, event["id"], "Sam", SLOT, token=invitee["response_token"])
+    token = invitee["response_token"]
+    code = client.post(f"/api/invite/{token}/phone/request-code", json={"phone": "+14695550166"}).json()["dev_code"]
+    res = client.post(f"/api/invite/{token}/phone/verify", json={"phone": "+14695550166", "code": code})
+    assert res.status_code == 200
+    assert res.json()["account_created"] is True
+    assert res.json()["token"]
+    # Wrong codes don't verify
+    bad = client.post(f"/api/invite/{token}/phone/verify", json={"phone": "+14695550166", "code": "000000"})
+    assert bad.status_code == 400
