@@ -321,10 +321,9 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
                           <motion.div
                             initial={{ scale: 0.95 }}
                             animate={{ scale: 1 }}
-                            className="w-full h-full rounded-md bg-white text-black font-semibold text-[11px] flex items-center justify-between px-2 border-l-4 border-black"
+                            className="w-full h-full rounded-md bg-white text-black font-semibold text-[11px] flex items-center justify-center px-2"
                           >
                             <span className="tracking-tight">Available</span>
-                            <span className="text-[10px] font-mono opacity-70">on</span>
                           </motion.div>
                         ) : (
                           <div className="w-full h-full rounded-md border border-white/[0.06] bg-white/[0.025] hover:bg-white/[0.07] hover:border-white/20 transition-colors" />

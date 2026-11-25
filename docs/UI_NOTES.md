@@ -19,7 +19,7 @@ This file explains the design choices and fixes in the `Ronit-Dev` branch so the
 
 ## Intro
 
-`IntroSplash.tsx` plays when the main page loads: the planet starts zoomed in on a black screen, then zooms out into its place in the hero while the black fades away. The hero text appears after it. It plays whenever the page is loaded or refreshed while on the main page, and not when you click back to the main page from another page. It is skipped for reduced motion. It is drawn on the document body so it covers the top bar.
+`IntroSplash.tsx` plays when the main page loads: the planet starts zoomed in on a black screen, then zooms out into its place in the hero while the black fades away. The hero text appears after it. It takes about 2.2 seconds. Clicking, tapping, or pressing any key skips it (it fades out quickly). It plays whenever the page is loaded or refreshed while on the main page, and not when you click back to the main page from another page. It is skipped for reduced motion. It is drawn on the document body so it covers the top bar.
 
 ## Rocket launch
 
@@ -47,10 +47,11 @@ Event dates and the daily window (for example 12:00 to 17:00) are wall-clock tim
 - **Page widths:** page wrappers use `mx-auto` inside a flex column, which shrank each page to its content. `.route-view > *` in `index.css` makes them fill their max width.
 - **Events page redirect:** `/events` sent logged-in users to the login page on a fresh load, because it checked for a user before the login check finished. It now waits.
 - **Blank screen when clicking between pages:** the route change used to fade the old page out before fading the new one in, so the screen was close to blank for about 0.7 seconds on every click, and clicking fast made it worse. The new page now replaces the old one immediately and fades in (`AnimatedRoutes` in `App.tsx`).
+- **Saved availability coming back at the wrong time:** reopening the paint page showed 3 PM to 5 PM selected instead of what was saved, because the server sends times without a `Z` (SQLite drops it) and the browser read them as local time. `api/client.ts` now adds the `Z` to every date-time string from the server (`markUtc`), which also fixed comment times and every other timestamp. The availability endpoint also returns UTC times now.
 - **Finalized time shown in the wrong hour:** the server sent finalized times without a UTC marker (like `2026-11-29T20:30:00`), so the browser read them as its own local time. Event times from `routers/events.py` are now marked as UTC (they end in Z).
 - **Recurrence preview:** it showed hard-coded September dates. It now starts from the event's finalized day (or first candidate day) and follows the chosen days and frequency.
 - **Default dates:** the create page now starts with the current week, Monday through Sunday.
 - **Reply button:** it used `bg-cosmic-purple` with white text, but that color is white in this theme, so the text could not be seen. It is now a white button with black text.
 - **Landing page after leaving a long page:** the scroll reset on every route change was a smooth scroll, and the landing hero fades out based on scroll position, so the hero could look missing while it scrolled. The reset is now instant and runs when the route changes. The logo only scrolls smoothly when you are already on the landing page.
-- **Availability grid:** empty cells are now visible and the day columns fill the width.
+- **Availability grid:** painted cells just say "Available", centered. empty cells are now visible and the day columns fill the width.
 - **Local database:** there are no migrations. After pulling model changes, run `docker compose down -v` to reset the local database.

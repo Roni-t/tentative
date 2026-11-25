@@ -2,6 +2,22 @@ import type { AuthResponse, CodeSentResponse, DevSmsNotice, Invitee, User } from
 
 const API_BASE = '/api';
 
+// The server stores times in UTC but SQLite gives them back without a "Z" (like 2026-11-26T15:00:00).
+// A browser reads that as local time, which shifts every time by the viewer's UTC offset.
+// Add the "Z" to any date-time string that has no time zone so it is read as UTC.
+const NAIVE_DATETIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?$/;
+
+const markUtc = (value: any): any => {
+  if (typeof value === 'string') return NAIVE_DATETIME.test(value) ? value + 'Z' : value;
+  if (Array.isArray(value)) return value.map(markUtc);
+  if (value && typeof value === 'object') {
+    const out: Record<string, any> = {};
+    for (const key of Object.keys(value)) out[key] = markUtc(value[key]);
+    return out;
+  }
+  return value;
+};
+
 class ApiClient {
   private getToken(): string | null {
     return localStorage.getItem('tentative_token');
@@ -62,7 +78,7 @@ class ApiClient {
     // Check if response is empty or blob/text
     const contentType = res.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
-      return res.json();
+      return markUtc(await res.json());
     }
     return res.text() as unknown as T;
   }

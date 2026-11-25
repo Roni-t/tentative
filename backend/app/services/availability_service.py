@@ -92,7 +92,7 @@ class AvailabilityService:
             Availability.event_id == event_id,
             Availability.edit_token == edit_token
         ).all()
-        return [TimeSlot(start_time=r.start_time, end_time=r.end_time) for r in records]
+        return [TimeSlot(start_time=ensure_utc(r.start_time), end_time=ensure_utc(r.end_time)) for r in records]
 
 
 availability_service = AvailabilityService()
