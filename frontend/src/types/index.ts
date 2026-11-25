@@ -85,7 +85,7 @@ export interface Rsvp {
   id: number;
   event_id: number;
   participant_name: string;
-  participant_email_or_phone?: string | null;
+  participant_phone?: string | null;
   status: RsvpStatus;
   waitlist_position?: number | null;
   edit_token: string;
@@ -165,7 +165,7 @@ export interface AdminEvent {
 export interface BugReport {
   id: number;
   user_name?: string | null;
-  email_or_phone?: string | null;
+  contact?: string | null;
   page_url?: string | null;
   description: string;
   status: string;

@@ -162,10 +162,6 @@ class ApiClient {
     return this.request<any[]>(`/events/${id}/changelog`);
   }
 
-  async getGoogleCalendarUrl(id: number | string) {
-    return this.request<{ url: string }>(`/events/${id}/google-calendar-url`);
-  }
-
   // Share
   async resolveShareToken(token: string) {
     return this.request<any>(`/share/${token}`);
@@ -209,7 +205,7 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify({
         participant_name: participantName,
-        participant_email_or_phone: contact,
+        participant_phone: contact,
         edit_token: editToken || this.getEditToken(),
         status,
       }),
@@ -263,10 +259,10 @@ class ApiClient {
   }
 
   // Bug Reports
-  async submitBugReport(userName: string, emailOrPhone: string, pageUrl: string, description: string) {
+  async submitBugReport(userName: string, contact: string, pageUrl: string, description: string) {
     return this.request<any>('/bug-reports', {
       method: 'POST',
-      body: JSON.stringify({ user_name: userName, email_or_phone: emailOrPhone, page_url: pageUrl, description }),
+      body: JSON.stringify({ user_name: userName, contact: contact, page_url: pageUrl, description }),
     });
   }
 

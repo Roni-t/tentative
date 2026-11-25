@@ -90,7 +90,7 @@ def test_nfr4_no_plaintext_phone_numbers_in_database(client, db_session, host_wi
         phones.append(phone)
 
     needles = {_national(p) for p in phones}
-    # rsvps.participant_email_or_phone is covered by its own test below
+    # rsvps.participant_phone is covered by its own test below
     hits = _scan_db(db_session, needles, skip={"rsvps"})
     assert hits == [], f"plaintext phone numbers found: {hits[:10]}"
 
@@ -102,12 +102,12 @@ def test_nfr4_no_plaintext_phone_numbers_in_database(client, db_session, host_wi
         assert _national(decrypt_phone(inv.phone_encrypted)) in needles
 
 
-@pytest.mark.xfail(strict=True, reason="UC-10 stores rsvps.participant_email_or_phone in plaintext; "
+@pytest.mark.xfail(strict=True, reason="UC-10 stores rsvps.participant_phone in plaintext; "
                                        "needs encryption at rest to meet NFR-4")
 def test_nfr4_rsvp_contact_phone_not_stored_in_plaintext(client, db_session, host_with_activity):
     event_id = db_session.query(Invitee).first().event_id
     client.post(f"/api/events/{event_id}/rsvp",
-                json={"participant_name": "Walk-in", "participant_email_or_phone": "+14695550188", "status": "going"})
+                json={"participant_name": "Walk-in", "participant_phone": "+14695550188", "status": "going"})
     assert db_session.query(RSVP).count() == 1
     assert _scan_db(db_session, {_national("+14695550188")}) == []
 
@@ -180,18 +180,6 @@ def test_nfr5_only_availability_is_stored_or_shown_never_calendar_details(client
 
 
 # ------------------------------------------------------------------ NFR-6
-
-def test_nfr6_finalized_event_can_be_added_to_google_calendar_via_link(client):
-    """Available today: an 'Add to Google Calendar' link carrying the finalized time."""
-    host = register_user(client, phone="+19725550142", name="Kaelan Nguyen")
-    event = create_event(client, host)
-    client.post(f"/api/events/{event['id']}/finalize",
-                json={"start_time": SLOT[0]["start_time"], "end_time": SLOT[0]["end_time"],
-                      "notify_participants": False}, headers=host)
-    url = client.get(f"/api/events/{event['id']}/google-calendar-url").json()["url"]
-    assert url.startswith("https://calendar.google.com/calendar/render?")
-    assert "20261205T010000Z%2F20261205T030000Z" in url or "20261205T010000Z/20261205T030000Z" in url
-
 
 @pytest.mark.xfail(strict=True, reason="NFR-6 direct add to a connected Google/Outlook calendar needs FR-17 OAuth")
 def test_nfr6_optionally_add_to_connected_calendar(client):

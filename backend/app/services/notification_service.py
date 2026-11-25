@@ -53,7 +53,7 @@ class NotificationService:
     def notify_all_invitees(self, event: Event, message: str, notification_type: str, db: Session):
         rsvps = db.query(RSVP).filter(RSVP.event_id == event.id).all()
         for r in rsvps:
-            recip = r.participant_email_or_phone or r.participant_name
+            recip = r.participant_phone or r.participant_name
             self.notify_participant(recip, event, message, notification_type, db)
 
 

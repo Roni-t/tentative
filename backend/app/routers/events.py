@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
-from app.adapters.ics_exporter import generate_google_calendar_url, generate_ics
 from app.core.dependencies import get_current_user, get_current_user_optional
 from app.database import get_db
 from app.models.event import Event, EventCoHost
@@ -229,56 +228,3 @@ def get_changelog(
             timestamp=en.timestamp
         ))
     return result
-
-
-@router.get("/{event_id}/export.ics")
-def export_ics(
-    event_id: int,
-    db: Session = Depends(get_db)
-):
-    """Download standard RFC 5545 iCalendar (.ics) file."""
-    event = db.query(Event).filter(Event.id == event_id).first()
-    if not event:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
-
-    st = event.finalized_start_time or datetime.now(timezone.utc)
-    et = event.finalized_end_time or st
-
-    ics_content = generate_ics(
-        event_id=event.id,
-        title=event.title,
-        description=event.description or "",
-        location=event.location or "",
-        start_time=st,
-        end_time=et
-    )
-
-    filename = f"tentative-{event.id}.ics"
-    return Response(
-        content=ics_content,
-        media_type="text/calendar",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
-    )
-
-
-@router.get("/{event_id}/google-calendar-url")
-def get_google_calendar_url(
-    event_id: int,
-    db: Session = Depends(get_db)
-):
-    """Return quick web URL for 'Add to Google Calendar'."""
-    event = db.query(Event).filter(Event.id == event_id).first()
-    if not event:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
-
-    st = event.finalized_start_time or datetime.now(timezone.utc)
-    et = event.finalized_end_time or st
-
-    url = generate_google_calendar_url(
-        title=event.title,
-        description=event.description or "",
-        location=event.location or "",
-        start_time=st,
-        end_time=et
-    )
-    return {"url": url}

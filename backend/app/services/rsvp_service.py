@@ -80,8 +80,8 @@ class RsvpService:
 
         if existing:
             existing.participant_name = payload.participant_name.strip()
-            if payload.participant_email_or_phone:
-                existing.participant_email_or_phone = payload.participant_email_or_phone.strip()
+            if payload.participant_phone:
+                existing.participant_phone = payload.participant_phone.strip()
             existing.status = target_status
             existing.waitlist_position = waitlist_pos
             existing.updated_at = now
@@ -91,7 +91,7 @@ class RsvpService:
                 event_id=event_id,
                 user_id=current_user.id if current_user else None,
                 participant_name=payload.participant_name.strip(),
-                participant_email_or_phone=payload.participant_email_or_phone.strip() if payload.participant_email_or_phone else None,
+                participant_phone=payload.participant_phone.strip() if payload.participant_phone else None,
                 edit_token=edit_token,
                 status=target_status,
                 waitlist_position=waitlist_pos,
@@ -142,7 +142,7 @@ class RsvpService:
 
             # Notify promoted attendee
             notification_service.notify_participant(
-                recipient=next_waitlisted.participant_email_or_phone or next_waitlisted.participant_name,
+                recipient=next_waitlisted.participant_phone or next_waitlisted.participant_name,
                 event=event,
                 message=f"You're off the waitlist! A spot opened up for '{event.title}'. Your RSVP is now Going.",
                 notification_type="waitlist_promoted",
@@ -193,13 +193,12 @@ class RsvpService:
         summary = self.get_rsvp_summary(event_id, None, db)
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow(["Name", "Status", "Waitlist Rank", "Contact", "Last Updated (UTC)"])
+        writer.writerow(["Name", "Status", "Waitlist Rank", "Last Updated (UTC)"])
         for r in summary.rsvps:
             writer.writerow([
                 r.participant_name,
                 r.status.upper(),
                 r.waitlist_position if r.waitlist_position else "-",
-                r.participant_email_or_phone or "-",
                 r.updated_at.strftime("%Y-%m-%d %H:%M:%S")
             ])
         return output.getvalue()

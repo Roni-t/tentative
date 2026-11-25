@@ -110,21 +110,21 @@ def seed_database(db: Session) -> None:
     # 5. Participants & Availability
     # Participants matching wireframe p. 47 & 51:
     participants = [
-        ("Alex Morgan", "alex.morgan@acme.com", "token-alex-01"),
-        ("Jamie Chen", "jamie.chen@acme.com", "token-jamie-02"),
-        ("Priya Shah", "priya.shah@acme.com", "token-priya-03"),
-        ("Daniel Kim", "daniel.kim@acme.com", "token-daniel-04"),
-        ("Sofia Patel", "sofia.patel@acme.com", "token-sofia-05"),
-        ("Marcus Lee", "marcus.lee@acme.com", "token-marcus-06"),
-        ("Emma Wilson", "emma.wilson@acme.com", "token-emma-07"),
-        ("Noah Davis", "noah.davis@acme.com", "token-noah-08")
+        ("Alex Morgan", "+19725550201", "token-alex-01"),
+        ("Jamie Chen", "+19725550202", "token-jamie-02"),
+        ("Priya Shah", "+19725550203", "token-priya-03"),
+        ("Daniel Kim", "+19725550204", "token-daniel-04"),
+        ("Sofia Patel", "+19725550205", "token-sofia-05"),
+        ("Marcus Lee", "+19725550206", "token-marcus-06"),
+        ("Emma Wilson", "+19725550207", "token-emma-07"),
+        ("Noah Davis", "+19725550208", "token-noah-08")
     ]
 
     # Pre-populate availability slots so Wednesday Sep 16, 2:00 PM - 3:00 PM (14:00 - 15:00 UTC) has 7 of 8 available!
     wed_date = "2026-09-16"
     y, m, d = 2026, 9, 16
 
-    for name, email, edit_tok in participants:
+    for name, phone, edit_tok in participants:
         # Everyone except Noah is available Wed 14:00 - 15:00 (7 of 8)
         if name != "Noah Davis":
             # 14:00 to 14:30
@@ -178,20 +178,20 @@ def seed_database(db: Session) -> None:
     # 1 Waitlisted: Emma Wilson (rank 1)
     # 1 No Response: Noah Davis (availability entered, but no RSVP)
     rsvp_data = [
-        ("Alex Morgan", "alex.morgan@acme.com", "token-alex-01", "going", None),
-        ("Jamie Chen", "jamie.chen@acme.com", "token-jamie-02", "going", None),
-        ("Priya Shah", "priya.shah@acme.com", "token-priya-03", "going", None),
-        ("Daniel Kim", "daniel.kim@acme.com", "token-daniel-04", "maybe", None),
-        ("Sofia Patel", "sofia.patel@acme.com", "token-sofia-05", "maybe", None),
-        ("Marcus Lee", "marcus.lee@acme.com", "token-marcus-06", "not_going", None),
-        ("Emma Wilson", "emma.wilson@acme.com", "token-emma-07", "waitlisted", 1),
+        ("Alex Morgan", "+19725550201", "token-alex-01", "going", None),
+        ("Jamie Chen", "+19725550202", "token-jamie-02", "going", None),
+        ("Priya Shah", "+19725550203", "token-priya-03", "going", None),
+        ("Daniel Kim", "+19725550204", "token-daniel-04", "maybe", None),
+        ("Sofia Patel", "+19725550205", "token-sofia-05", "maybe", None),
+        ("Marcus Lee", "+19725550206", "token-marcus-06", "not_going", None),
+        ("Emma Wilson", "+19725550207", "token-emma-07", "waitlisted", 1),
     ]
 
-    for name, email, tok, stat, rank in rsvp_data:
+    for name, phone, tok, stat, rank in rsvp_data:
         db.add(RSVP(
             event_id=event.id,
             participant_name=name,
-            participant_email_or_phone=email,
+            participant_phone=phone,
             edit_token=tok,
             status=stat,
             waitlist_position=rank,

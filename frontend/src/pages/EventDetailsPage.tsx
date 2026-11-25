@@ -21,8 +21,6 @@ import {
   AlertTriangle,
   UserPlus,
   ShieldAlert,
-  Download,
-  ExternalLink,
   Trash2,
 } from 'lucide-react';
 
@@ -44,16 +42,12 @@ export const EventDetailsPage: React.FC = () => {
 
   const [cohostInput, setCohostInput] = useState('');
   const [blockInput, setBlockInput] = useState('');
-  const [googleCalendarUrl, setGoogleCalendarUrl] = useState('');
 
   const fetchEvent = async () => {
     if (!id) return;
     try {
       const data = await api.getEvent(id);
       setEvent(data);
-      if (data.status === 'finalized') {
-        api.getGoogleCalendarUrl(id).then((res) => setGoogleCalendarUrl(res.url)).catch(() => {});
-      }
     } catch (err: any) {
       showToast(err.message || 'Error loading event', 'error');
     } finally {
@@ -254,28 +248,6 @@ export const EventDetailsPage: React.FC = () => {
                 Location: {event.location || 'Online'}
               </div>
             </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <a
-              href={`/api/events/${event.id}/export.ics`}
-              download
-              className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-white border border-white/10 flex items-center space-x-1.5 transition-colors"
-            >
-              <Download className="w-3.5 h-3.5 text-cosmic-cyan" />
-              <span>Export .ics</span>
-            </a>
-            {googleCalendarUrl && (
-              <a
-                href={googleCalendarUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-xs font-semibold text-emerald-300 border border-emerald-500/30 flex items-center space-x-1.5 transition-colors"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                <span>Google Calendar</span>
-              </a>
-            )}
           </div>
         </div>
       )}

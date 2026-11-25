@@ -5,7 +5,7 @@ import { Event, HeatmapResponse, HeatmapSlot } from '../types';
 import { HeatmapGrid } from '../components/HeatmapGrid';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { ArrowLeft, RefreshCw, Download, Sparkles, PlusCircle } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Sparkles, PlusCircle } from 'lucide-react';
 
 export const HeatmapPage: React.FC = () => {
   const { id, token } = useParams<{ id?: string; token?: string }>();
@@ -117,14 +117,6 @@ export const HeatmapPage: React.FC = () => {
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
           </button>
-          <a
-            href={`/api/events/${event.id}/export.ics`}
-            download
-            className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 text-xs font-medium flex items-center space-x-1.5 transition-colors"
-          >
-            <Download className="w-3.5 h-3.5 text-cosmic-cyan" />
-            <span>Export .ics</span>
-          </a>
           <Link
             to={token ? `/share/${token}/respond` : `/events/${event.id}/respond`}
             className="px-4 py-2 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-bold shadow-[0_0_15px_rgba(255,255,255,0.35)] flex items-center space-x-1.5 transition-all"
