@@ -28,7 +28,7 @@ class User(Base):
     
     manages: Mapped[List["Event"]] = relationship()
 
-#This needs a time and date start and end. All ints. I can handle the conversion/authentication. Also needs a min/max attendees field. Both ints. -Trinity
+#This needs a few more fields. Check my test_create_event_validation.py in my branch for what I used. -Trinity
 class Event(Base):
     __tablename__ = "events"
     
