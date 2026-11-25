@@ -13,9 +13,16 @@ This file explains the design choices and fixes in the `Ronit-Dev` branch so the
 - **Reveal on scroll:** the `Reveal` component fades content in once. The landing page planet drifts up and fades as you scroll.
 - **Reduced motion:** animations are turned down for people who ask for it in their system settings.
 
-## Cursor comet
+## Cursor smoke
 
-`CometTrail.tsx` draws a faint streak behind the cursor. It is only shown on the landing page and is drawn behind all page content (it is rendered in `App.tsx` next to the star field). It is skipped on touch screens and when reduced motion is on. The old glow around the cursor was removed.
+`FluidTrail.tsx` is a small fluid simulation that runs on the GPU (WebGL2). Moving the cursor pushes the fluid and adds a little dye, which swirls and slowly fades, so the cursor leaves a soft inky trail. The idea comes from the smoke effect on kuljitaujla.com, but this one is much fainter and uses cool blue and violet instead of a rainbow.
+
+- It is only shown on the landing page and is drawn behind all page content (it is rendered in `App.tsx` next to the star field).
+- The values at the top of the file control the look: `DYE_STRENGTH` (how bright), `DYE_FADE` (how fast it fades), `SWIRL` (how much it curls), `SPLAT_RADIUS` (how wide), `SPLAT_FORCE` (how hard the cursor pushes).
+- Dye is scaled by how fast the cursor moves, so slow movement does not pile up into a blob.
+- The simulation stops after 5 seconds without cursor movement and starts again when the cursor moves.
+- The canvas is half the window size, because the smoke is soft anyway. It is rebuilt when the window is resized.
+- If the browser cannot run it (no WebGL2 or float textures), `CursorTrail` falls back to `CometTrail.tsx`, a thin 2D streak. Nothing is shown on touch screens or when reduced motion is on.
 
 ## Intro
 

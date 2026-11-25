@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { StarField } from './components/StarField';
-import { CometTrail } from './components/CometTrail';
+import { CursorTrail } from './components/FluidTrail';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { ToastContainer } from './components/ToastContainer';
@@ -119,7 +119,7 @@ export const App: React.FC = () => {
             {/* Ambient Celestial Starfield */}
             <StarField />
             <LandingOnly>
-              <CometTrail />
+              <CursorTrail />
             </LandingOnly>
 
             {/* Sticky Navigation Bar */}
