@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { api } from '../api/client';
 import { Event, TimeSlot } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { AvailabilityGrid } from '../components/AvailabilityGrid';
+import { TextOptIn } from '../components/TextOptIn';
 import { Calendar, User as UserIcon, Check, ArrowRight, Sparkles, MapPin, Clock } from 'lucide-react';
 
 export const RespondAvailabilityPage: React.FC = () => {
   const { id, token } = useParams<{ id?: string; token?: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get('invite') || undefined;
   const { showToast } = useToast();
 
   const [event, setEvent] = useState<Event | null>(null);
@@ -18,6 +21,7 @@ export const RespondAvailabilityPage: React.FC = () => {
   const [participantName, setParticipantName] = useState(user?.name || '');
   const [selectedSlots, setSelectedSlots] = useState<TimeSlot[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [savedToken, setSavedToken] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -33,7 +37,7 @@ export const RespondAvailabilityPage: React.FC = () => {
         setEvent(ev);
 
         // Preload any existing slots for this edit token
-        const existingSlots = await api.getMyAvailability(ev.id);
+        const existingSlots = await api.getMyAvailability(ev.id, inviteToken);
         setSelectedSlots(existingSlots);
       } catch (err: any) {
         if (err.status === 410) {
@@ -64,16 +68,26 @@ export const RespondAvailabilityPage: React.FC = () => {
 
     setSubmitting(true);
     try {
-      const res = await api.submitAvailability(event.id, participantName.trim(), selectedSlots);
-      showToast(`Availability saved! (${res.slots_count} slots recorded)`, 'success');
-      const targetUrl = token ? `/share/${token}/heatmap` : `/events/${event.id}/heatmap`;
-      navigate(targetUrl);
+      const res = await api.submitAvailability(event.id, participantName.trim(), selectedSlots, inviteToken);
+      showToast(`Availability saved (${res.slots_count} slots)`, 'success');
+      if (user) {
+        // Logged-in people already have a phone number on their account
+        navigate(token ? `/share/${token}/heatmap` : `/events/${event.id}/heatmap`);
+      } else {
+        setSavedToken(res.edit_token);
+      }
     } catch (err: any) {
       showToast(err.message || 'Failed to save availability', 'error');
     } finally {
       setSubmitting(false);
     }
   };
+
+  const heatmapUrl = event ? (token ? `/share/${token}/heatmap` : `/events/${event.id}/heatmap`) : '/';
+
+  if (savedToken) {
+    return <TextOptIn editToken={savedToken} onDone={() => navigate(heatmapUrl)} />;
+  }
 
   if (loading) {
     return <div className="max-w-4xl mx-auto px-4 py-16 text-center text-slate-500 animate-pulse">Loading orbit...</div>;

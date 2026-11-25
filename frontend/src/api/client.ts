@@ -1,4 +1,4 @@
-import type { AuthResponse, CodeSentResponse, DevSmsNotice, User } from '../types';
+import type { AuthResponse, CodeSentResponse, DevSmsNotice, Invitee, User } from '../types';
 
 const API_BASE = '/api';
 
@@ -175,6 +175,36 @@ class ApiClient {
     return this.request<any>(`/events/${eventId}/share/expiry`, {
       method: 'POST',
       body: JSON.stringify({ expiry_option: option, custom_expiry_date: customDate }),
+    });
+  }
+
+  // Invitees
+  async listInvitees(eventId: number | string) {
+    return this.request<Invitee[]>(`/events/${eventId}/invitees`);
+  }
+
+  async addInvitee(eventId: number | string, name: string) {
+    return this.request<Invitee>(`/events/${eventId}/invitees`, {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    });
+  }
+
+  async newInviteeLink(eventId: number | string, inviteeId: number) {
+    return this.request<Invitee>(`/events/${eventId}/invitees/${inviteeId}/new-link`, { method: 'POST' });
+  }
+
+  async requestInviteePhoneCode(token: string, phone: string) {
+    return this.request<CodeSentResponse>(`/invite/${token}/phone/request-code`, {
+      method: 'POST',
+      body: JSON.stringify({ phone }),
+    });
+  }
+
+  async verifyInviteePhone(token: string, phone: string, code: string) {
+    return this.request<{ message: string; account_created: boolean }>(`/invite/${token}/phone/verify`, {
+      method: 'POST',
+      body: JSON.stringify({ phone, code }),
     });
   }
 

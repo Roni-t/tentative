@@ -7,6 +7,7 @@ import { useToast } from '../context/ToastContext';
 import { formatDateTimeLong } from '../utils/format';
 import { Modal } from '../components/Modal';
 import { ChangeHistoryModal } from '../components/ChangeHistoryModal';
+import { InviteeList } from '../components/InviteeList';
 import {
   Calendar,
   Clock,
@@ -386,6 +387,10 @@ export const EventDetailsPage: React.FC = () => {
           </div>
         </Link>
       </div>
+
+      {canManage && event.status === 'collecting' && (
+        <InviteeList event={event} groupLink={`${window.location.origin}/share/${shareToken}/respond`} />
+      )}
 
       {/* Modals */}
       {/* Cancel Confirmation Modal (UC-4) */}

@@ -171,3 +171,15 @@ export interface BugReport {
   status: string;
   created_at: string;
 }
+
+export interface Invitee {
+  id: number;
+  name: string;
+  responded_at?: string | null;
+  reminder_sent_at?: string | null;
+  joined_via_link: boolean;
+  can_text: boolean;
+  sms_opted_out: boolean;
+  response_token: string;
+  link: string;
+}
