@@ -119,6 +119,15 @@ h2 {
   font-size: 0.9rem;
 }
 
+/* 16px inputs on phones, so iOS does not zoom the page when one is focused */
+@media (max-width: 640px) {
+  .route-view input,
+  .route-view select,
+  .route-view textarea {
+    font-size: 16px;
+  }
+}
+
 /* Small mono labels, like "01 / HOW IT WORKS" */
 .eyebrow {
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
