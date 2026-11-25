@@ -160,7 +160,7 @@ export const DiscussionPage: React.FC = () => {
                 onClick={() => setIsQuestion(false)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-colors ${
                   !isQuestion
-                    ? 'bg-cosmic-purple/20 text-purple-300 border border-cosmic-purple/40'
+                    ? 'bg-cosmic-purple/20 text-zinc-200 border border-cosmic-purple/40'
                     : 'bg-white/5 text-slate-400 hover:text-white'
                 }`}
               >
@@ -245,7 +245,7 @@ export const DiscussionPage: React.FC = () => {
                           <div className="flex items-center space-x-1.5">
                             <span className="font-bold text-white">{rep.author_name}</span>
                             {rep.is_host_reply && (
-                              <span className="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase bg-cosmic-purple/30 text-purple-300 border border-cosmic-purple/40">
+                              <span className="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase bg-cosmic-purple/30 text-zinc-200 border border-cosmic-purple/40">
                                 Host Reply
                               </span>
                             )}

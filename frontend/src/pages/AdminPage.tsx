@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 export const AdminPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { showToast } = useToast();
 
   const [status, setStatus] = useState<SystemStatus | null>(null);
@@ -84,6 +84,8 @@ export const AdminPage: React.FC = () => {
       showToast(err.message || 'Failed to delete event', 'error');
     }
   };
+
+  if (authLoading) return null;
 
   if (!user?.is_admin) {
     return (
@@ -271,7 +273,7 @@ export const AdminPage: React.FC = () => {
                   <td className="py-3 px-4 font-mono text-slate-400">{u.phone_masked}</td>
                   <td className="py-3 px-4">
                     {u.is_admin ? (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-cosmic-purple/20 text-purple-300 border border-purple-500/30">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-cosmic-purple/20 text-zinc-200 border border-zinc-400/30">
                         Admin
                       </span>
                     ) : (

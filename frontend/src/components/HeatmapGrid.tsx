@@ -175,7 +175,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
           {/* Heatmap Matrix (University Timetable Schedule Layout) */}
           <div className="lg:col-span-8 flex flex-col space-y-6">
             <div className="overflow-x-auto custom-scrollbar rounded-2xl border border-zinc-800 bg-black shadow-2xl">
-              <div className="min-w-max">
+              <div className="min-w-max w-full">
                 {/* Header Bar Across All Days (Collegiate Schedule Banner) */}
                 <div className="flex items-stretch bg-zinc-900/90 border-b border-zinc-700/80 sticky top-0 z-20">
                   <div className="w-20 sm:w-24 shrink-0 p-3 text-right text-[11px] font-bold text-zinc-400 uppercase tracking-wider border-r border-zinc-800 flex items-center justify-end">
@@ -184,7 +184,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                   {candidateDates.map((dStr) => (
                     <div
                       key={dStr}
-                      className="w-32 sm:w-40 md:w-44 shrink-0 py-3 px-3 text-center border-r border-zinc-800 last:border-r-0 flex flex-col items-center justify-center"
+                      className="flex-1 min-w-[8rem] py-3 px-3 text-center border-r border-zinc-800 last:border-r-0 flex flex-col items-center justify-center"
                     >
                       <span className="text-xs sm:text-sm font-bold text-white tracking-wide uppercase">
                         {formatDayName(dStr)}
@@ -226,7 +226,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                           return (
                             <div
                               key={dStr}
-                              className="w-32 sm:w-40 md:w-44 h-9 border-r border-zinc-800/80 last:border-r-0 opacity-0"
+                              className="flex-1 min-w-[8rem] h-9 border-r border-zinc-800/80 last:border-r-0 opacity-0"
                             />
                           );
                         }
@@ -240,7 +240,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                         return (
                           <div
                             key={slot.start_time}
-                            className="w-32 sm:w-40 md:w-44 h-8 sm:h-9 px-1.5 py-0.5 border-r border-zinc-800/80 last:border-r-0 flex items-center"
+                            className="flex-1 min-w-[8rem] h-8 sm:h-9 px-1.5 py-0.5 border-r border-zinc-800/80 last:border-r-0 flex items-center"
                           >
                             <motion.button
                               type="button"

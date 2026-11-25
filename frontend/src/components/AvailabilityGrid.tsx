@@ -232,7 +232,7 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
       {/* University Timetable Grid Style (Course Planner layout) */}
       <div className="overflow-x-auto pb-4 custom-scrollbar rounded-2xl border border-zinc-800 bg-black shadow-2xl">
         <div
-          className="min-w-max"
+          className="min-w-max w-full"
           onTouchMove={handleTouchMove}
           onTouchEnd={() => (isMouseDownRef.current = false)}
         >
@@ -251,7 +251,7 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
               return (
                 <div
                   key={dateStr}
-                  className="w-32 sm:w-40 md:w-44 shrink-0 py-3 px-3 text-center border-r border-zinc-800 last:border-r-0 flex flex-col items-center justify-center"
+                  className="flex-1 min-w-[8rem] py-3 px-3 text-center border-r border-zinc-800 last:border-r-0 flex flex-col items-center justify-center"
                 >
                   <span className="text-xs sm:text-sm font-bold text-white tracking-wide uppercase">
                     {dayName}
@@ -310,7 +310,7 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
                           setSelectedSet(next);
                           notifyChange(next);
                         }}
-                        className={`w-32 sm:w-40 md:w-44 h-8 sm:h-9 px-1.5 py-0.5 border-r border-zinc-800/80 last:border-r-0 cursor-pointer transition-colors duration-100 flex items-center ${
+                        className={`flex-1 min-w-[8rem] h-8 sm:h-9 px-1.5 py-0.5 border-r border-zinc-800/80 last:border-r-0 cursor-pointer transition-colors duration-100 flex items-center ${
                           isSelected
                             ? 'bg-zinc-800/90 text-white'
                             : 'hover:bg-zinc-900/60 text-zinc-600'
@@ -326,7 +326,7 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
                             <span className="text-[10px] font-mono opacity-70">on</span>
                           </motion.div>
                         ) : (
-                          <div className="w-full h-full rounded border border-transparent hover:border-zinc-700/40" />
+                          <div className="w-full h-full rounded-md border border-white/[0.06] bg-white/[0.025] hover:bg-white/[0.07] hover:border-white/20 transition-colors" />
                         )}
                       </div>
                     );

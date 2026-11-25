@@ -146,7 +146,7 @@ export const EventDetailsPage: React.FC = () => {
                   ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                   : event.status === 'canceled'
                   ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                  : 'bg-cosmic-purple/20 text-purple-300 border border-purple-500/30'
+                  : 'bg-cosmic-purple/20 text-zinc-200 border border-zinc-400/30'
               }`}
             >
               {event.status === 'collecting' ? 'Collecting Responses' : event.status}
@@ -327,17 +327,17 @@ export const EventDetailsPage: React.FC = () => {
           className="glass-panel p-6 rounded-3xl border border-white/10 hover:border-white/30 transition-all flex flex-col justify-between group"
         >
           <div className="space-y-3">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 rounded-2xl bg-zinc-400/20 text-zinc-300 flex items-center justify-center group-hover:scale-110 transition-transform">
               <MessageSquare className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-white group-hover:text-indigo-300 transition-colors">
+            <h3 className="text-base font-bold text-white group-hover:text-zinc-200 transition-colors">
               Discussion & Inquiries
             </h3>
             <p className="text-xs text-slate-400">
               Public inquiries, questions, and host responses for attendees.
             </p>
           </div>
-          <div className="mt-4 pt-3 border-t border-white/5 text-xs text-indigo-300 font-semibold flex items-center space-x-1">
+          <div className="mt-4 pt-3 border-t border-white/5 text-xs text-zinc-200 font-semibold flex items-center space-x-1">
             <span>Join Discussion</span>
             
           </div>

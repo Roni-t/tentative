@@ -55,7 +55,7 @@ const AnimatedRoutes: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full flex-1 flex flex-col"
+        className="route-view w-full flex-1 flex flex-col"
       >
         <Routes location={location}>
           <Route path="/" element={<LandingPage />} />
@@ -90,7 +90,23 @@ const AnimatedRoutes: React.FC = () => {
   );
 };
 
+// Tells glass surfaces where the cursor is so their shine can follow it
+const useGlassShine = () => {
+  React.useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      const el = (e.target as HTMLElement).closest?.('.glass-card, .pill-dark, .glass-pill-nav') as HTMLElement | null;
+      if (!el) return;
+      const box = el.getBoundingClientRect();
+      el.style.setProperty('--mx', `${e.clientX - box.left}px`);
+      el.style.setProperty('--my', `${e.clientY - box.top}px`);
+    };
+    window.addEventListener('pointermove', onMove, { passive: true });
+    return () => window.removeEventListener('pointermove', onMove);
+  }, []);
+};
+
 export const App: React.FC = () => {
+  useGlassShine();
   return (
     <BrowserRouter>
       <ScrollToTop />

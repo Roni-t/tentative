@@ -7,13 +7,14 @@ import { useAuth } from '../context/AuthContext';
 import { PlusCircle, Calendar, Users, Sparkles, ArrowUpRight } from 'lucide-react';
 
 export const MyEventsPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'hosted' | 'cohosted'>('hosted');
 
   useEffect(() => {
+    if (authLoading) return; // wait until we know whether someone is logged in
     if (!user) {
       navigate('/login');
       return;
@@ -24,7 +25,7 @@ export const MyEventsPage: React.FC = () => {
       .then(setEvents)
       .catch(() => setEvents([]))
       .finally(() => setLoading(false));
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   const hostedEvents = events.filter((e) => e.created_by_id === user?.id);
   const cohostedEvents = events.filter((e) => e.created_by_id !== user?.id);

@@ -27,6 +27,8 @@ docker compose up --build
 
 Set `SMS_PROVIDER=console` in `.env` to skip Twilio. Codes then show up in the dev banner and the backend log.
 
+The project has no database migrations. If the tables change (for example after pulling new models), reset the local database with `docker compose down -v` and start again. This deletes the local demo data.
+
 ## Environment variables
 
 | Variable | Description |

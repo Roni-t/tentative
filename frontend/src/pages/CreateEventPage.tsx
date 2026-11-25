@@ -194,7 +194,7 @@ export const CreateEventPage: React.FC = () => {
               {candidateDates.map((d) => (
                 <span
                   key={d}
-                  className="px-3 py-1.5 rounded-xl bg-cosmic-purple/20 border border-cosmic-purple/40 text-purple-200 text-xs font-mono flex items-center space-x-2"
+                  className="px-3 py-1.5 rounded-xl bg-cosmic-purple/20 border border-cosmic-purple/40 text-zinc-200 text-xs font-mono flex items-center space-x-2"
                 >
                   <span>{d}</span>
                   <button
