@@ -250,7 +250,18 @@ def _finalized_event(event_id: int, db: Session) -> Event:
 
 @router.get("/{event_id}/export.ics")
 def export_ics(event_id: int, db: Session = Depends(get_db)):
-    """Download the finalized event as a .ics file (works in Apple, Google and Outlook calendars)."""
+    """Download the finalized event as a .ics file (works in Apple, Google and Outlook calendars).
+
+    FR-13 (Trinity): if the event was canceled after a time was picked, the same link returns a
+    cancellation file that removes the event from the calendar it was added to.
+    """
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if event and event.status == "canceled" and event.finalized_start_time:
+        return Response(
+            content=make_ics(event, cancel=True),
+            media_type="text/calendar",
+            headers={"Content-Disposition": f'attachment; filename="tentative-{event.id}-canceled.ics"'},
+        )
     event = _finalized_event(event_id, db)
     return Response(
         content=make_ics(event),
