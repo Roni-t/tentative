@@ -273,7 +273,7 @@ export const EventDetailsPage: React.FC = () => {
           </div>
           <div className="mt-4 pt-3 border-t border-white/5 text-xs text-cosmic-purple font-semibold flex items-center space-x-1">
             <span>Explore Heatmap</span>
-            <span>→</span>
+            
           </div>
         </Link>
 
@@ -295,7 +295,7 @@ export const EventDetailsPage: React.FC = () => {
           </div>
           <div className="mt-4 pt-3 border-t border-white/5 text-xs text-cosmic-cyan font-semibold flex items-center space-x-1">
             <span>Paint Free Slots</span>
-            <span>→</span>
+            
           </div>
         </Link>
 
@@ -317,7 +317,7 @@ export const EventDetailsPage: React.FC = () => {
           </div>
           <div className="mt-4 pt-3 border-t border-white/5 text-xs text-cosmic-pink font-semibold flex items-center space-x-1">
             <span>View Attendance</span>
-            <span>→</span>
+            
           </div>
         </Link>
 
@@ -339,7 +339,7 @@ export const EventDetailsPage: React.FC = () => {
           </div>
           <div className="mt-4 pt-3 border-t border-white/5 text-xs text-indigo-300 font-semibold flex items-center space-x-1">
             <span>Join Discussion</span>
-            <span>→</span>
+            
           </div>
         </Link>
 
@@ -361,7 +361,7 @@ export const EventDetailsPage: React.FC = () => {
           </div>
           <div className="mt-4 pt-3 border-t border-white/5 text-xs text-slate-300 font-semibold flex items-center space-x-1">
             <span>Configure Link</span>
-            <span>→</span>
+            
           </div>
         </Link>
 
@@ -383,7 +383,7 @@ export const EventDetailsPage: React.FC = () => {
           </div>
           <div className="mt-4 pt-3 border-t border-white/5 text-xs text-slate-300 font-semibold flex items-center space-x-1">
             <span>Manage Recurrence</span>
-            <span>→</span>
+            
           </div>
         </Link>
       </div>

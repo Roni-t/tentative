@@ -164,7 +164,7 @@ export const MyEventsPage: React.FC = () => {
                     </div>
                     {ev.location && (
                       <div className="truncate text-zinc-500">
-                        📍 {ev.location}
+                        {ev.location}
                       </div>
                     )}
                   </div>

@@ -210,7 +210,7 @@ export const RsvpListPage: React.FC = () => {
 
           {summary.current_waitlist_position && (
             <div className="p-3 rounded-2xl bg-zinc-900 border border-zinc-700 text-xs text-zinc-200">
-              ⚡ You are currently on the waitlist at <strong>Position #{summary.current_waitlist_position}</strong>.
+              You are currently on the waitlist at <strong>Position #{summary.current_waitlist_position}</strong>.
               If a spot opens up, you will be automatically promoted to Going.
             </div>
           )}

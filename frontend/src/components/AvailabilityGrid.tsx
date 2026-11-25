@@ -323,7 +323,7 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
                             className="w-full h-full rounded-md bg-white text-black font-semibold text-[11px] flex items-center justify-between px-2 shadow-[0_0_10px_rgba(255,255,255,0.4)] border-l-4 border-black"
                           >
                             <span className="tracking-tight">Available</span>
-                            <span className="text-[10px] font-mono opacity-70">✓</span>
+                            <span className="text-[10px] font-mono opacity-70">on</span>
                           </motion.div>
                         ) : (
                           <div className="w-full h-full rounded border border-transparent hover:border-zinc-700/40" />

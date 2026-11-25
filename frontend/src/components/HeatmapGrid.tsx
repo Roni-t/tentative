@@ -262,7 +262,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                                 {slot.count}/{slot.total_participants}
                               </span>
                               {slot.ratio >= 0.9 && (
-                                <span className="text-[10px] font-bold">★</span>
+                                <span className="text-[10px] font-bold">Best</span>
                               )}
                             </motion.button>
                           </div>
