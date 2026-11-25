@@ -1,4 +1,4 @@
-import type { AuthResponse, CodeSentResponse, DevSmsNotice, Invitee, User } from '../types';
+import type { AuthResponse, CodeSentResponse, DevSmsNotice, Invitee, RecurrenceInfo, User } from '../types';
 
 const API_BASE = '/api';
 
@@ -176,6 +176,22 @@ class ApiClient {
 
   async getChangelog(id: number | string) {
     return this.request<any[]>(`/events/${id}/changelog`);
+  }
+
+  // UC-11 Recurring events (FR-1, Aaron)
+  async getRecurrence(id: number | string) {
+    return this.request<RecurrenceInfo>(`/events/${id}/recurrence`);
+  }
+
+  async setRecurrence(id: number | string, frequency: string, daysOfWeek: string[], endDate: string) {
+    return this.request<RecurrenceInfo>(`/events/${id}/recurrence`, {
+      method: 'PUT',
+      body: JSON.stringify({ frequency, days_of_week: daysOfWeek, end_date: endDate }),
+    });
+  }
+
+  async removeRecurrence(id: number | string) {
+    return this.request<RecurrenceInfo>(`/events/${id}/recurrence`, { method: 'DELETE' });
   }
 
   async getGoogleCalendarUrl(id: number | string) {

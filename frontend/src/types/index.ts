@@ -183,3 +183,13 @@ export interface Invitee {
   response_token: string;
   link: string;
 }
+
+// UC-11 Recurring events (FR-1, Aaron)
+export interface RecurrenceInfo {
+  event_id: number;
+  is_recurring: boolean;
+  frequency: 'weekly' | 'biweekly' | null;
+  days_of_week: string[];
+  end_date: string | null;
+  occurrences: string[];
+}
