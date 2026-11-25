@@ -178,6 +178,10 @@ class ApiClient {
     return this.request<any[]>(`/events/${id}/changelog`);
   }
 
+  async getGoogleCalendarUrl(id: number | string) {
+    return this.request<{ url: string }>(`/events/${id}/google-calendar-url`);
+  }
+
   // Share
   async resolveShareToken(token: string) {
     return this.request<any>(`/share/${token}`);

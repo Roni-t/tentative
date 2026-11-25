@@ -182,6 +182,47 @@ def test_nfr5_only_availability_is_stored_or_shown_never_calendar_details(client
 
 # ------------------------------------------------------------------ NFR-6
 
+def _finalized_event(client, host):
+    """A finalized event on Dec 4, 7-9 PM Chicago time (Dec 5, 01:00-03:00 UTC)."""
+    event = create_event(client, host, title="Team Dinner, Fall; Part 1", description="Bring food")
+    res = client.post(f"/api/events/{event['id']}/finalize",
+                      json={"start_time": SLOT[0]["start_time"], "end_time": SLOT[0]["end_time"],
+                            "notify_participants": False}, headers=host)
+    assert res.status_code == 200, res.text
+    return event
+
+
+def test_nfr6_finalized_event_can_be_added_to_google_calendar_via_link(client):
+    host = register_user(client, phone="+19725550142", name="Kaelan Nguyen")
+    event = _finalized_event(client, host)
+    url = client.get(f"/api/events/{event['id']}/google-calendar-url").json()["url"]
+    assert url.startswith("https://calendar.google.com/calendar/render?")
+    assert "20261205T010000Z%2F20261205T030000Z" in url
+
+
+def test_nfr6_finalized_event_downloads_as_ics_file(client):
+    host = register_user(client, phone="+19725550142", name="Kaelan Nguyen")
+    event = _finalized_event(client, host)
+    res = client.get(f"/api/events/{event['id']}/export.ics")
+    assert res.status_code == 200
+    assert res.headers["content-type"].startswith("text/calendar")
+    assert "attachment" in res.headers["content-disposition"]
+    text = res.text
+    assert text.startswith("BEGIN:VCALENDAR") and text.rstrip().endswith("END:VCALENDAR")
+    assert "\r\n" in text  # .ics files use Windows line endings
+    assert "DTSTART:20261205T010000Z" in text and "DTEND:20261205T030000Z" in text
+    assert r"SUMMARY:Team Dinner\, Fall\; Part 1" in text  # commas and semicolons are escaped
+    assert "LOCATION:ECSS 2.410" in text
+
+
+def test_nfr6_calendar_export_needs_a_final_time(client):
+    host = register_user(client, phone="+19725550142", name="Kaelan Nguyen")
+    event = create_event(client, host)  # still collecting responses
+    assert client.get(f"/api/events/{event['id']}/export.ics").status_code == 400
+    assert client.get(f"/api/events/{event['id']}/google-calendar-url").status_code == 400
+    assert client.get("/api/events/9999/export.ics").status_code == 404
+
+
 @pytest.mark.xfail(strict=True, reason="NFR-6 direct add to a connected Google/Outlook calendar needs FR-17 OAuth")
 def test_nfr6_optionally_add_to_connected_calendar(client):
     host = register_user(client, phone="+19725550142", name="Kaelan Nguyen")

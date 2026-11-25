@@ -73,3 +73,4 @@ Event dates and the daily window (for example 12:00 to 17:00) are wall-clock tim
 - **Main page:** a short welcoming line under the tagline explains what the app does and that guests do not need an account.
 - **Readability:** the smallest text (`text-xs`) is 13px instead of 12px, and form fields are a little bigger (`index.css`).
 - **Small things:** "1 day" and "1 participant" use the singular.
+- **Calendar export is back:** the finalized banner on the event page has Download .ics and Google Calendar buttons (see the README). The first version was removed earlier. This one only works for finalized events, because the old one made an entry for "now" when an event had no final time.

@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
+from app.adapters.calendar_export import google_calendar_url, make_ics
 from app.core.dependencies import get_current_user, get_current_user_optional
 from app.database import get_db
 from app.models.event import Event, EventCoHost
@@ -233,3 +234,29 @@ def get_changelog(
             timestamp=en.timestamp
         ))
     return result
+
+
+def _finalized_event(event_id: int, db: Session) -> Event:
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+    if event.status != "finalized" or not event.finalized_start_time:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This event has no final time yet.")
+    return event
+
+
+@router.get("/{event_id}/export.ics")
+def export_ics(event_id: int, db: Session = Depends(get_db)):
+    """Download the finalized event as a .ics file (works in Apple, Google and Outlook calendars)."""
+    event = _finalized_event(event_id, db)
+    return Response(
+        content=make_ics(event),
+        media_type="text/calendar",
+        headers={"Content-Disposition": f'attachment; filename="tentative-{event.id}.ics"'},
+    )
+
+
+@router.get("/{event_id}/google-calendar-url")
+def get_google_calendar_url(event_id: int, db: Session = Depends(get_db)):
+    """A link that opens Google Calendar with the finalized event filled in."""
+    return {"url": google_calendar_url(_finalized_event(event_id, db))}

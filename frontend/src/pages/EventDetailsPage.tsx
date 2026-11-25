@@ -23,6 +23,8 @@ import {
   UserPlus,
   ShieldAlert,
   Trash2,
+  Download,
+  ExternalLink,
 } from 'lucide-react';
 
 export const EventDetailsPage: React.FC = () => {
@@ -43,12 +45,16 @@ export const EventDetailsPage: React.FC = () => {
 
   const [cohostInput, setCohostInput] = useState('');
   const [blockInput, setBlockInput] = useState('');
+  const [googleCalendarUrl, setGoogleCalendarUrl] = useState('');
 
   const fetchEvent = async () => {
     if (!id) return;
     try {
       const data = await api.getEvent(id);
       setEvent(data);
+      if (data.status === 'finalized') {
+        api.getGoogleCalendarUrl(id).then((res) => setGoogleCalendarUrl(res.url)).catch(() => {});
+      }
     } catch (err: any) {
       showToast(err.message || 'Error loading event', 'error');
     } finally {
@@ -249,6 +255,24 @@ export const EventDetailsPage: React.FC = () => {
                 Location: {event.location || 'Online'}
               </div>
             </div>
+          </div>
+
+          {/* Add the finalized time to a calendar */}
+          <div className="flex flex-wrap items-center gap-2">
+            <a
+              href={`/api/events/${event.id}/export.ics`}
+              download
+              className="pill pill-dark !py-2 !px-4 !text-xs"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Download .ics</span>
+            </a>
+            {googleCalendarUrl && (
+              <a href={googleCalendarUrl} target="_blank" rel="noreferrer" className="pill pill-dark !py-2 !px-4 !text-xs">
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Google Calendar</span>
+              </a>
+            )}
           </div>
         </div>
       )}

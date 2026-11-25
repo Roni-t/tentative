@@ -13,6 +13,15 @@ Built for UT Dallas CS 3354 (Fall 2026).
 - After responding, an invitee can enter a phone number to get texts. We text a code to check the number, then create their account. Only verified numbers get reminders and the final time.
 - The invitee list shows whether each person responded and whether we can text them. It never shows phone numbers.
 
+## Calendar export
+
+Once an event is finalized, the event page shows two buttons for everyone who opens it:
+
+- **Download .ics** gives a calendar file that works in Apple Calendar, Google Calendar and Outlook (`GET /api/events/{id}/export.ics`).
+- **Google Calendar** opens Google Calendar with the event filled in (`GET /api/events/{id}/google-calendar-url`).
+
+Both return an error until the event has a final time. The code is in `backend/app/adapters/calendar_export.py`.
+
 ## Run it
 
 You need Docker.
