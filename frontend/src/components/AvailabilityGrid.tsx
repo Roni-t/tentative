@@ -1,8 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { TimeSlot } from '../types';
 import { formatDayName, formatDateSub } from '../utils/format';
-import { getUserTimezone, parseUtc, zonedTimeToUtc } from '../utils/timezone';
+import {
+  getTimeZoneAbbreviation,
+  getUserTimezone,
+  parseUtc,
+  zonedTimeToUtcOccurrences,
+} from '../utils/timezone';
 import { Clock, CheckSquare, XSquare, Sparkles, Calendar, Sun, Briefcase } from 'lucide-react';
 
 interface AvailabilityGridProps {
@@ -29,32 +34,52 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
   const isMouseDownRef = useRef(false);
   const dragModeRef = useRef<'add' | 'remove'>('add');
 
-  // Parse hours
-  const [startHour, startMin] = dailyStartTime.split(':').map(Number);
-  const [endHour, endMin] = dailyEndTime.split(':').map(Number);
+  const gridRows = useMemo(() => {
+    const [startHour, startMin] = dailyStartTime.split(':').map(Number);
+    const [endHour, endMin] = dailyEndTime.split(':').map(Number);
+    const endMinutesTotal = endHour * 60 + endMin;
+    const tz = timezone || getUserTimezone();
+    const increments: { hour: number; minute: number; label: string; isTopHour: boolean }[] = [];
+    let curHour = startHour;
+    let curMin = startMin;
 
-  // Generate grid matrix: dates x timeslots
-  const timeIncrements: { hour: number; minute: number; label: string; isTopHour: boolean }[] = [];
-  let curHour = startHour;
-  let curMin = startMin;
-  const endMinutesTotal = endHour * 60 + endMin;
+    while (curHour * 60 + curMin < endMinutesTotal) {
+      const d = new Date(2026, 0, 1, curHour, curMin);
+      increments.push({
+        hour: curHour,
+        minute: curMin,
+        label: d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+        isTopHour: curMin === 0,
+      });
 
-  while (curHour * 60 + curMin < endMinutesTotal) {
-    const d = new Date(2026, 0, 1, curHour, curMin);
-    const label = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-    timeIncrements.push({
-      hour: curHour,
-      minute: curMin,
-      label,
-      isTopHour: curMin === 0,
-    });
-
-    curMin += slotDurationMinutes;
-    if (curMin >= 60) {
-      curHour += Math.floor(curMin / 60);
-      curMin = curMin % 60;
+      curMin += slotDurationMinutes;
+      if (curMin >= 60) {
+        curHour += Math.floor(curMin / 60);
+        curMin = curMin % 60;
+      }
     }
-  }
+
+    return increments
+      .map((increment) => {
+        const slotsByDate = candidateDates.map((dateStr) => {
+          const [y, m, d] = dateStr.split('-').map(Number);
+          const slots = zonedTimeToUtcOccurrences(
+            y,
+            m,
+            d,
+            increment.hour,
+            increment.minute,
+            tz
+          ).map((startDt) => ({
+            startIso: startDt.toISOString(),
+            endIso: new Date(startDt.getTime() + slotDurationMinutes * 60 * 1000).toISOString(),
+          }));
+          return { dateStr, slots };
+        });
+        return { ...increment, slotsByDate };
+      })
+      .filter((row) => row.slotsByDate.some(({ slots }) => slots.length > 0));
+  }, [candidateDates, dailyStartTime, dailyEndTime, slotDurationMinutes, timezone]);
 
   // Initialize selected set from props
   useEffect(() => {
@@ -64,17 +89,6 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
     });
     setSelectedSet(s);
   }, [initialSlots]);
-
-  const getSlotIso = (dateStr: string, hour: number, minute: number): { startIso: string; endIso: string } => {
-    const [y, m, d] = dateStr.split('-').map(Number);
-    // Grid labels are wall-clock times in the event's timezone.
-    const startDt = zonedTimeToUtc(y, m, d, hour, minute, timezone || getUserTimezone());
-    const endDt = new Date(startDt.getTime() + slotDurationMinutes * 60 * 1000);
-    return {
-      startIso: startDt.toISOString(),
-      endIso: endDt.toISOString(),
-    };
-  };
 
   const notifyChange = (newSet: Set<string>) => {
     const result: TimeSlot[] = [];
@@ -129,8 +143,9 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
   const handleTouchMove = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     const elem = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (elem && elem.getAttribute('data-slot-iso')) {
-      const slotIso = elem.getAttribute('data-slot-iso')!;
+    const target = elem?.closest<HTMLElement>('[data-slot-iso]');
+    const slotIso = target?.dataset.slotIso;
+    if (slotIso) {
       if (dragModeRef.current === 'add' && !selectedSet.has(slotIso)) {
         const next = new Set(selectedSet).add(slotIso);
         setSelectedSet(next);
@@ -147,10 +162,9 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
   // Quick Preset Handlers
   const selectAll = () => {
     const next = new Set<string>();
-    candidateDates.forEach((dateStr) => {
-      timeIncrements.forEach(({ hour, minute }) => {
-        const { startIso } = getSlotIso(dateStr, hour, minute);
-        next.add(startIso);
+    gridRows.forEach((row) => {
+      row.slotsByDate.forEach(({ slots }) => {
+        slots.forEach(({ startIso }) => next.add(startIso));
       });
     });
     setSelectedSet(next);
@@ -165,12 +179,10 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
 
   const applyPresetHours = (startH: number, endH: number) => {
     const next = new Set(selectedSet);
-    candidateDates.forEach((dateStr) => {
-      timeIncrements.forEach(({ hour, minute }) => {
-        if (hour >= startH && hour < endH) {
-          const { startIso } = getSlotIso(dateStr, hour, minute);
-          next.add(startIso);
-        }
+    gridRows.forEach((row) => {
+      if (row.hour < startH || row.hour >= endH) return;
+      row.slotsByDate.forEach(({ slots }) => {
+        slots.forEach(({ startIso }) => next.add(startIso));
       });
     });
     setSelectedSet(next);
@@ -268,7 +280,7 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
 
           {/* Time Rows Matrix */}
           <div className="flex flex-col">
-            {timeIncrements.map(({ hour, minute, label, isTopHour }, index) => {
+            {gridRows.map(({ hour, minute, label, isTopHour, slotsByDate }) => {
               const hourLabel = label.split(' ')[0];
               const ampm = label.split(' ')[1] || '';
 
@@ -293,46 +305,77 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
                   </div>
 
                   {/* Day Slots (Course Block Card Style) */}
-                  {candidateDates.map((dateStr) => {
-                    const { startIso } = getSlotIso(dateStr, hour, minute);
-                    const isSelected = selectedSet.has(startIso);
+                  {slotsByDate.map(({ dateStr, slots }) => (
+                    <div
+                      key={dateStr}
+                      className="w-32 sm:w-40 md:w-44 shrink-0 border-r border-zinc-800/80 last:border-r-0 flex flex-col"
+                    >
+                      {slots.length === 0 ? (
+                        <div className="w-full h-8 sm:h-9" aria-hidden="true" />
+                      ) : (
+                        slots.map(({ startIso }) => {
+                          const isSelected = selectedSet.has(startIso);
+                          const zoneLabel =
+                            slots.length > 1
+                              ? getTimeZoneAbbreviation(
+                                  new Date(startIso),
+                                  timezone || getUserTimezone()
+                                )
+                              : '';
 
-                    return (
-                      <div
-                        key={startIso}
-                        data-slot-iso={startIso}
-                        onMouseDown={() => handleSlotMouseDown(startIso)}
-                        onMouseEnter={() => handleSlotMouseEnter(startIso)}
-                        onTouchStart={() => {
-                          isMouseDownRef.current = true;
-                          dragModeRef.current = isSelected ? 'remove' : 'add';
-                          const next = new Set(selectedSet);
-                          if (dragModeRef.current === 'add') next.add(startIso);
-                          else next.delete(startIso);
-                          setSelectedSet(next);
-                          notifyChange(next);
-                        }}
-                        className={`w-32 sm:w-40 md:w-44 h-8 sm:h-9 px-1.5 py-0.5 border-r border-zinc-800/80 last:border-r-0 cursor-pointer transition-colors duration-100 flex items-center ${
-                          isSelected
-                            ? 'bg-zinc-800/90 text-white'
-                            : 'hover:bg-zinc-900/60 text-zinc-600'
-                        }`}
-                      >
-                        {isSelected ? (
-                          <motion.div
-                            initial={{ scale: 0.95 }}
-                            animate={{ scale: 1 }}
-                            className="w-full h-full rounded-md bg-white text-black font-semibold text-[11px] flex items-center justify-between px-2 shadow-[0_0_10px_rgba(255,255,255,0.4)] border-l-4 border-black"
-                          >
-                            <span className="tracking-tight">Available</span>
-                            <span className="text-[10px] font-mono opacity-70">✓</span>
-                          </motion.div>
-                        ) : (
-                          <div className="w-full h-full rounded border border-transparent hover:border-zinc-700/40" />
-                        )}
-                      </div>
-                    );
-                  })}
+                          return (
+                            <div
+                              key={startIso}
+                              data-slot-iso={startIso}
+                              title={startIso}
+                              onMouseDown={() => handleSlotMouseDown(startIso)}
+                              onMouseEnter={() => handleSlotMouseEnter(startIso)}
+                              onTouchStart={() => {
+                                isMouseDownRef.current = true;
+                                dragModeRef.current = isSelected ? 'remove' : 'add';
+                                const next = new Set(selectedSet);
+                                if (dragModeRef.current === 'add') next.add(startIso);
+                                else next.delete(startIso);
+                                setSelectedSet(next);
+                                notifyChange(next);
+                              }}
+                              className={`w-full h-8 sm:h-9 px-1.5 py-0.5 cursor-pointer transition-colors duration-100 flex items-center ${
+                                isSelected
+                                  ? 'bg-zinc-800/90 text-white'
+                                  : 'hover:bg-zinc-900/60 text-zinc-600'
+                              }`}
+                            >
+                              {isSelected ? (
+                                <motion.div
+                                  initial={{ scale: 0.95 }}
+                                  animate={{ scale: 1 }}
+                                  className="w-full h-full rounded-md bg-white text-black font-semibold text-[11px] flex items-center justify-between px-2 shadow-[0_0_10px_rgba(255,255,255,0.4)] border-l-4 border-black"
+                                >
+                                  <span className="tracking-tight">
+                                    Available
+                                    {zoneLabel && (
+                                      <span className="ml-1 text-[9px] font-mono opacity-60">
+                                        {zoneLabel}
+                                      </span>
+                                    )}
+                                  </span>
+                                  <span className="text-[10px] font-mono opacity-70">✓</span>
+                                </motion.div>
+                              ) : (
+                                <div className="w-full h-full rounded border border-transparent hover:border-zinc-700/40 flex items-center justify-center">
+                                  {zoneLabel && (
+                                    <span className="text-[9px] font-mono text-zinc-600">
+                                      {zoneLabel}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  ))}
                 </div>
               );
             })}

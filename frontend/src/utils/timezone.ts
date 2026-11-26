@@ -21,14 +21,23 @@ export const COMMON_TIMEZONES = [
 ];
 
 const ZONE_SUFFIX = /(?:Z|[+-]\d{2}:?\d{2})$/i;
+const HOUR_MS = 60 * 60 * 1000;
+
+interface ZonedParts {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second: number;
+}
 
 /** Parse an API datetime. The backend stores UTC; naive strings are UTC, not browser-local. */
 export function parseUtc(isoString: string): Date {
   return new Date(ZONE_SUFFIX.test(isoString) ? isoString : `${isoString}Z`);
 }
 
-/** Offset (in ms) of a timezone at a given instant: local wall-clock minus UTC. */
-function getTimeZoneOffsetMs(date: Date, timeZone: string): number {
+function getZonedParts(date: Date, timeZone: string | undefined): ZonedParts {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone,
     hourCycle: 'h23',
@@ -43,18 +52,101 @@ function getTimeZoneOffsetMs(date: Date, timeZone: string): number {
   const value = (type: Intl.DateTimeFormatPartTypes) =>
     Number(parts.find((p) => p.type === type)?.value ?? 0);
 
-  const asUtc = Date.UTC(
-    value('year'),
-    value('month') - 1,
-    value('day'),
-    value('hour'),
-    value('minute'),
-    value('second')
-  );
-  return asUtc - date.getTime();
+  return {
+    year: value('year'),
+    month: value('month'),
+    day: value('day'),
+    hour: value('hour'),
+    minute: value('minute'),
+    second: value('second'),
+  };
 }
 
-/** Convert a wall-clock date/time in an IANA timezone to the matching UTC instant. */
+/** Offset (in ms) of a timezone at a given instant: local wall-clock minus UTC. */
+function getTimeZoneOffsetMs(date: Date, timeZone: string): number {
+  const parts = getZonedParts(date, timeZone);
+  return (
+    Date.UTC(
+      parts.year,
+      parts.month - 1,
+      parts.day,
+      parts.hour,
+      parts.minute,
+      parts.second
+    ) - date.getTime()
+  );
+}
+
+function isValidWallClock(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number
+): boolean {
+  const values = [year, month, day, hour, minute];
+  if (!values.every(Number.isInteger)) return false;
+  if (month < 1 || month > 12 || day < 1 || day > 31) return false;
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return false;
+
+  const probe = new Date(Date.UTC(year, month - 1, day, hour, minute));
+  return (
+    probe.getUTCFullYear() === year &&
+    probe.getUTCMonth() === month - 1 &&
+    probe.getUTCDate() === day &&
+    probe.getUTCHours() === hour &&
+    probe.getUTCMinutes() === minute
+  );
+}
+
+export function zonedTimeToUtcOccurrences(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number,
+  timeZone: string
+): Date[] {
+  if (!isValidWallClock(year, month, day, hour, minute)) return [];
+
+  const wallClockUtc = Date.UTC(year, month - 1, day, hour, minute);
+  let offsets: number[];
+
+  try {
+    offsets = Array.from(
+      new Set(
+        [-48, -24, 0, 24, 48].map((hours) =>
+          getTimeZoneOffsetMs(new Date(wallClockUtc + hours * HOUR_MS), timeZone)
+        )
+      )
+    );
+  } catch {
+    return [];
+  }
+
+  const results: Date[] = [];
+  const seen = new Set<number>();
+
+  for (const offset of offsets) {
+    const candidate = new Date(wallClockUtc - offset);
+    const parts = getZonedParts(candidate, timeZone);
+    const matches =
+      parts.year === year &&
+      parts.month === month &&
+      parts.day === day &&
+      parts.hour === hour &&
+      parts.minute === minute &&
+      getTimeZoneOffsetMs(candidate, timeZone) === offset;
+
+    if (!matches || seen.has(candidate.getTime())) continue;
+    seen.add(candidate.getTime());
+    results.push(candidate);
+  }
+
+  return results.sort((a, b) => a.getTime() - b.getTime());
+}
+
+/** Convert a wall-clock date/time in an IANA timezone to its first matching UTC instant. */
 export function zonedTimeToUtc(
   year: number,
   month: number,
@@ -62,39 +154,30 @@ export function zonedTimeToUtc(
   hour: number,
   minute: number,
   timeZone: string
-): Date {
-  const utcGuess = Date.UTC(year, month - 1, day, hour, minute);
-  const guess = new Date(utcGuess);
-  const offset = getTimeZoneOffsetMs(guess, timeZone);
-  let result = new Date(utcGuess - offset);
-  const adjustedOffset = getTimeZoneOffsetMs(result, timeZone);
-  if (adjustedOffset !== offset) {
-    result = new Date(utcGuess - adjustedOffset);
-  }
-  return result;
+): Date | null {
+  return zonedTimeToUtcOccurrences(year, month, day, hour, minute, timeZone)[0] ?? null;
 }
 
 /** Convert a `<input type="datetime-local">` value (wall clock in `timeZone`) to a UTC ISO string. */
 export function wallClockToUtcIso(value: string, timeZone: string): string | null {
-  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(value);
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::\d{2}(?:\.\d{1,3})?)?$/.exec(
+    value.trim()
+  );
   if (!match) return null;
+
   const [, y, mo, d, h, mi] = match;
-  return zonedTimeToUtc(Number(y), Number(mo), Number(d), Number(h), Number(mi), timeZone).toISOString();
+  const instant = zonedTimeToUtc(Number(y), Number(mo), Number(d), Number(h), Number(mi), timeZone);
+  return instant ? instant.toISOString() : null;
 }
 
 /** YYYY-MM-DD key for the calendar day an instant falls on in a timezone. */
 export function getDateKeyInTimeZone(isoString: string, timeZone?: string): string {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(parseUtc(isoString));
-
-  const value = (type: Intl.DateTimeFormatPartTypes) =>
-    parts.find((p) => p.type === type)?.value ?? '';
-
-  return `${value('year')}-${value('month')}-${value('day')}`;
+  try {
+    const parts = getZonedParts(parseUtc(isoString), timeZone);
+    return `${parts.year}-${String(parts.month).padStart(2, '0')}-${String(parts.day).padStart(2, '0')}`;
+  } catch {
+    return '';
+  }
 }
 
 /** Format an instant in a specific timezone (falls back to the browser timezone). */
@@ -103,5 +186,25 @@ export function formatInstant(
   timeZone: string | undefined,
   options: Intl.DateTimeFormatOptions
 ): string {
-  return new Intl.DateTimeFormat('en-US', { timeZone, ...options }).format(parseUtc(isoString));
+  try {
+    return new Intl.DateTimeFormat('en-US', { timeZone, ...options }).format(parseUtc(isoString));
+  } catch {
+    try {
+      return new Intl.DateTimeFormat('en-US', options).format(parseUtc(isoString));
+    } catch {
+      return '';
+    }
+  }
+}
+
+export function getTimeZoneAbbreviation(date: Date, timeZone: string): string {
+  try {
+    return (
+      new Intl.DateTimeFormat('en-US', { timeZone, timeZoneName: 'short' })
+        .formatToParts(date)
+        .find((p) => p.type === 'timeZoneName')?.value ?? ''
+    );
+  } catch {
+    return '';
+  }
 }
