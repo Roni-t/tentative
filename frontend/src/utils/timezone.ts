@@ -169,6 +169,8 @@ export function zonedTimeToUtcWindowEnd(
   if (!isValidWallClock(year, month, day, hour, minute)) return null;
   const wallClockUtc = Date.UTC(year, month - 1, day, hour, minute);
   try {
+    const matches = zonedTimeToUtcOccurrences(year, month, day, hour, minute, timeZone);
+    if (matches.length > 0) return matches[matches.length - 1];
     return new Date(wallClockUtc - getTimeZoneOffsetMs(new Date(wallClockUtc), timeZone));
   } catch {
     return null;
@@ -196,13 +198,19 @@ export function getWallClockSlots(
   const windowEnd = zonedTimeToUtcWindowEnd(year, month, day, endHour, endMinute, timeZone);
   if (!windowEnd) return [];
 
+  if (slotDurationMinutes <= 0) return [];
+
   const slots: WallClockSlot[] = [];
   let curHour = startHour;
   let curMinute = startMinute;
   const endTotal = endHour * 60 + endMinute;
 
-  while (curHour * 60 + curMinute < endTotal) {
-    for (const start of zonedTimeToUtcOccurrences(year, month, day, curHour, curMinute, timeZone)) {
+  while (curHour * 60 + curMinute <= endTotal) {
+    const starts = zonedTimeToUtcOccurrences(year, month, day, curHour, curMinute, timeZone);
+    const hasStartBeforeEnd = starts.some((start) => start.getTime() < windowEnd.getTime());
+    if (curHour * 60 + curMinute === endTotal && !hasStartBeforeEnd) break;
+
+    for (const start of starts) {
       const end = new Date(start.getTime() + slotDurationMinutes * 60 * 1000);
       if (end.getTime() <= windowEnd.getTime()) {
         slots.push({ start, end, hour: curHour, minute: curMinute });
@@ -275,4 +283,20 @@ export function getTimeZoneAbbreviation(date: Date, timeZone: string): string {
   } catch {
     return '';
   }
+}
+
+export function getDistinctSlotTimeLabels(startTimes: string[], timeZone?: string): string[] {
+  const zone = timeZone || getUserTimezone();
+  const labels = startTimes.map((isoString) =>
+    formatInstant(isoString, zone, { hour: 'numeric', minute: '2-digit' })
+  );
+  const counts = new Map<string, number>();
+  labels.forEach((label) => counts.set(label, (counts.get(label) ?? 0) + 1));
+
+  return startTimes.map((isoString, index) => {
+    const label = labels[index];
+    if ((counts.get(label) ?? 0) < 2) return label;
+    const suffix = getTimeZoneAbbreviation(parseUtc(isoString), zone);
+    return suffix ? `${label} ${suffix}` : label;
+  });
 }

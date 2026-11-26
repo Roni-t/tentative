@@ -45,6 +45,41 @@ test('window end uses the pre-transition offset for nonexistent times', () => {
   );
 });
 
+test('window end keeps the last occurrence of an ambiguous fall-back time', () => {
+  assert.equal(
+    timezone
+      .zonedTimeToUtcWindowEnd(2026, 11, 1, 1, 30, 'America/New_York')
+      ?.toISOString(),
+    '2026-11-01T06:30:00.000Z'
+  );
+});
+
+test('grid keeps repeated slots near the end of a fall-back window', () => {
+  const starts = timezone
+    .getWallClockSlots(2026, 11, 1, 1, 0, 1, 30, 30, 'America/New_York')
+    .map((slot) => slot.start.toISOString());
+  assert.deepEqual(starts, [
+    '2026-11-01T05:00:00.000Z',
+    '2026-11-01T05:30:00.000Z',
+    '2026-11-01T06:00:00.000Z',
+  ]);
+});
+
+test('repeated heatmap slot labels include a zone suffix', () => {
+  assert.equal(typeof timezone.getDistinctSlotTimeLabels, 'function');
+  assert.deepEqual(
+    timezone.getDistinctSlotTimeLabels(
+      ['2026-11-01T05:00:00Z', '2026-11-01T06:00:00Z'],
+      'America/New_York'
+    ),
+    ['1:00 AM EDT', '1:00 AM EST']
+  );
+  assert.deepEqual(
+    timezone.getDistinctSlotTimeLabels(['2026-07-01T13:00:00Z'], 'America/New_York'),
+    ['9:00 AM']
+  );
+});
+
 test('grid omits a slot whose end passes the window end', () => {
   assert.equal(typeof timezone.getWallClockSlots, 'function');
   const slots = timezone.getWallClockSlots(
@@ -69,6 +104,8 @@ test('grid keeps repeated slots that fit inside the window', () => {
     '2026-11-01T05:00:00.000Z',
     '2026-11-01T05:30:00.000Z',
     '2026-11-01T06:00:00.000Z',
+    '2026-11-01T06:30:00.000Z',
+    '2026-11-01T07:00:00.000Z',
   ]);
 });
 

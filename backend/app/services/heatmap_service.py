@@ -75,7 +75,10 @@ class HeatmapService:
                 continue
 
             current_slot_start = datetime(y, m, d, start_hour, start_min, tzinfo=event_tz).astimezone(timezone.utc)
-            day_slot_end = datetime(y, m, d, end_hour, end_min, tzinfo=event_tz).astimezone(timezone.utc)
+            day_slot_end = max(
+                datetime(y, m, d, end_hour, end_min, tzinfo=event_tz, fold=fold).astimezone(timezone.utc)
+                for fold in (0, 1)
+            )
 
             while current_slot_start + slot_delta <= day_slot_end:
                 current_slot_end = current_slot_start + slot_delta

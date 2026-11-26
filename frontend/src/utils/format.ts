@@ -1,5 +1,10 @@
 import { format } from 'date-fns';
-import { formatInstant } from './timezone';
+import {
+  formatInstant,
+  getTimeZoneAbbreviation,
+  getUserTimezone,
+  parseUtc,
+} from './timezone';
 
 export function formatSlotTime(isoString: string, timeZone?: string): string {
   try {
@@ -9,9 +14,16 @@ export function formatSlotTime(isoString: string, timeZone?: string): string {
   }
 }
 
+export function formatSlotTimeWithZone(isoString: string, timeZone?: string): string {
+  const zone = timeZone || getUserTimezone();
+  const suffix = getTimeZoneAbbreviation(parseUtc(isoString), zone);
+  const time = formatSlotTime(isoString, zone);
+  return suffix ? `${time} ${suffix}` : time;
+}
+
 export function formatSlotRange(startIso: string, endIso: string, timeZone?: string): string {
   try {
-    return `${formatSlotTime(startIso, timeZone)} – ${formatSlotTime(endIso, timeZone)}`;
+    return `${formatSlotTimeWithZone(startIso, timeZone)} – ${formatSlotTimeWithZone(endIso, timeZone)}`;
   } catch {
     return `${startIso} - ${endIso}`;
   }
