@@ -139,6 +139,7 @@ export const HeatmapPage: React.FC = () => {
       <HeatmapGrid
         heatmap={heatmap}
         candidateDates={event.candidate_dates}
+        timezone={event.timezone}
         isHostOrCohost={isHostOrCohost}
         onSelectSlot={handleSelectSlotForFinalize}
         selectedSlot={selectedSlot}

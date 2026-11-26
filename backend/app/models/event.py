@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text, JSON
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text, JSON
 from sqlalchemy.orm import relationship
-from app.database import Base
+from app.database import Base, UTCDateTime
 
 
 class Event(Base):
@@ -20,20 +20,20 @@ class Event(Base):
     slot_duration_minutes = Column(Integer, default=30, nullable=False)
     
     # Requirements & Limits
-    deadline = Column(DateTime, nullable=True)
+    deadline = Column(UTCDateTime, nullable=True)
     capacity_limit = Column(Integer, nullable=True)
     is_hidden_details = Column(Boolean, default=False, nullable=False)
     
     # Status: 'collecting', 'finalized', 'canceled'
     status = Column(String(32), default="collecting", index=True, nullable=False)
-    finalized_start_time = Column(DateTime, nullable=True)
-    finalized_end_time = Column(DateTime, nullable=True)
+    finalized_start_time = Column(UTCDateTime, nullable=True)
+    finalized_end_time = Column(UTCDateTime, nullable=True)
     
     created_by_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     group_id = Column(Integer, ForeignKey("groups.id", ondelete="SET NULL"), nullable=True, index=True)
     
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     creator = relationship("User", back_populates="events_created")
@@ -54,7 +54,7 @@ class Group(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(128), nullable=False)
     created_by_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     events = relationship("Event", back_populates="group")
     shareable_urls = relationship("ShareableURL", back_populates="group", cascade="all, delete-orphan")
@@ -66,7 +66,7 @@ class EventCoHost(Base):
     id = Column(Integer, primary_key=True, index=True)
     event_id = Column(Integer, ForeignKey("events.id", ondelete="CASCADE"), nullable=False, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     event = relationship("Event", back_populates="co_hosts")
     user = relationship("User")
@@ -78,6 +78,6 @@ class BlockedUser(Base):
     id = Column(Integer, primary_key=True, index=True)
     event_id = Column(Integer, ForeignKey("events.id", ondelete="CASCADE"), nullable=False, index=True)
     identifier = Column(String(128), nullable=False, index=True)  # phone hash or normalized name
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     event = relationship("Event", back_populates="blocked_users")

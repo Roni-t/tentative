@@ -1,19 +1,17 @@
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
+import { formatInstant } from './timezone';
 
-export function formatSlotTime(isoString: string): string {
+export function formatSlotTime(isoString: string, timeZone?: string): string {
   try {
-    const d = parseISO(isoString);
-    return format(d, 'h:mm a');
+    return formatInstant(isoString, timeZone, { hour: 'numeric', minute: '2-digit' });
   } catch {
     return isoString;
   }
 }
 
-export function formatSlotRange(startIso: string, endIso: string): string {
+export function formatSlotRange(startIso: string, endIso: string, timeZone?: string): string {
   try {
-    const s = parseISO(startIso);
-    const e = parseISO(endIso);
-    return `${format(s, 'h:mm a')} – ${format(e, 'h:mm a')}`;
+    return `${formatSlotTime(startIso, timeZone)} – ${formatSlotTime(endIso, timeZone)}`;
   } catch {
     return `${startIso} - ${endIso}`;
   }
@@ -58,11 +56,24 @@ export function formatDateSub(dateStr: string): string {
   }
 }
 
-export function formatDateTimeLong(isoString?: string | null): string {
+export function formatDateInZone(isoString: string, timeZone?: string, long = false): string {
+  try {
+    return formatInstant(
+      isoString,
+      timeZone,
+      long
+        ? { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }
+        : { weekday: 'long', month: 'short', day: 'numeric' }
+    );
+  } catch {
+    return isoString;
+  }
+}
+
+export function formatDateTimeLong(isoString?: string | null, timeZone?: string): string {
   if (!isoString) return 'Not finalized';
   try {
-    const d = parseISO(isoString);
-    return format(d, 'EEEE, MMMM d, yyyy · h:mm a');
+    return `${formatDateInZone(isoString, timeZone, true)} · ${formatSlotTime(isoString, timeZone)}`;
   } catch {
     return isoString;
   }

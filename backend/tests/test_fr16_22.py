@@ -251,9 +251,9 @@ def test_f20_no_text_without_invitees(client, host, sms_outbox):
 
 # ------------------------------------------------------------------ F-21 / FR-21
 
-# The heatmap currently lays out each day's window in UTC rather than the event timezone (an FR-6 gap),
-# so F-21 uses a slot inside the 17:00-22:00 window as the heatmap sees it.
-HEATMAP_SLOT = [{"start_time": "2026-12-04T19:00:00Z", "end_time": "2026-12-04T21:00:00Z"}]
+# The heatmap lays out the 17:00-22:00 America/Chicago window in local time, i.e. 23:00Z-04:00Z.
+# Dec 4 7:00-9:00 PM CST == Dec 5 01:00-03:00 UTC.
+HEATMAP_SLOT = [{"start_time": "2026-12-05T01:00:00Z", "end_time": "2026-12-05T03:00:00Z"}]
 
 
 def test_f21_host_finalizes_slot_everyone_is_free(client, db_session, host, event_with_invitees, sms_outbox):
@@ -266,14 +266,14 @@ def test_f21_host_finalizes_slot_everyone_is_free(client, db_session, host, even
     best = heatmap["best_slots"][0]
     assert best["count"] == best["total_participants"] == 4
 
-    assert best["start_time"].startswith("2026-12-04T19:00")
+    assert best["start_time"].startswith("2026-12-05T01:00")
     res = client.post(f"/api/events/{event['id']}/finalize",
-                      json={"start_time": best["start_time"], "end_time": "2026-12-04T21:00:00Z"}, headers=host)
+                      json={"start_time": best["start_time"], "end_time": "2026-12-05T03:00:00Z"}, headers=host)
     assert res.status_code == 200
     page = client.get(f"/api/events/{event['id']}", headers=host).json()
     assert page["status"] == "finalized"
     assert ensure_utc(datetime.fromisoformat(page["finalized_start_time"].replace("Z", "+00:00"))) == datetime(
-        2026, 12, 4, 19, 0, tzinfo=timezone.utc
+        2026, 12, 5, 1, 0, tzinfo=timezone.utc
     )
 
     # Availability grid is locked for all invitees

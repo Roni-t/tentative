@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { TimeSlot } from '../types';
-import { formatDateHeading, formatDayName, formatDateSub } from '../utils/format';
+import { formatDayName, formatDateSub } from '../utils/format';
+import { getUserTimezone, parseUtc, zonedTimeToUtc } from '../utils/timezone';
 import { Clock, CheckSquare, XSquare, Sparkles, Calendar, Sun, Briefcase } from 'lucide-react';
 
 interface AvailabilityGridProps {
@@ -59,14 +60,15 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
   useEffect(() => {
     const s = new Set<string>();
     initialSlots.forEach((slot) => {
-      s.add(new Date(slot.start_time).toISOString());
+      s.add(parseUtc(slot.start_time).toISOString());
     });
     setSelectedSet(s);
   }, [initialSlots]);
 
   const getSlotIso = (dateStr: string, hour: number, minute: number): { startIso: string; endIso: string } => {
     const [y, m, d] = dateStr.split('-').map(Number);
-    const startDt = new Date(Date.UTC(y, m - 1, d, hour, minute));
+    // Grid labels are wall-clock times in the event's timezone.
+    const startDt = zonedTimeToUtc(y, m, d, hour, minute, timezone || getUserTimezone());
     const endDt = new Date(startDt.getTime() + slotDurationMinutes * 60 * 1000);
     return {
       startIso: startDt.toISOString(),

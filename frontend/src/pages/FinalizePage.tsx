@@ -4,8 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../api/client';
 import { Event, HeatmapResponse } from '../types';
 import { useToast } from '../context/ToastContext';
-import { formatSlotRange, formatDateHeading } from '../utils/format';
-import { format, parseISO } from 'date-fns';
+import { formatSlotRange, formatDateInZone } from '../utils/format';
 import { CheckCircle2, ArrowLeft, Clock, MapPin, Sparkles, Send, Lock } from 'lucide-react';
 
 export const FinalizePage: React.FC = () => {
@@ -137,7 +136,7 @@ export const FinalizePage: React.FC = () => {
                 </div>
                 <h3 className="text-2xl font-extrabold text-white tracking-tight">Meeting Time Finalized!</h3>
                 <p className="text-xs font-mono text-cosmic-cyan">
-                  {format(parseISO(selectedStart), 'EEEE, MMMM d, yyyy')} · {formatSlotRange(selectedStart, selectedEnd)}
+                  {formatDateInZone(selectedStart, event.timezone, true)} · {formatSlotRange(selectedStart, selectedEnd, event.timezone)}
                 </p>
                 <p className="text-xs text-slate-400">Aligning all participant calendars...</p>
               </motion.div>
@@ -199,10 +198,10 @@ export const FinalizePage: React.FC = () => {
                         </div>
                         <div>
                           <div className="text-xs font-bold text-white">
-                            {format(parseISO(slot.start_time), 'EEEE, MMM d')}
+                            {formatDateInZone(slot.start_time, event.timezone)}
                           </div>
                           <div className="text-xs font-mono text-cosmic-cyan">
-                            {formatSlotRange(slot.start_time, slot.end_time)}
+                            {formatSlotRange(slot.start_time, slot.end_time, event.timezone)}
                           </div>
                         </div>
                       </div>
@@ -232,10 +231,10 @@ export const FinalizePage: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <div className="text-lg font-bold text-white">
-                    {format(parseISO(selectedStart), 'EEEE, MMMM d, yyyy')}
+                    {formatDateInZone(selectedStart, event.timezone, true)}
                   </div>
                   <div className="text-sm font-mono text-cosmic-purple font-semibold">
-                    {formatSlotRange(selectedStart, selectedEnd)}
+                    {formatSlotRange(selectedStart, selectedEnd, event.timezone)}
                   </div>
                 </div>
 

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import Column, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
-from app.database import Base
+from app.database import Base, UTCDateTime
 
 
 class Invitee(Base):
@@ -17,9 +17,9 @@ class Invitee(Base):
     timezone = Column(String(64), nullable=True)  # falls back to the event's timezone
     response_token = Column(String(64), unique=True, index=True, nullable=False)
 
-    responded_at = Column(DateTime, nullable=True)
-    reminder_sent_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    responded_at = Column(UTCDateTime, nullable=True)
+    reminder_sent_at = Column(UTCDateTime, nullable=True)
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     event = relationship("Event")
 
@@ -30,4 +30,4 @@ class SmsOptOut(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     phone_hash = Column(String(64), unique=True, index=True, nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), nullable=False)

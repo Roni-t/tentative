@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { COMMON_TIMEZONES, getUserTimezone } from '../utils/timezone';
+import { COMMON_TIMEZONES, getUserTimezone, wallClockToUtcIso } from '../utils/timezone';
 import {
   Calendar as CalendarIcon,
   Clock,
@@ -81,11 +81,11 @@ export const CreateEventPage: React.FC = () => {
         daily_start_time: dailyStartTime,
         daily_end_time: dailyEndTime,
         slot_duration_minutes: Number(slotDuration),
-        deadline: deadline ? new Date(deadline).toISOString() : null,
+        deadline: deadline ? wallClockToUtcIso(deadline, timezone) : null,
         capacity_limit: capacityLimit ? parseInt(capacityLimit, 10) : null,
         is_hidden_details: isHiddenDetails,
         expiry_option: expiryOption,
-        custom_expiry_date: expiryOption === 'custom' && customExpiry ? new Date(customExpiry).toISOString() : null,
+        custom_expiry_date: expiryOption === 'custom' && customExpiry ? wallClockToUtcIso(customExpiry, timezone) : null,
       };
 
       const event = await api.createEvent(payload);

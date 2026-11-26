@@ -21,8 +21,8 @@ def test_heatmap_calculation_and_caching(client, db_session):
     client.post(f"/api/events/{event_id}/availability", json={
         "participant_name": "Alice",
         "slots": [
-            {"start_time": "2026-11-25T14:00:00Z", "end_time": "2026-11-25T14:30:00Z"},
-            {"start_time": "2026-11-25T14:30:00Z", "end_time": "2026-11-25T15:00:00Z"}
+            {"start_time": "2026-11-25T20:00:00Z", "end_time": "2026-11-25T20:30:00Z"},
+            {"start_time": "2026-11-25T20:30:00Z", "end_time": "2026-11-25T21:00:00Z"}
         ]
     })
 
@@ -31,8 +31,8 @@ def test_heatmap_calculation_and_caching(client, db_session):
     client.post(f"/api/events/{event_id}/availability", json={
         "participant_name": "Bob",
         "slots": [
-            {"start_time": "2026-11-25T14:30:00Z", "end_time": "2026-11-25T15:00:00Z"},
-            {"start_time": "2026-11-25T15:00:00Z", "end_time": "2026-11-25T15:30:00Z"}
+            {"start_time": "2026-11-25T20:30:00Z", "end_time": "2026-11-25T21:00:00Z"},
+            {"start_time": "2026-11-25T21:00:00Z", "end_time": "2026-11-25T21:30:00Z"}
         ]
     })
 
@@ -41,7 +41,7 @@ def test_heatmap_calculation_and_caching(client, db_session):
     client.post(f"/api/events/{event_id}/availability", json={
         "participant_name": "Charlie",
         "slots": [
-            {"start_time": "2026-11-25T14:30:00Z", "end_time": "2026-11-25T15:00:00Z"}
+            {"start_time": "2026-11-25T20:30:00Z", "end_time": "2026-11-25T21:00:00Z"}
         ]
     })
 

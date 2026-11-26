@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
-from app.database import Base
+from app.database import Base, UTCDateTime
 
 
 class RSVP(Base):
@@ -19,8 +19,8 @@ class RSVP(Base):
     status = Column(String(32), default="going", nullable=False, index=True)
     waitlist_position = Column(Integer, nullable=True)  # FIFO rank when status == 'waitlisted'
     
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     event = relationship("Event", back_populates="rsvps")
     user = relationship("User", back_populates="rsvps")

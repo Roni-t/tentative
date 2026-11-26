@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, DateTime, Integer, String, Text
-from app.database import Base
+from sqlalchemy import Column, Integer, String, Text
+from app.database import Base, UTCDateTime
 
 
 class BugReport(Base):
@@ -12,4 +12,4 @@ class BugReport(Base):
     page_url = Column(String(512), nullable=True)
     description = Column(Text, nullable=False)
     status = Column(String(32), default="open", nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), nullable=False)

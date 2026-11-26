@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
-from app.database import Base
+from app.database import Base, UTCDateTime
 
 
 class Comment(Base):
@@ -16,7 +16,7 @@ class Comment(Base):
     content = Column(Text, nullable=False)
     
     parent_id = Column(Integer, ForeignKey("comments.id", ondelete="CASCADE"), nullable=True, index=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     event = relationship("Event", back_populates="comments")
     user = relationship("User", back_populates="comments")

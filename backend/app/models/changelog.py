@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Column, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
-from app.database import Base
+from app.database import Base, UTCDateTime
 
 
 class ChangeLogEntry(Base):
@@ -13,7 +13,7 @@ class ChangeLogEntry(Base):
     
     action = Column(String(64), nullable=False)  # 'created', 'updated', 'finalized', 'canceled', 'cohost_added'
     details = Column(Text, nullable=False)
-    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    timestamp = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     event = relationship("Event", back_populates="changelog_entries")
     user = relationship("User", back_populates="changelog_entries")

@@ -1,8 +1,34 @@
 import sqlite3
-from sqlalchemy import create_engine, event
+from datetime import timezone
+from sqlalchemy import create_engine, event, DateTime, TypeDecorator
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 from app.config import settings
+
+
+class UTCDateTime(TypeDecorator):
+    """A DateTime that always round-trips as timezone-aware UTC.
+
+    SQLite drops tzinfo, so values read back from the database would otherwise
+    be naive and get misinterpreted as local time by API clients.
+    """
+
+    impl = DateTime
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        if value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc)
 
 # Prepare connect args for SQLite
 connect_args = {}

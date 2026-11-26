@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
-from app.database import Base
+from app.database import Base, UTCDateTime
 
 
 class Availability(Base):
@@ -15,9 +15,9 @@ class Availability(Base):
     edit_token = Column(String(64), index=True, nullable=False)
     
     # Time slot in UTC
-    start_time = Column(DateTime, nullable=False, index=True)
-    end_time = Column(DateTime, nullable=False, index=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    start_time = Column(UTCDateTime, nullable=False, index=True)
+    end_time = Column(UTCDateTime, nullable=False, index=True)
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     event = relationship("Event", back_populates="availabilities")
     user = relationship("User", back_populates="availabilities")

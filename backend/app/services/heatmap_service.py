@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Set, Tuple
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from app.models.availability import Availability
@@ -58,6 +59,12 @@ class HeatmapService:
 
         slot_delta = timedelta(minutes=max(15, event.slot_duration_minutes or 30))
 
+        # The daily window is wall-clock time in the event's timezone.
+        try:
+            event_tz = ZoneInfo(event.timezone or "UTC")
+        except (ZoneInfoNotFoundError, ValueError):
+            event_tz = timezone.utc
+
         # Generate canonical slots across candidate dates
         grid_slots: List[HeatmapSlotOut] = []
 
@@ -67,8 +74,8 @@ class HeatmapService:
             except Exception:
                 continue
 
-            current_slot_start = datetime(y, m, d, start_hour, start_min, tzinfo=timezone.utc)
-            day_slot_end = datetime(y, m, d, end_hour, end_min, tzinfo=timezone.utc)
+            current_slot_start = datetime(y, m, d, start_hour, start_min, tzinfo=event_tz).astimezone(timezone.utc)
+            day_slot_end = datetime(y, m, d, end_hour, end_min, tzinfo=event_tz).astimezone(timezone.utc)
 
             while current_slot_start + slot_delta <= day_slot_end:
                 current_slot_end = current_slot_start + slot_delta

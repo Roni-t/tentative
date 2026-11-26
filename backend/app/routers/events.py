@@ -147,7 +147,7 @@ def finalize_event(
     if payload.notify_participants:
         notification_service.notify_all_invitees(
             event=event,
-            message=f"Event '{event.title}' is finalized for {event.finalized_start_time.strftime('%b %d at %I:%M %p')}.",
+            message=f"Event '{event.title}' is finalized for {format_local(event.finalized_start_time, event.timezone)}.",
             notification_type="finalized",
             db=db
         )

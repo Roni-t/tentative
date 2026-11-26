@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from typing import List, Optional
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.encryption import hash_phone, normalize_phone
@@ -143,7 +144,7 @@ class EventService:
           1. A canceled event cannot be finalized.
           2. The end time must be after the start time.
           3. The time must fall on one of the event's candidate dates and
-             inside its daily window (times are stored and compared in UTC).
+             inside its daily window (wall-clock times in the event timezone).
         """
         if event.status == "canceled":
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot finalize a canceled event.")
@@ -155,12 +156,19 @@ class EventService:
         if et <= st:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="End time must be after start time.")
 
-        if st.strftime("%Y-%m-%d") not in (event.candidate_dates or []) or st.date() != et.date():
+        try:
+            event_tz = ZoneInfo(event.timezone or "UTC")
+        except (ZoneInfoNotFoundError, ValueError):
+            event_tz = timezone.utc
+        st_local = st.astimezone(event_tz)
+        et_local = et.astimezone(event_tz)
+
+        if st_local.strftime("%Y-%m-%d") not in (event.candidate_dates or []) or st_local.date() != et_local.date():
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Selected time must be on one of the event's candidate dates.")
 
         window_start = event.daily_start_time or "00:00"
         window_end = event.daily_end_time or "23:59"
-        if st.strftime("%H:%M") < window_start or et.strftime("%H:%M") > window_end:
+        if st_local.strftime("%H:%M") < window_start or et_local.strftime("%H:%M") > window_end:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Selected time must be within the event's daily time window.")
 
     def cancel_event(self, event_id: int, user: User, db: Session) -> Event:

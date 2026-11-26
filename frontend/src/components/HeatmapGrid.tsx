@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HeatmapResponse, HeatmapSlot } from '../types';
-import { formatDateHeading, formatSlotTime, formatSlotRange, formatDayName, formatDateSub } from '../utils/format';
+import { formatSlotTime, formatSlotRange, formatDayName, formatDateSub, formatDateInZone } from '../utils/format';
+import { getDateKeyInTimeZone } from '../utils/timezone';
 import { Sparkles, Users, UserCheck, UserX, List, Grid as GridIcon, CheckCircle, Calendar, Clock, Info } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
 
 interface HeatmapGridProps {
   heatmap: HeatmapResponse;
   candidateDates: string[];
+  timezone?: string;
   isHostOrCohost?: boolean;
   onSelectSlot?: (slot: HeatmapSlot) => void;
   selectedSlot?: HeatmapSlot | null;
@@ -16,6 +17,7 @@ interface HeatmapGridProps {
 export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
   heatmap,
   candidateDates,
+  timezone,
   isHostOrCohost = false,
   onSelectSlot,
   selectedSlot: propSelectedSlot,
@@ -25,10 +27,10 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
   );
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  // Group slots by date string YYYY-MM-DD
+  // Group slots by their calendar date in the event's timezone
   const slotsByDate: Record<string, HeatmapSlot[]> = {};
   heatmap.slots.forEach((slot) => {
-    const dStr = format(parseISO(slot.start_time), 'yyyy-MM-dd');
+    const dStr = getDateKeyInTimeZone(slot.start_time, timezone);
     if (!slotsByDate[dStr]) {
       slotsByDate[dStr] = [];
     }
@@ -38,7 +40,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
   // Extract unique time labels from the first populated day
   const sampleDay = Object.values(slotsByDate)[0] || [];
   const timeLabels = sampleDay.map((s) => {
-    const timeStr = formatSlotTime(s.start_time);
+    const timeStr = formatSlotTime(s.start_time, timezone);
     const isTopHour = timeStr.includes(':00');
     return {
       label: timeStr,
@@ -123,8 +125,8 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
               <div>
                 <div className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">Top Overlap</div>
                 <div className="text-xs font-semibold text-white">
-                  {formatDayName(format(parseISO(heatmap.best_slots[0].start_time), 'yyyy-MM-dd'))} ·{' '}
-                  {formatSlotRange(heatmap.best_slots[0].start_time, heatmap.best_slots[0].end_time)}
+                  {formatDayName(getDateKeyInTimeZone(heatmap.best_slots[0].start_time, timezone))} ·{' '}
+                  {formatSlotRange(heatmap.best_slots[0].start_time, heatmap.best_slots[0].end_time, timezone)}
                 </div>
               </div>
             </div>
@@ -302,8 +304,9 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {heatmap.best_slots.slice(0, 4).map((slot, idx) => {
-                  const dayName = formatDayName(format(parseISO(slot.start_time), 'yyyy-MM-dd'));
-                  const dateSub = formatDateSub(format(parseISO(slot.start_time), 'yyyy-MM-dd'));
+                  const slotDateKey = getDateKeyInTimeZone(slot.start_time, timezone);
+                  const dayName = formatDayName(slotDateKey);
+                  const dateSub = formatDateSub(slotDateKey);
                   const isSelected =
                     activeSlot &&
                     activeSlot.start_time === slot.start_time &&
@@ -337,7 +340,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                         {dayName}, {dateSub}
                       </div>
                       <div className="text-[11px] font-mono text-zinc-400">
-                        {formatSlotRange(slot.start_time, slot.end_time)}
+                        {formatSlotRange(slot.start_time, slot.end_time, timezone)}
                       </div>
 
                       <div className="mt-2.5 pt-2 border-t border-zinc-800/80 flex items-center justify-between">
@@ -385,10 +388,10 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                   >
                     <div>
                       <h4 className="text-base font-bold text-white">
-                        {format(parseISO(activeSlot.start_time), 'EEEE, MMM d')}
+                        {formatDateInZone(activeSlot.start_time, timezone)}
                       </h4>
                       <p className="text-xs font-mono text-zinc-300">
-                        {formatSlotRange(activeSlot.start_time, activeSlot.end_time)}
+                        {formatSlotRange(activeSlot.start_time, activeSlot.end_time, timezone)}
                       </p>
                     </div>
 
@@ -494,10 +497,10 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                   </div>
                   <div>
                     <div className="text-sm font-bold text-white">
-                      {format(parseISO(slot.start_time), 'EEEE, MMMM d, yyyy')}
+                      {formatDateInZone(slot.start_time, timezone, true)}
                     </div>
                     <div className="text-xs font-mono text-zinc-300">
-                      {formatSlotRange(slot.start_time, slot.end_time)}
+                      {formatSlotRange(slot.start_time, slot.end_time, timezone)}
                     </div>
                     <div className="text-xs text-zinc-400 mt-1">
                       <span className="font-semibold text-white">

@@ -4,6 +4,7 @@ Covers the main flow, the co-host alternate flow, the permission exception,
 and each invalid-input rule added in EventService._validate_finalize_time.
 Test IDs match the test case tables in the SE Document.
 """
+from tests.helpers import register_user
 
 EVENT = {
     "title": "Sprint Review",
@@ -12,15 +13,12 @@ EVENT = {
     "daily_end_time": "16:00",
     "slot_duration_minutes": 30,
 }
-VALID_SLOT = {"start_time": "2026-11-25T14:30:00Z", "end_time": "2026-11-25T15:00:00Z"}
+VALID_SLOT = {"start_time": "2026-11-25T20:30:00Z", "end_time": "2026-11-25T21:00:00Z"}
 
 
 def login(client, phone, name):
-    """Log in through the passwordless SMS flow and return auth headers."""
-    client.post("/api/auth/request-code", json={"phone": phone, "name": name})
-    code = client.get("/api/auth/dev-banner-code", params={"phone": phone}).json()["code"]
-    token = client.post("/api/auth/verify-code", json={"phone": phone, "code": code}).json()["token"]
-    return {"Authorization": f"Bearer {token}"}
+    """Register through the passwordless SMS flow and return auth headers."""
+    return register_user(client, phone=phone, name=name)
 
 
 def create_event(client, headers):
@@ -45,8 +43,8 @@ def test_tc15_01_host_finalizes_valid_slot(client, db_session):
     assert res.status_code == 200
     body = res.json()
     assert body["status"] == "finalized"
-    assert body["finalized_start_time"].startswith("2026-11-25T14:30")
-    assert body["finalized_end_time"].startswith("2026-11-25T15:00")
+    assert body["finalized_start_time"].startswith("2026-11-25T20:30")
+    assert body["finalized_end_time"].startswith("2026-11-25T21:00")
 
 
 def test_tc15_02_cohost_can_finalize(client, db_session):
@@ -79,7 +77,7 @@ def test_tc15_04_end_before_start_rejected(client, db_session):
     host = login(client, "+19725550141", "Host")
     event_id = create_event(client, host)
 
-    res = finalize(client, event_id, host, "2026-11-25T15:00:00Z", "2026-11-25T14:30:00Z")
+    res = finalize(client, event_id, host, "2026-11-25T21:00:00Z", "2026-11-25T20:30:00Z")
 
     assert res.status_code == 400
     assert res.json()["detail"] == "End time must be after start time."
@@ -90,7 +88,7 @@ def test_tc15_05_date_not_candidate_rejected(client, db_session):
     host = login(client, "+19725550151", "Host")
     event_id = create_event(client, host)
 
-    res = finalize(client, event_id, host, "2026-11-26T14:30:00Z", "2026-11-26T15:00:00Z")
+    res = finalize(client, event_id, host, "2026-11-26T20:30:00Z", "2026-11-26T21:00:00Z")
 
     assert res.status_code == 400
     assert res.json()["detail"] == "Selected time must be on one of the event's candidate dates."
@@ -101,7 +99,7 @@ def test_tc15_06_outside_daily_window_rejected(client, db_session):
     host = login(client, "+19725550161", "Host")
     event_id = create_event(client, host)
 
-    res = finalize(client, event_id, host, "2026-11-25T13:00:00Z", "2026-11-25T13:30:00Z")
+    res = finalize(client, event_id, host, "2026-11-25T19:00:00Z", "2026-11-25T19:30:00Z")
 
     assert res.status_code == 400
     assert res.json()["detail"] == "Selected time must be within the event's daily time window."

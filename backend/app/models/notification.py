@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
-from app.database import Base
+from sqlalchemy import Column, ForeignKey, Integer, String, Text
+from app.database import Base, UTCDateTime
 
 
 class Notification(Base):
@@ -13,4 +13,4 @@ class Notification(Base):
     recipient = Column(String(128), nullable=False)
     message = Column(Text, nullable=False)
     notification_type = Column(String(64), nullable=False)
-    sent_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    sent_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), nullable=False)

@@ -4,6 +4,7 @@ import { api } from '../api/client';
 import { Event } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { wallClockToUtcIso } from '../utils/timezone';
 import { format, parseISO } from 'date-fns';
 import { Share2, Copy, RefreshCw, Clock, ArrowLeft, Check, ShieldAlert } from 'lucide-react';
 
@@ -71,7 +72,7 @@ export const ShareExpiryPage: React.FC = () => {
     if (!id) return;
     setUpdatingExpiry(true);
     try {
-      const dateVal = expiryOption === 'custom' && customDate ? new Date(customDate).toISOString() : undefined;
+      const dateVal = expiryOption === 'custom' && customDate ? wallClockToUtcIso(customDate, event?.timezone || 'UTC') ?? undefined : undefined;
       await api.updateShareExpiry(id, expiryOption, dateVal);
       showToast('Link expiry updated!', 'success');
       fetchEvent();

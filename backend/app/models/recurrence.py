@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
-from app.database import Base
+from app.database import Base, UTCDateTime
 
 
 class RecurrenceRule(Base):
@@ -14,8 +14,8 @@ class RecurrenceRule(Base):
     frequency = Column(String(32), default="weekly", nullable=False)
     interval = Column(Integer, default=1, nullable=False)
     days_of_week = Column(String(64), nullable=False)  # comma separated e.g. "MO,WE,FR" or "TUE"
-    end_date = Column(DateTime, nullable=True)
+    end_date = Column(UTCDateTime, nullable=True)
     
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     event = relationship("Event", back_populates="recurrence_rules")
