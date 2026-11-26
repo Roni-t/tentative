@@ -4,7 +4,7 @@ import { api } from '../api/client';
 import { Event } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { wallClockToUtcIso } from '../utils/timezone';
+import { getWallClockDateTimeError, wallClockToUtcIso } from '../utils/timezone';
 import { format, parseISO } from 'date-fns';
 import { Share2, Copy, RefreshCw, Clock, ArrowLeft, Check, ShieldAlert } from 'lucide-react';
 
@@ -70,6 +70,14 @@ export const ShareExpiryPage: React.FC = () => {
   const handleUpdateExpiry = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!id) return;
+    const expiryError =
+      expiryOption === 'custom' && customDate
+        ? getWallClockDateTimeError(customDate, event?.timezone || 'UTC')
+        : null;
+    if (expiryError) {
+      showToast(expiryError, 'error');
+      return;
+    }
     setUpdatingExpiry(true);
     try {
       const dateVal = expiryOption === 'custom' && customDate ? wallClockToUtcIso(customDate, event?.timezone || 'UTC') ?? undefined : undefined;

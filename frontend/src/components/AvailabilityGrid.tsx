@@ -5,8 +5,8 @@ import { formatDayName, formatDateSub } from '../utils/format';
 import {
   getTimeZoneAbbreviation,
   getUserTimezone,
+  getWallClockSlots,
   parseUtc,
-  zonedTimeToUtcOccurrences,
 } from '../utils/timezone';
 import { Clock, CheckSquare, XSquare, Sparkles, Calendar, Sun, Briefcase } from 'lucide-react';
 
@@ -37,48 +37,61 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
   const gridRows = useMemo(() => {
     const [startHour, startMin] = dailyStartTime.split(':').map(Number);
     const [endHour, endMin] = dailyEndTime.split(':').map(Number);
-    const endMinutesTotal = endHour * 60 + endMin;
     const tz = timezone || getUserTimezone();
-    const increments: { hour: number; minute: number; label: string; isTopHour: boolean }[] = [];
-    let curHour = startHour;
-    let curMin = startMin;
 
-    while (curHour * 60 + curMin < endMinutesTotal) {
-      const d = new Date(2026, 0, 1, curHour, curMin);
-      increments.push({
-        hour: curHour,
-        minute: curMin,
-        label: d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
-        isTopHour: curMin === 0,
-      });
+    const slotsByDate = candidateDates.map((dateStr) => {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      return {
+        dateStr,
+        slots: getWallClockSlots(
+          y,
+          m,
+          d,
+          startHour,
+          startMin,
+          endHour,
+          endMin,
+          slotDurationMinutes,
+          tz
+        ),
+      };
+    });
 
-      curMin += slotDurationMinutes;
-      if (curMin >= 60) {
-        curHour += Math.floor(curMin / 60);
-        curMin = curMin % 60;
-      }
-    }
-
-    return increments
-      .map((increment) => {
-        const slotsByDate = candidateDates.map((dateStr) => {
-          const [y, m, d] = dateStr.split('-').map(Number);
-          const slots = zonedTimeToUtcOccurrences(
-            y,
-            m,
-            d,
-            increment.hour,
-            increment.minute,
-            tz
-          ).map((startDt) => ({
-            startIso: startDt.toISOString(),
-            endIso: new Date(startDt.getTime() + slotDurationMinutes * 60 * 1000).toISOString(),
-          }));
-          return { dateStr, slots };
+    const increments = new Map<
+      string,
+      { hour: number; minute: number; label: string; isTopHour: boolean }
+    >();
+    slotsByDate.forEach(({ slots }) => {
+      slots.forEach(({ hour, minute }) => {
+        const key = `${hour}:${minute}`;
+        if (increments.has(key)) return;
+        const date = new Date(2026, 0, 1, hour, minute);
+        increments.set(key, {
+          hour,
+          minute,
+          label: date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+          isTopHour: minute === 0,
         });
-        return { ...increment, slotsByDate };
-      })
-      .filter((row) => row.slotsByDate.some(({ slots }) => slots.length > 0));
+      });
+    });
+
+    return Array.from(increments.values())
+      .sort((a, b) => a.hour * 60 + a.minute - (b.hour * 60 + b.minute))
+      .map((increment) => {
+        const key = `${increment.hour}:${increment.minute}`;
+        return {
+          ...increment,
+          slotsByDate: slotsByDate.map(({ dateStr, slots }) => ({
+            dateStr,
+            slots: slots
+              .filter((slot) => `${slot.hour}:${slot.minute}` === key)
+              .map(({ start, end }) => ({
+                startIso: start.toISOString(),
+                endIso: end.toISOString(),
+              })),
+          })),
+        };
+      });
   }, [candidateDates, dailyStartTime, dailyEndTime, slotDurationMinutes, timezone]);
 
   // Initialize selected set from props

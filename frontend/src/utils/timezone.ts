@@ -158,6 +158,67 @@ export function zonedTimeToUtc(
   return zonedTimeToUtcOccurrences(year, month, day, hour, minute, timeZone)[0] ?? null;
 }
 
+export function zonedTimeToUtcWindowEnd(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number,
+  timeZone: string
+): Date | null {
+  if (!isValidWallClock(year, month, day, hour, minute)) return null;
+  const wallClockUtc = Date.UTC(year, month - 1, day, hour, minute);
+  try {
+    return new Date(wallClockUtc - getTimeZoneOffsetMs(new Date(wallClockUtc), timeZone));
+  } catch {
+    return null;
+  }
+}
+
+export interface WallClockSlot {
+  start: Date;
+  end: Date;
+  hour: number;
+  minute: number;
+}
+
+export function getWallClockSlots(
+  year: number,
+  month: number,
+  day: number,
+  startHour: number,
+  startMinute: number,
+  endHour: number,
+  endMinute: number,
+  slotDurationMinutes: number,
+  timeZone: string
+): WallClockSlot[] {
+  const windowEnd = zonedTimeToUtcWindowEnd(year, month, day, endHour, endMinute, timeZone);
+  if (!windowEnd) return [];
+
+  const slots: WallClockSlot[] = [];
+  let curHour = startHour;
+  let curMinute = startMinute;
+  const endTotal = endHour * 60 + endMinute;
+
+  while (curHour * 60 + curMinute < endTotal) {
+    for (const start of zonedTimeToUtcOccurrences(year, month, day, curHour, curMinute, timeZone)) {
+      const end = new Date(start.getTime() + slotDurationMinutes * 60 * 1000);
+      if (end.getTime() <= windowEnd.getTime()) {
+        slots.push({ start, end, hour: curHour, minute: curMinute });
+      }
+    }
+
+    curMinute += slotDurationMinutes;
+    if (curMinute >= 60) {
+      curHour += Math.floor(curMinute / 60);
+      curMinute = curMinute % 60;
+    }
+  }
+
+  return slots.sort((a, b) => a.start.getTime() - b.start.getTime());
+}
+
 /** Convert a `<input type="datetime-local">` value (wall clock in `timeZone`) to a UTC ISO string. */
 export function wallClockToUtcIso(value: string, timeZone: string): string | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::\d{2}(?:\.\d{1,3})?)?$/.exec(
@@ -168,6 +229,13 @@ export function wallClockToUtcIso(value: string, timeZone: string): string | nul
   const [, y, mo, d, h, mi] = match;
   const instant = zonedTimeToUtc(Number(y), Number(mo), Number(d), Number(h), Number(mi), timeZone);
   return instant ? instant.toISOString() : null;
+}
+
+export function getWallClockDateTimeError(value: string, timeZone: string): string | null {
+  if (!value) return null;
+  return wallClockToUtcIso(value, timeZone)
+    ? null
+    : `Choose a valid date and time in ${timeZone}.`;
 }
 
 /** YYYY-MM-DD key for the calendar day an instant falls on in a timezone. */

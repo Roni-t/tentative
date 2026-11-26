@@ -3,7 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { COMMON_TIMEZONES, getUserTimezone, wallClockToUtcIso } from '../utils/timezone';
+import {
+  COMMON_TIMEZONES,
+  getWallClockDateTimeError,
+  getUserTimezone,
+  wallClockToUtcIso,
+} from '../utils/timezone';
 import {
   Calendar as CalendarIcon,
   Clock,
@@ -67,6 +72,20 @@ export const CreateEventPage: React.FC = () => {
     }
     if (candidateDates.length === 0) {
       showToast('Please select at least one candidate date', 'error');
+      return;
+    }
+
+    const deadlineError = deadline ? getWallClockDateTimeError(deadline, timezone) : null;
+    if (deadlineError) {
+      showToast(deadlineError, 'error');
+      return;
+    }
+    const customExpiryError =
+      expiryOption === 'custom' && customExpiry
+        ? getWallClockDateTimeError(customExpiry, timezone)
+        : null;
+    if (customExpiryError) {
+      showToast(customExpiryError, 'error');
       return;
     }
 
