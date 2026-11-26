@@ -74,3 +74,13 @@ Event dates and the daily window (for example 12:00 to 17:00) are wall-clock tim
 - **Readability:** the smallest text (`text-xs`) is 13px instead of 12px, and form fields are a little bigger (`index.css`).
 - **Small things:** "1 day" and "1 participant" use the singular.
 - **Calendar export is back:** the finalized banner on the event page has Download .ics and Google Calendar buttons (see the README). The first version was removed earlier. This one only works for finalized events, because the old one made an entry for "now" when an event had no final time.
+
+## Create event survey
+
+- **One step at a time:** creating an event is now a five screen survey (Details, Dates, Times, Options, Review) instead of one long form. Each screen slides in from the right when you continue and from the left when you go back, with a progress bar on top. Pressing Enter also continues.
+- **Checks per step:** the title is required, at least one date has to be picked, and the latest time has to be after the earliest. A short message explains what is missing and the screen does not move on.
+- **Dates:** a tap-to-select month calendar with "This week", "Next week" and "Clear" shortcuts. The current week (Monday to Sunday) is still selected by default.
+- **Options:** the reply deadline, capacity limit, link expiry and surprise mode live on their own screen, which can be skipped.
+- **Review:** a summary of every answer with an Edit link that jumps back to that screen.
+- **Phones:** inputs are 16px below 640px wide so iOS does not zoom in when one is focused, and the buttons are large enough to tap.
+- **Draft saving:** the survey saves your answers and current step in the browser tab (`utils/createDraft.ts`) as you type. If you refresh, or press Create while signed out, you are sent to sign in and then straight back to the survey with everything filled in. The draft is cleared when the event is created, and it is not saved until a title, description or location has been typed.

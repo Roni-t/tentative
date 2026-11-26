@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { api } from '../api/client';
 import { PlanetLogo } from '../components/PlanetLogo';
+import { afterAuthPath } from '../utils/createDraft';
 import { DevSmsBanner } from '../components/DevSmsBanner';
 import { CodeEntry } from '../components/auth/CodeEntry';
 import { AuthOutcome, Outcome } from '../components/auth/AuthOutcome';
@@ -86,7 +87,7 @@ export const LoginPage: React.FC = () => {
     try {
       const user = await login(phone, code, keepSignedIn);
       showToast(`Welcome back, ${user.name}!`, 'success');
-      navigate('/events');
+      navigate(afterAuthPath());
     } catch (err: any) {
       setCode('');
       setOutcome(
