@@ -8,6 +8,25 @@ from app.models.event import Event
 from app.schemas.availability import HeatmapResponse, HeatmapSlotOut
 
 
+def _wall_clock_occurrences(
+    year: int, month: int, day: int, hour: int, minute: int, tz: timezone | ZoneInfo
+) -> List[datetime]:
+    naive = datetime(year, month, day, hour, minute)
+    matches: List[datetime] = []
+    seen = set()
+
+    for fold in (0, 1):
+        candidate = naive.replace(tzinfo=tz, fold=fold).astimezone(timezone.utc)
+        if candidate.astimezone(tz).replace(tzinfo=None) != naive:
+            continue
+        if candidate in seen:
+            continue
+        seen.add(candidate)
+        matches.append(candidate)
+
+    return sorted(matches)
+
+
 class HeatmapService:
     def __init__(self):
         # UC-14 (Divyam): each cache entry remembers which event it was built for
@@ -57,7 +76,8 @@ class HeatmapService:
             start_hour, start_min = 9, 0
             end_hour, end_min = 21, 0
 
-        slot_delta = timedelta(minutes=max(15, event.slot_duration_minutes or 30))
+        slot_delta_minutes = max(15, event.slot_duration_minutes or 30)
+        slot_delta = timedelta(minutes=slot_delta_minutes)
 
         # The daily window is wall-clock time in the event's timezone.
         try:
@@ -74,46 +94,61 @@ class HeatmapService:
             except Exception:
                 continue
 
-            current_slot_start = datetime(y, m, d, start_hour, start_min, tzinfo=event_tz).astimezone(timezone.utc)
-            day_slot_end = max(
-                datetime(y, m, d, end_hour, end_min, tzinfo=event_tz, fold=fold).astimezone(timezone.utc)
-                for fold in (0, 1)
-            )
+            end_occurrences = _wall_clock_occurrences(y, m, d, end_hour, end_min, event_tz)
+            if end_occurrences:
+                day_slot_end = end_occurrences[-1]
+            else:
+                day_slot_end = datetime(y, m, d, end_hour, end_min, tzinfo=event_tz).astimezone(timezone.utc)
 
-            while current_slot_start + slot_delta <= day_slot_end:
-                current_slot_end = current_slot_start + slot_delta
-                
-                # Check who is available during this slot
-                available_tokens: Set[str] = set()
-                for token, ranges in participant_slots_map.items():
-                    for r_start, r_end in ranges:
-                        # If respondent availability covers or overlaps this slot
-                        if r_start <= current_slot_start and r_end >= current_slot_end:
-                            available_tokens.add(token)
-                            break
-                        # Also count if slot midpoint falls within availability
-                        midpoint = current_slot_start + (slot_delta / 2)
-                        if r_start <= midpoint <= r_end:
-                            available_tokens.add(token)
-                            break
+            end_total = end_hour * 60 + end_min
+            wall_minute = start_hour * 60 + start_min
 
-                avail_names = sorted([respondents_map[t] for t in available_tokens])
-                unavail_names = sorted([name for name in all_participant_names if name not in avail_names])
+            while wall_minute <= end_total:
+                slot_hour, slot_minute = divmod(wall_minute, 60)
+                slot_starts = _wall_clock_occurrences(y, m, d, slot_hour, slot_minute, event_tz)
+                if wall_minute == end_total and not any(
+                    start + slot_delta <= day_slot_end for start in slot_starts
+                ):
+                    break
 
-                count = len(avail_names)
-                ratio = (count / total_respondents) if total_respondents > 0 else 0.0
+                for slot_start in slot_starts:
+                    slot_end = slot_start + slot_delta
+                    if slot_end > day_slot_end:
+                        continue
 
-                grid_slots.append(HeatmapSlotOut(
-                    start_time=current_slot_start,
-                    end_time=current_slot_end,
-                    count=count,
-                    total_participants=total_respondents,
-                    ratio=round(ratio, 3),
-                    available_participants=avail_names,
-                    unavailable_participants=unavail_names
-                ))
+                    # Check who is available during this slot
+                    available_tokens: Set[str] = set()
+                    for token, ranges in participant_slots_map.items():
+                        for r_start, r_end in ranges:
+                            # If respondent availability covers or overlaps this slot
+                            if r_start <= slot_start and r_end >= slot_end:
+                                available_tokens.add(token)
+                                break
+                            # Also count if slot midpoint falls within availability
+                            midpoint = slot_start + (slot_delta / 2)
+                            if r_start <= midpoint <= r_end:
+                                available_tokens.add(token)
+                                break
 
-                current_slot_start = current_slot_end
+                    avail_names = sorted([respondents_map[t] for t in available_tokens])
+                    unavail_names = sorted([name for name in all_participant_names if name not in avail_names])
+
+                    count = len(avail_names)
+                    ratio = (count / total_respondents) if total_respondents > 0 else 0.0
+
+                    grid_slots.append(HeatmapSlotOut(
+                        start_time=slot_start,
+                        end_time=slot_end,
+                        count=count,
+                        total_participants=total_respondents,
+                        ratio=round(ratio, 3),
+                        available_participants=avail_names,
+                        unavailable_participants=unavail_names
+                    ))
+
+                wall_minute += slot_delta_minutes
+
+            grid_slots.sort(key=lambda slot: slot.start_time)
 
         # Determine best slots (slots with count > 0, ranked descending by count)
         best_slots = sorted(

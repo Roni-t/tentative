@@ -300,3 +300,68 @@ export function getDistinctSlotTimeLabels(startTimes: string[], timeZone?: strin
     return suffix ? `${label} ${suffix}` : label;
   });
 }
+
+export interface HeatmapTimeRow {
+  key: string;
+  label: string;
+  isTopHour: boolean;
+}
+
+interface HeatmapTimeRowDraft extends HeatmapTimeRow {
+  localMinutes: number;
+  offsetMinutes: number;
+  abbreviation: string;
+}
+
+export function buildHeatmapTimeRows<T extends { start_time: string }>(
+  slotsByDate: Record<string, T[]>,
+  timeZone?: string
+): { rows: HeatmapTimeRow[]; slotKeysByDate: Record<string, string[]> } {
+  const zone = timeZone || getUserTimezone();
+  const rowsByKey = new Map<string, HeatmapTimeRowDraft>();
+  const slotKeysByDate: Record<string, string[]> = {};
+
+  for (const [dateKey, slots] of Object.entries(slotsByDate)) {
+    slotKeysByDate[dateKey] = slots.map((slot) => {
+      const instant = parseUtc(slot.start_time);
+      const parts = getZonedParts(instant, zone);
+      const localMinutes = parts.hour * 60 + parts.minute;
+      const offsetMinutes = Math.round(getTimeZoneOffsetMs(instant, zone) / 60000);
+      const key = `${localMinutes}|${offsetMinutes}`;
+
+      if (!rowsByKey.has(key)) {
+        rowsByKey.set(key, {
+          key,
+          label: formatInstant(slot.start_time, zone, { hour: 'numeric', minute: '2-digit' }),
+          isTopHour: parts.minute === 0,
+          localMinutes,
+          offsetMinutes,
+          abbreviation: getTimeZoneAbbreviation(instant, zone),
+        });
+      }
+
+      return key;
+    });
+  }
+
+  const countsByMinute = new Map<number, number>();
+  rowsByKey.forEach((row) => {
+    countsByMinute.set(row.localMinutes, (countsByMinute.get(row.localMinutes) ?? 0) + 1);
+  });
+
+  const rows = Array.from(rowsByKey.values())
+    .sort((a, b) => a.localMinutes - b.localMinutes || b.offsetMinutes - a.offsetMinutes)
+    .map((row): HeatmapTimeRow => {
+      if ((countsByMinute.get(row.localMinutes) ?? 0) < 2) {
+        return { key: row.key, label: row.label, isTopHour: row.isTopHour };
+      }
+      const suffix =
+        row.abbreviation ||
+        `UTC${row.offsetMinutes >= 0 ? '+' : '-'}${String(
+          Math.floor(Math.abs(row.offsetMinutes) / 60)
+        ).padStart(2, '0')}:${String(Math.abs(row.offsetMinutes) % 60).padStart(2, '0')}`;
+      return { key: row.key, label: `${row.label} ${suffix}`, isTopHour: row.isTopHour };
+    });
+
+  return { rows, slotKeysByDate };
+}

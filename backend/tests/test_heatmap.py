@@ -92,3 +92,31 @@ def test_heatmap_keeps_repeated_hour_at_fall_back(client, db_session):
         datetime(2026, 11, 1, 5, 30, tzinfo=timezone.utc),
         datetime(2026, 11, 1, 6, 0, tzinfo=timezone.utc),
     ]
+
+
+def test_heatmap_slots_stay_inside_fall_back_local_window(client, db_session):
+    headers = register_user(client, phone="+19725550144", name="Host")
+
+    create_resp = client.post("/api/events", json={
+        "title": "Fall Back Window Bound",
+        "timezone": "America/New_York",
+        "candidate_dates": ["2026-11-01"],
+        "daily_start_time": "01:30",
+        "daily_end_time": "02:30",
+        "slot_duration_minutes": 30
+    }, headers=headers)
+    assert create_resp.status_code == 200
+
+    event_id = create_resp.json()["id"]
+    heatmap_resp = client.get(f"/api/events/{event_id}/heatmap")
+    assert heatmap_resp.status_code == 200
+
+    starts = [
+        datetime.fromisoformat(slot["start_time"].replace("Z", "+00:00"))
+        for slot in heatmap_resp.json()["slots"]
+    ]
+    assert starts == [
+        datetime(2026, 11, 1, 5, 30, tzinfo=timezone.utc),
+        datetime(2026, 11, 1, 6, 30, tzinfo=timezone.utc),
+        datetime(2026, 11, 1, 7, 0, tzinfo=timezone.utc),
+    ]

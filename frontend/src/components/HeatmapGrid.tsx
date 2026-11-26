@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HeatmapResponse, HeatmapSlot } from '../types';
 import { formatSlotRange, formatDayName, formatDateSub, formatDateInZone } from '../utils/format';
-import { getDateKeyInTimeZone, getDistinctSlotTimeLabels } from '../utils/timezone';
+import { buildHeatmapTimeRows, getDateKeyInTimeZone } from '../utils/timezone';
 import { Sparkles, Users, UserCheck, UserX, List, Grid as GridIcon, CheckCircle, Calendar, Clock, Info } from 'lucide-react';
 
 interface HeatmapGridProps {
@@ -37,15 +37,14 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
     slotsByDate[dStr].push(slot);
   });
 
-  // Extract unique time labels from the first populated day
-  const sampleDay = Object.values(slotsByDate)[0] || [];
-  const timeLabels = getDistinctSlotTimeLabels(
-    sampleDay.map((slot) => slot.start_time),
-    timezone
-  ).map((label) => ({
-    label,
-    isTopHour: label.includes(':00'),
-  }));
+  const { rows: timeRows, slotKeysByDate } = buildHeatmapTimeRows(slotsByDate, timezone);
+  const slotsByRowKey: Record<string, Record<string, HeatmapSlot>> = {};
+  Object.entries(slotsByDate).forEach(([dateKey, slots]) => {
+    slotsByRowKey[dateKey] = {};
+    slots.forEach((slot, index) => {
+      slotsByRowKey[dateKey][slotKeysByDate[dateKey][index]] = slot;
+    });
+  });
 
   // Monochrome / Black & White heatmap intensity scale
   const getMonochromeIntensityStyle = (ratio: number) => {
@@ -198,9 +197,9 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
 
                 {/* Rows with Time Gutter and Schedule Cells */}
                 <div className="flex flex-col">
-                  {timeLabels.map((tItem, rowIndex) => (
+                  {timeRows.map((tItem) => (
                     <div
-                      key={`${tItem.label}-${rowIndex}`}
+                      key={tItem.key}
                       className={`flex items-stretch ${
                         tItem.isTopHour
                           ? 'border-t border-zinc-800 bg-zinc-950/40'
@@ -220,8 +219,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
 
                       {/* Day Columns */}
                       {candidateDates.map((dStr) => {
-                        const daySlots = slotsByDate[dStr] || [];
-                        const slot = daySlots[rowIndex];
+                        const slot = slotsByRowKey[dStr]?.[tItem.key];
                         if (!slot) {
                           return (
                             <div

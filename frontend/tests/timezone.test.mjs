@@ -80,6 +80,39 @@ test('repeated heatmap slot labels include a zone suffix', () => {
   );
 });
 
+test('heatmap grid maps mixed-DST dates to their own local time rows', () => {
+  assert.equal(typeof timezone.buildHeatmapTimeRows, 'function');
+  const slotsByDate = {
+    '2026-11-01': [
+      { start_time: '2026-11-01T05:00:00Z' },
+      { start_time: '2026-11-01T05:30:00Z' },
+      { start_time: '2026-11-01T06:00:00Z' },
+      { start_time: '2026-11-01T06:30:00Z' },
+      { start_time: '2026-11-01T07:00:00Z' },
+    ],
+    '2026-11-02': [
+      { start_time: '2026-11-02T06:00:00Z' },
+      { start_time: '2026-11-02T06:30:00Z' },
+      { start_time: '2026-11-02T07:00:00Z' },
+    ],
+  };
+  const { rows, slotKeysByDate } = timezone.buildHeatmapTimeRows(
+    slotsByDate,
+    'America/New_York'
+  );
+
+  assert.deepEqual(rows.map((row) => row.label), [
+    '1:00 AM EDT',
+    '1:00 AM EST',
+    '1:30 AM EDT',
+    '1:30 AM EST',
+    '2:00 AM',
+  ]);
+  assert.equal(slotKeysByDate['2026-11-02'][0], slotKeysByDate['2026-11-01'][2]);
+  assert.equal(slotKeysByDate['2026-11-02'][1], slotKeysByDate['2026-11-01'][3]);
+  assert.equal(slotKeysByDate['2026-11-02'][2], slotKeysByDate['2026-11-01'][4]);
+});
+
 test('grid omits a slot whose end passes the window end', () => {
   assert.equal(typeof timezone.getWallClockSlots, 'function');
   const slots = timezone.getWallClockSlots(
