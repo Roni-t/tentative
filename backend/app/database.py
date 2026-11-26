@@ -1,8 +1,10 @@
 import os
 from typing import List
 from typing import Optional
+from sqlalchemy import Column
 from sqlalchemy import String
 from sqlalchemy import select
+from sqlalchemy import Table
 from sqlalchemy import create_engine
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Session
@@ -37,6 +39,16 @@ class Event(Base):
     name: Mapped[str] = mapped_column(String(50))
     description: Mapped[str]
     location: Mapped[str]
+    valid_timespans: Mapped[List["Timespan"]] = relationship(back_populates = "ts_event")
+
+# timespans and what event it represents
+class Timespan(Base):
+    __tablename__ = "timespan"
+    
+    timespanid: Mapped[int] = mapped_column(primary_key = True)
+    event: Mapped[int] = mapped_column(ForeignKey("events.id"))
+    ts_event: Mapped["Event"] = relationship(back_populates = "valid_timespans")
+
 
 #I don't know if I'm doing this right but these were the databases I needed, so please check over -Trinity
 #List of users who cannot see x event
@@ -53,6 +65,8 @@ class BlockedUsers(Base):
 
     blockerID: Mapped[int] = mapped_column(primary_key = True)
     blockedID: Mapped[int] = mapped_column(ForeignKey("user_acc.id"))
+
+
 
 def newSession():
     global globengine
