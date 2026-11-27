@@ -147,7 +147,6 @@ export interface AdminEvent {
 export interface BugReport {
   id: number;
   user_name?: string | null;
-  contact?: string | null;
   page_url?: string | null;
   description: string;
   status: string;
