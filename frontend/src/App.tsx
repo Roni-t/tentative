@@ -8,6 +8,7 @@ import { CursorTrail } from './components/FluidTrail';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { ToastContainer } from './components/ToastContainer';
+import { RequireAuth } from './components/RequireAuth';
 
 // Pages
 import { LandingPage } from './pages/LandingPage';
@@ -28,6 +29,7 @@ import { AdminPage } from './pages/AdminPage';
 import { BugReportPage } from './pages/BugReportPage';
 import { ExpiredOrbitPage } from './pages/ExpiredOrbitPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { PrivacyPolicyPage, TermsPage } from './pages/LegalPage';
 
 // Helper component that redirects /share/:token to /share/:token/heatmap
 const ShareRedirect: React.FC = () => {
@@ -65,19 +67,19 @@ const AnimatedRoutes: React.FC = () => {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<CreateAccountPage />} />
-          <Route path="/events" element={<MyEventsPage />} />
+          <Route path="/events" element={<RequireAuth><MyEventsPage /></RequireAuth>} />
           <Route path="/create" element={<CreateEventPage />} />
 
           {/* Event Details & Functional Views */}
           <Route path="/events/:id" element={<EventDetailsPage />} />
           <Route path="/events/:id/respond" element={<RespondAvailabilityPage />} />
           <Route path="/events/:id/heatmap" element={<HeatmapPage />} />
-          <Route path="/events/:id/finalize" element={<FinalizePage />} />
+          <Route path="/events/:id/finalize" element={<RequireAuth><FinalizePage /></RequireAuth>} />
           <Route path="/events/:id/rsvps" element={<RsvpListPage />} />
           <Route path="/events/:id/discussion" element={<DiscussionPage />} />
-          <Route path="/events/:id/share" element={<ShareExpiryPage />} />
-          <Route path="/events/:id/recurrence" element={<RecurrencePage />} />
-          <Route path="/groups" element={<GroupsPage />} />
+          <Route path="/events/:id/share" element={<RequireAuth><ShareExpiryPage /></RequireAuth>} />
+          <Route path="/events/:id/recurrence" element={<RequireAuth><RecurrencePage /></RequireAuth>} />
+          <Route path="/groups" element={<RequireAuth><GroupsPage /></RequireAuth>} />
           <Route path="/groups/:token" element={<GroupSharePage />} />
 
           {/* Shareable Link Routes (Invitee Anonymous Routes) */}
@@ -87,8 +89,10 @@ const AnimatedRoutes: React.FC = () => {
           <Route path="/share/:token/finalize" element={<FinalizePage />} />
 
           {/* System & Extra Views */}
-          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/admin" element={<RequireAuth><AdminPage /></RequireAuth>} />
           <Route path="/bug-report" element={<BugReportPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
           <Route path="/expired" element={<ExpiredOrbitPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

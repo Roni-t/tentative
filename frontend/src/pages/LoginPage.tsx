@@ -9,6 +9,7 @@ import { afterAuthPath } from '../utils/createDraft';
 import { DevSmsBanner } from '../components/DevSmsBanner';
 import { CodeEntry } from '../components/auth/CodeEntry';
 import { AuthOutcome, Outcome } from '../components/auth/AuthOutcome';
+import { LegalNote, PrivacyLink } from '../components/LegalLinks';
 import { Phone, ArrowRight, Lock } from 'lucide-react';
 
 const inputClass =
@@ -20,6 +21,9 @@ const primaryButton =
 export const LoginPage: React.FC = () => {
   const location = useLocation();
   const prefillPhone = (location.state as { phone?: string } | null)?.phone ?? '';
+  // Keeps ?next= when switching between log in and create account
+  const next = new URLSearchParams(location.search).get('next');
+  const keepNext = location.search;
 
   const [step, setStep] = useState<'phone' | 'verify'>('phone');
   const [phone, setPhone] = useState(prefillPhone);
@@ -31,14 +35,14 @@ export const LoginPage: React.FC = () => {
   const [resending, setResending] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
 
-  const { login, pollDevCode, clearDevNotice } = useAuth();
+  const { login, pollDevCode, clearDevNotice, sessionEnded } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
   const noAccount = (message: string): Outcome => ({
     title: "We couldn't find that number",
     message,
-    action: { label: 'Create an account', onClick: () => navigate('/register', { state: { phone } }) },
+    action: { label: 'Create an account', onClick: () => navigate(`/register${keepNext}`, { state: { phone } }) },
   });
 
   const sendCode = async () => {
@@ -87,7 +91,7 @@ export const LoginPage: React.FC = () => {
     try {
       const user = await login(phone, code, keepSignedIn);
       showToast(`Welcome back, ${user.name}!`, 'success');
-      navigate(afterAuthPath());
+      navigate(afterAuthPath(next));
     } catch (err: any) {
       setCode('');
       setOutcome(
@@ -128,6 +132,12 @@ export const LoginPage: React.FC = () => {
           </p>
         </div>
 
+        {sessionEnded && (
+          <p role="status" className="text-xs text-center text-zinc-300 glass-card rounded-2xl px-4 py-3">
+            Your session ended. Log in again to continue.
+          </p>
+        )}
+
         <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden space-y-4">
           <AnimatePresence mode="wait">
             {step === 'phone' ? (
@@ -157,9 +167,13 @@ export const LoginPage: React.FC = () => {
                       placeholder="(972) 555-0142"
                       required
                       autoFocus
+                      aria-describedby="phone-privacy"
                       className={inputClass}
                     />
                   </div>
+                  <LegalNote id="phone-privacy" className="mt-2.5">
+                    <PrivacyLink />
+                  </LegalNote>
                 </div>
 
                 <button type="submit" disabled={loading} className={primaryButton}>
@@ -229,7 +243,7 @@ export const LoginPage: React.FC = () => {
 
           <div className="pt-4 border-t border-white/10 text-center text-xs text-zinc-400">
             New to Tentative?{' '}
-            <Link to="/register" state={{ phone }} className="text-white hover:underline font-semibold transition-colors">
+            <Link to={`/register${keepNext}`} state={{ phone }} className="text-white hover:underline font-semibold transition-colors">
               Create an account
             </Link>
           </div>

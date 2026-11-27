@@ -3,12 +3,11 @@
 import json
 import secrets
 
-from fastapi import APIRouter, Cookie, Depends, Response
+from fastapi import APIRouter, Cookie, Depends, Request, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_current_user
-from app.config import settings
 from app.database import get_db
 from app.models.user import User
 from app.services import aaron_service
@@ -48,6 +47,7 @@ def vote_in_poll(
     event_id: int,
     poll_id: int,
     payload: PollVoteRequest,
+    request: Request,
     response: Response,
     voter_token: str | None = Cookie(None, alias="tentative_poll_voter"),
     db: Session = Depends(get_db),
@@ -58,7 +58,7 @@ def vote_in_poll(
             key="tentative_poll_voter",
             value=voter_token,
             httponly=True,
-            secure=settings.ENVIRONMENT.lower() == "production",
+            secure=request.url.scheme == "https",
             samesite="lax",
             max_age=60 * 60 * 24 * 365,
         )

@@ -18,17 +18,20 @@ const markUtc = (value: any): any => {
   return value;
 };
 
-class ApiClient {
-  private getToken(): string | null {
-    return localStorage.getItem('tentative_token');
-  }
+// Login used to be kept in localStorage, which outlives the browser session. It now lives only in
+// the session cookie (which JavaScript can't read), so remove any token left from before.
+try {
+  localStorage.removeItem('tentative_token');
+} catch {
+  // storage blocked; nothing to clean up
+}
 
-  setToken(token: string | null) {
-    if (token) {
-      localStorage.setItem('tentative_token', token);
-    } else {
-      localStorage.removeItem('tentative_token');
-    }
+class ApiClient {
+  // Called when the server says the session is gone (expired or logged out elsewhere)
+  private unauthorizedHandler: (() => void) | null = null;
+
+  onUnauthorized(handler: (() => void) | null) {
+    this.unauthorizedHandler = handler;
   }
 
   // Each event has its own token, so answering one event does not affect another
@@ -50,16 +53,15 @@ class ApiClient {
       ...(options.headers as Record<string, string>),
     };
 
-    const token = this.getToken();
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
     const res = await fetch(`${API_BASE}${endpoint}`, {
       ...options,
       headers,
       credentials: 'include',
     });
+
+    if (res.status === 401) {
+      this.unauthorizedHandler?.();
+    }
 
     if (res.status === 410) {
       // Orbit expired
@@ -97,7 +99,6 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify({ name, phone, code }),
     });
-    this.setToken(data.token);
     return data;
   }
 
@@ -114,7 +115,6 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify({ phone, code, keep_signed_in: keepSignedIn }),
     });
-    this.setToken(data.token);
     return data;
   }
 
@@ -123,12 +123,8 @@ class ApiClient {
   }
 
   async logout() {
-    try {
-      // Send the token so the server can revoke this session, then forget it locally.
-      return await this.request<{ message: string }>('/auth/logout', { method: 'POST' });
-    } finally {
-      this.setToken(null);
-    }
+    // The server revokes the session and clears the cookie
+    return this.request<{ message: string }>('/auth/logout', { method: 'POST' });
   }
 
   async getDevBannerCode(phone: string) {
@@ -367,10 +363,10 @@ class ApiClient {
   }
 
   async downloadAaronBackup(eventId: number | string): Promise<Blob> {
-    const headers: Record<string, string> = {};
-    const token = this.getToken();
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`${API_BASE}/aaron/events/${eventId}/backup.json`, { headers, credentials: 'include' });
+    const res = await fetch(`${API_BASE}/aaron/events/${eventId}/backup.json`, { credentials: 'include' });
+    if (res.status === 401) {
+      this.unauthorizedHandler?.();
+    }
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({ detail: `HTTP ${res.status}: ${res.statusText}` }));
       throw new Error(errorData.detail || 'Could not download event backup');

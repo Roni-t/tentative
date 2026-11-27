@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { api } from '../api/client';
+import { LegalNote, PrivacyLink } from './LegalLinks';
 import { CodeEntry } from './auth/CodeEntry';
 
 interface TextOptInProps {
@@ -69,8 +70,12 @@ export const TextOptIn: React.FC<TextOptInProps> = ({ editToken, onDone }) => {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="(972) 555-0142"
+              aria-describedby="optin-terms"
               className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-sm"
             />
+            <LegalNote id="optin-terms" className="-mt-2">
+              Msg &amp; data rates may apply. Reply STOP to opt out. <PrivacyLink />
+            </LegalNote>
             {error && <p className="text-xs text-red-300">{error}</p>}
             <div className="flex items-center justify-between">
               <button type="button" onClick={onDone} className="text-xs text-zinc-400 hover:text-white cursor-pointer">

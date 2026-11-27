@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { AvailabilityGrid } from '../components/AvailabilityGrid';
 import { TextOptIn } from '../components/TextOptIn';
+import { LegalNote, TermsLink } from '../components/LegalLinks';
 import { Calendar, User as UserIcon, Check, ArrowRight, Sparkles, MapPin, Clock } from 'lucide-react';
 
 export const RespondAvailabilityPage: React.FC = () => {
@@ -142,6 +143,12 @@ export const RespondAvailabilityPage: React.FC = () => {
                 className="w-full pl-10 pr-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:border-white"
               />
             </div>
+            {/* Guests never sign up, so this is where they see the terms */}
+            {!user && (
+              <LegalNote className="pt-1">
+                By responding, you agree to the <TermsLink />.
+              </LegalNote>
+            )}
           </div>
 
           <div className="flex items-center space-x-3 w-full sm:w-auto justify-end">

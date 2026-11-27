@@ -1,0 +1,171 @@
+TENTATIVE PRIVACY POLICY
+
+Effective date: 11/27/2026
+Last updated: 11/27/2026
+
+This Privacy Policy explains how Tentative ("Tentative," "we," "us," or "our") collects, uses, shares, and protects information when you use the Tentative website and web application at https://tentative-frontend.onrender.com/ (the "Service"). Tentative is a group scheduling tool: a host creates an event proposal, invitees share when they are available within a time window, and the host picks a final time from the combined availability.
+
+By using the Service, you agree to the practices described in this Privacy Policy. If you do not agree, please do not use the Service.
+
+
+1. WHO WE ARE
+
+Tentative is a student project developed by a team of Computer Science students at The University of Texas at Dallas. Tentative is not an official product or service of The University of Texas at Dallas.
+
+Contact: kxn210043@utdallas.edu
+
+
+2. INFORMATION WE COLLECT
+
+2.1 Information you give us
+
+- Account information. To create an account, you provide your name and mobile phone number. Accounts are required for hosts and optional for invitees.
+- Guest information. If you respond to an event without an account, you provide a display name and, if you choose, a phone number for event notifications.
+- Event information. If you host an event, we collect what you enter: title, description, category, candidate dates, daily time window, response deadline, location or meeting link, capacity limit, recurrence settings, co-hosts, groups, and invitees.
+- Availability and responses. The time slots you mark as available or unavailable, your RSVP status (going, maybe, declined, waitlisted), and any changes you make to them.
+- Comments and polls. Questions or comments you post on an event page and votes you cast in event polls.
+- Communications with us. Bug reports, feedback, and support requests you send us.
+
+2.2 Information from connected calendars (optional)
+
+If you choose to connect a Google or Microsoft Outlook calendar to auto-fill your availability, we request read-only access to your free/busy information only. We use it to mark time slots as available or unavailable on your response. We do not request or store the titles, descriptions, locations, attendees, or other details of your calendar events, and other participants never see them. Other participants see only whether you are available in a given time slot.
+
+If you set up CalDAV synchronization, you provide a CalDAV server address, username, and app-specific password. We use these only to sync Tentative events with the calendar you configured, and we store the password in encrypted form.
+
+If you choose to add a finalized event to a connected calendar, we write that single event to your calendar on your request.
+
+2.3 Information collected automatically
+
+- Log and device information, such as IP address, browser type, device type, operating system, pages visited, and timestamps.
+- Session information. We use a session token (stored in your browser) to keep you signed in.
+- Security and abuse-prevention data, such as request counts used by our rate limiter to block spam and excessive invites, comments, or text messages.
+
+2.4 Location information
+
+If you use the "filter events by distance" feature, we use the location you enter or, with your browser's permission, your device's approximate location, to show nearby events. We do not track your location in the background.
+
+
+3. HOW WE USE INFORMATION
+
+We use information to:
+
+- Create and secure your account, including verifying your phone number with one-time codes sent by text message.
+- Run the core scheduling features: collecting availability, building the availability heatmap, handling RSVPs and waitlists, and letting hosts finalize a time.
+- Send text messages and in-app notifications related to events you host or are invited to (see Section 5).
+- Show change history and activity on an event page.
+- Generate calendar files (.ics) and CSV exports that you request.
+- Prevent fraud, spam, and abuse, enforce our Terms and Conditions, and keep the Service secure.
+- Back up event data so it can be restored after a failure.
+- Fix bugs, troubleshoot, and improve the Service.
+- Comply with legal obligations.
+
+We do not sell your personal information. We do not share your personal information for cross-context behavioral advertising, and we do not show third-party advertising in the Service.
+
+
+4. HOW INFORMATION IS SHARED
+
+4.1 With other participants in an event
+
+Tentative is a shared tool, so some of your information is visible to other people in the events you join:
+
+- The host and any co-hosts can see invitees' names, availability, RSVP status, comments, and poll votes, and can export the RSVP list as a CSV file. Once exported, that file is under the host's control, not ours.
+- Other invitees may see participant names, the availability heatmap, which participants are available in a selected time slot, comments, and the event's change history.
+- Participants never see your phone number unless you share it yourself.
+- Hosts can hide some event details from invitees (for example, for a surprise party).
+
+Anyone who has an event's share link can open that event and respond to it. If a link is shared too widely, the host can rotate it, which immediately disables the old link.
+
+4.2 With service providers
+
+We share information with vendors who help us run the Service, only as needed for them to perform services for us, including:
+
+- SMS provider: Twilio, to deliver verification codes and event text messages.
+- Hosting and database provider: Render.
+- Calendar providers: Google and Microsoft, when you choose to connect a calendar; and your CalDAV server, if you configure one.
+
+4.3 For legal reasons and safety
+
+We may disclose information if we believe it is required by law, subpoena, or court order, or is necessary to protect the rights, property, or safety of Tentative, our users, or others.
+
+4.4 Changes to the project
+
+If Tentative is transferred to a new maintainer or organization, information may be transferred as part of that change. We will notify you before your information becomes subject to a materially different privacy policy.
+
+
+5. TEXT MESSAGES (SMS)
+
+We send text messages to the phone number you provide for:
+
+- Account verification and login codes.
+- Event invitations and updates sent by a host.
+- Reminders, such as a reminder to respond before a deadline.
+- Host notices, such as a notice that all invitees have responded and the event is ready to finalize.
+- Finalization and cancellation notices.
+
+Message frequency varies with your event activity. Message and data rates may apply. Reply STOP to any message to opt out of event texts, or HELP for help. You can also turn off texts in your account settings. If you opt out, you may still see updates in the app's activity feed. Verification codes are needed to sign in, so opting out of all texts may prevent you from logging in.
+
+We do not share your phone number or SMS opt-in consent with third parties for their marketing purposes.
+
+
+6. GOOGLE AND MICROSOFT DATA
+
+Tentative's use and transfer of information received from Google APIs to any other app will adhere to the Google API Services User Data Policy, including the Limited Use requirements.
+
+Specifically, we use Google and Microsoft calendar data only to provide the availability auto-fill and calendar features you turn on. We do not use this data for advertising, do not sell it, do not use it to train artificial intelligence or machine learning models, and do not allow humans to read it, except with your consent, for security purposes, or to comply with law. You can disconnect a calendar at any time in your Tentative settings, or by revoking access from your Google Account (https://myaccount.google.com/permissions) or Microsoft account.
+
+
+7. COOKIES AND LOCAL STORAGE
+
+We use cookies and browser storage that are necessary to sign you in, keep your session secure, and remember basic preferences. We do not use advertising or cross-site tracking cookies. You can block cookies in your browser settings, but parts of the Service, such as signing in, may not work.
+
+
+8. DATA SECURITY
+
+We use reasonable measures to protect your information, including encrypting phone numbers and stored calendar credentials in our database, using HTTPS for data in transit, rate-limiting requests, restricting administrative access, and making permission checks so that, for example, only a host or co-host can finalize an event. No method of transmission or storage is completely secure, and we cannot guarantee absolute security.
+
+
+9. DATA RETENTION
+
+- Account information is kept while your account is active and deleted within 30 days after you delete your account, except where we must keep it for legal, security, or fraud-prevention reasons.
+- Event data, including availability, RSVPs, comments, and change history, is kept while the event exists. When a host deletes or cancels an event, its data is removed from our active database. Backups containing it are overwritten on a rolling basis within 30 days.
+- Guest responses are kept for as long as the event they belong to exists.
+- Server logs are kept for up to 90 days.
+- Calendar access tokens are deleted when you disconnect a calendar or delete your account.
+
+
+10. YOUR CHOICES AND RIGHTS
+
+You can:
+
+- View and edit your name and response details in the app.
+- Change or withdraw your availability and RSVP before an event starts.
+- Disconnect a connected calendar at any time.
+- Opt out of event text messages by replying STOP or using your settings.
+- Delete your account in your settings or by emailing kxn210043@utdallas.edu.
+
+Depending on where you live, you may have additional rights, such as the right to access, correct, delete, or receive a copy of your personal information, or to appeal a decision we make about your request. To exercise these rights, contact us at kxn210043@utdallas.edu. We will verify your request, generally by confirming control of your phone number, and respond within the time required by applicable law. We will not discriminate against you for exercising your rights.
+
+Note that if you delete your account, content you contributed to other people's events (such as comments) may be removed or shown as from a "Deleted user," and copies a host has already exported (for example, a CSV file) are outside our control.
+
+
+11. CHILDREN'S PRIVACY
+
+The Service is not directed to children under 13, and we do not knowingly collect personal information from children under 13. If you believe a child under 13 has given us personal information, contact us at kxn210043@utdallas.edu and we will delete it. Users between 13 and 18 should use the Service only with the involvement of a parent or guardian.
+
+
+12. INTERNATIONAL USERS
+
+The Service is operated from the United States, and information is stored and processed in the United States. If you use the Service from outside the United States, you understand that your information will be transferred to the United States, where privacy laws may differ from those in your country.
+
+
+13. CHANGES TO THIS POLICY
+
+We may update this Privacy Policy from time to time. When we do, we will update the "Last updated" date above. If changes are material, we will give notice in the app or by text message before they take effect. Your continued use of the Service after changes take effect means you accept the updated policy.
+
+
+14. CONTACT US
+
+Questions or requests about this Privacy Policy:
+
+Tentative
+kxn210043@utdallas.edu

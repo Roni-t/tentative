@@ -33,7 +33,7 @@ export const HeroPlanet: React.FC = () => {
     <motion.div
       animate={{ y: [0, -8, 0] }}
       transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
-      className="relative mx-auto w-[340px] sm:w-[520px] select-none pointer-events-none"
+      className="relative mx-auto w-full max-w-[340px] sm:max-w-[520px] select-none pointer-events-none"
     >
       <svg viewBox="0 0 400 260" className="w-full overflow-visible" aria-hidden="true">
         <defs>
