@@ -14,7 +14,6 @@ from app.schemas.event import (
     EventOut,
     FinalizeEventPayload,
     CoHostAddPayload,
-    ExpiryUpdatePayload,
     ChangeLogOut,
     ShareableURLOut,
 )
@@ -54,7 +53,6 @@ __all__ = [
     "EventOut",
     "FinalizeEventPayload",
     "CoHostAddPayload",
-    "ExpiryUpdatePayload",
     "ChangeLogOut",
     "ShareableURLOut",
     "TimeSlot",

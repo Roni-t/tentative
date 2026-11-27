@@ -7,7 +7,6 @@ import { shortDateInZone, timeInZone, zoneName } from '../utils/zoned';
 
 interface InviteeListProps {
   event: Event;
-  groupLink: string;
 }
 
 // Status pills are outlines: colored border and text, no fill
@@ -26,7 +25,7 @@ const RSVP_PILL: Record<RsvpStatus, { label: string; className: string }> = {
 const iconButton =
   'w-8 h-8 inline-flex items-center justify-center rounded-lg border border-white/15 text-zinc-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer';
 
-export const InviteeList: React.FC<InviteeListProps> = ({ event, groupLink }) => {
+export const InviteeList: React.FC<InviteeListProps> = ({ event }) => {
   const { showToast } = useToast();
   const [invitees, setInvitees] = useState<Invitee[]>([]);
   const [name, setName] = useState('');
@@ -72,6 +71,24 @@ export const InviteeList: React.FC<InviteeListProps> = ({ event, groupLink }) =>
     }
   };
 
+  // The server hands back the current group link, or a new one if it expired (DEV-172).
+  // Safari only allows copying during the click, so the clipboard is given the pending link up front.
+  const copyGroupLink = async () => {
+    const link = api.getGroupLink(event.id).then(({ token }) => `${window.location.origin}/share/${token}/respond`);
+    try {
+      if (typeof ClipboardItem !== 'undefined' && navigator.clipboard.write) {
+        const blob = link.then((text) => new Blob([text], { type: 'text/plain' }));
+        await navigator.clipboard.write([new ClipboardItem({ 'text/plain': blob })]);
+      } else {
+        await navigator.clipboard.writeText(await link);
+      }
+      showToast('Group link copied', 'success');
+    } catch (err: any) {
+      const reason = await link.then(() => null, (e: any) => e);
+      showToast(reason?.message || err?.message || 'Could not copy. Copy it by hand instead.', 'error');
+    }
+  };
+
   // Copy is the link only; the message is for the share sheet
   const copyLink = async (invitee: Invitee) => {
     if (!(await copy(linkFor(invitee)))) return;
@@ -108,7 +125,7 @@ export const InviteeList: React.FC<InviteeListProps> = ({ event, groupLink }) =>
   };
 
   return (
-    <section className="glass-panel p-6 rounded-3xl border border-white/10 space-y-5">
+    <section id="invitees" className="glass-panel p-6 rounded-3xl border border-white/10 space-y-5 scroll-mt-28">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-base font-bold text-white">Invitees</h2>
@@ -120,7 +137,7 @@ export const InviteeList: React.FC<InviteeListProps> = ({ event, groupLink }) =>
           </p>
         </div>
         <button
-          onClick={() => copy(groupLink)}
+          onClick={copyGroupLink}
           className="px-3 py-1.5 rounded-lg text-xs border border-white/15 text-zinc-200 hover:bg-white/10 transition-colors cursor-pointer"
         >
           Copy group link

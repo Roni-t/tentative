@@ -18,8 +18,6 @@ export interface CreateDraft {
   deadline: string;
   capacityLimit: string;
   isHiddenDetails: boolean;
-  expiryOption: string;
-  customExpiry: string;
 }
 
 export const loadDraft = (): CreateDraft | null => {

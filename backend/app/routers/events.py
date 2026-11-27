@@ -18,6 +18,7 @@ from app.schemas.event import (
 )
 from app.services.event_service import event_service
 from app.services.invitee_service import invitee_service
+from app.services.share_link_service import share_link_service
 from app.core.timefmt import format_local, to_utc
 
 router = APIRouter(prefix="/api/events", tags=["Events"])
@@ -75,7 +76,7 @@ def _format_event_out(event: Event, current_user: Optional[User], db: Session) -
         created_at=event.created_at,
         updated_at=event.updated_at,
         active_token=active_url.token if active_url else None,
-        expires_at=as_utc(active_url.expires_at) if active_url else None,
+        expires_at=share_link_service.expiry_for(active_url, event) if active_url else None,
         is_host=is_host,
         is_cohost=is_cohost,
         respondents_count=unique_respondents,

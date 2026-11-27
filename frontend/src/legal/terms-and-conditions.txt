@@ -31,7 +31,7 @@ You must be at least 13 years old to use the Service. If you are under 18, you m
 
 4.1 Consent to contact. If you add invitees by phone number or ask Tentative to text them, you confirm that each person has agreed to be contacted by you about the event and that you have the right to share their number with us. Do not use the Service to send messages to people who have not agreed to receive them.
 
-4.2 Share links. Anyone with an event's share link can view and respond to that event. You are responsible for who you share links with. If a link is shared further than you intended, you can rotate it, which disables the old link.
+4.2 Share links. Anyone with an event's share link can view and respond to that event. You are responsible for who you share links with. A share link stops working at the event's response deadline, or 30 days after it was created if there is no deadline.
 
 4.3 Host and co-host controls. Hosts and the co-hosts they appoint can edit event details, set deadlines and capacity limits, remove attendees, block accounts from RSVPing, view RSVPs, send updates, finalize a time, and cancel the event. Only a host or co-host can finalize an event's time. Hosts are responsible for the actions of the co-hosts they appoint.
 
@@ -60,7 +60,7 @@ You agree not to:
 - Harass, threaten, abuse, or impersonate any person, or post hateful, sexually explicit, or violent content in event details or polls.
 - Send spam or unsolicited messages, or use invitations or SMS features to contact people who have not agreed to it.
 - Collect or harvest other users' information, including phone numbers, without their consent.
-- Attempt to get around rate limits, permission checks, share-link rotation, or other security features, or access events, accounts, or data you are not authorized to access.
+- Attempt to get around rate limits, permission checks, share-link expiry, or other security features, or access events, accounts, or data you are not authorized to access.
 - Probe, scan, or test the vulnerability of the Service, or interfere with or disrupt it, including through bots, scrapers, or automated mass requests, except as permitted in writing by us.
 - Upload or link to malware or other harmful code.
 - Use the Service to organize events that promote or involve illegal activity or violence.

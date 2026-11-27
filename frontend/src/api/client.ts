@@ -1,4 +1,4 @@
-import type { AuthResponse, CodeSentResponse, DevSmsNotice, Invitee, RsvpPage, RsvpStatus, User } from '../types';
+import type { AuthResponse, CodeSentResponse, DevSmsNotice, HostUpdateResult, Invitee, RsvpPage, RsvpStatus, User } from '../types';
 
 const API_BASE = '/api';
 
@@ -184,15 +184,25 @@ class ApiClient {
     return this.request<any>(`/share/${token}`);
   }
 
-  async rotateShareUrl(eventId: number | string) {
-    return this.request<any>(`/events/${eventId}/share/rotate`, { method: 'POST' });
+  // The group link for "Copy group link". An expired one is replaced with a new link (DEV-172).
+  async getGroupLink(eventId: number | string) {
+    return this.request<{ token: string; expires_at: string }>(`/events/${eventId}/group-link`, { method: 'POST' });
   }
 
-  async updateShareExpiry(eventId: number | string, option: string, customDate?: string) {
-    return this.request<any>(`/events/${eventId}/share/expiry`, {
+  // FR-19: text an update to every invitee who gets texts. With preview, nothing is sent.
+  async sendHostUpdate(eventId: number | string, message: string, preview: boolean) {
+    return this.request<HostUpdateResult>(`/events/${eventId}/updates${preview ? '?preview=true' : ''}`, {
       method: 'POST',
-      body: JSON.stringify({ expiry_option: option, custom_expiry_date: customDate }),
+      body: JSON.stringify({ message }),
     });
+  }
+
+  // Which RSVP link is this viewer's, for the event page's "Submit RSVP" card
+  async getMyRsvp(eventId: number | string) {
+    const token = this.getEditToken(eventId);
+    return this.request<{ token: string | null }>(
+      `/events/${eventId}/my-rsvp${token ? `?token=${encodeURIComponent(token)}` : ''}`
+    );
   }
 
   // Invitees

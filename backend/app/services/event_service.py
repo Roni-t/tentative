@@ -50,12 +50,7 @@ class EventService:
         db.refresh(event)
 
         # Generate shareable URL
-        share_link_service.create_event_url(
-            event_id=event.id,
-            expiry_option=payload.expiry_option,
-            custom_expiry_date=payload.custom_expiry_date,
-            db=db
-        )
+        share_link_service.create_event_url(event, db)
 
         # Log creation
         self.log_change(event.id, creator.id, "created", f"Event '{event.title}' scheduled.", db)

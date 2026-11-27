@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.core.security import ensure_utc
 from app.models.event import Event
 from app.models.invitee import Invitee
+from app.models.user import User
 from app.schemas.rsvp import RsvpPage
 from app.services.event_service import event_service
 from app.services.notification_service import notification_service
@@ -92,6 +93,19 @@ class RsvpService:
                 notification_type="rsvp_update", db=db,
             )
         return self.get_page(token, db)
+
+
+    def my_token(self, event_id: int, token: Optional[str], user: Optional[User], db: Session) -> Optional[str]:
+        """The viewer's RSVP token on this event: the personal token saved in their browser, or their account's invitee row."""
+        if token:
+            mine = db.query(Invitee).filter(Invitee.event_id == event_id, Invitee.response_token == token).first()
+            if mine:
+                return mine.response_token
+        if user:
+            mine = db.query(Invitee).filter(Invitee.event_id == event_id, Invitee.phone_hash == user.phone_hash).first()
+            if mine:
+                return mine.response_token
+        return None
 
 
 rsvp_service = RsvpService()
