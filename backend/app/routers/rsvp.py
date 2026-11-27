@@ -1,73 +1,21 @@
-from typing import Optional
-from fastapi import APIRouter, Cookie, Depends, Query, Response
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.core.dependencies import get_current_user_optional
+
+from app.core.rate_limiter import rate_limit
 from app.database import get_db
-from app.models.rsvp import RSVP
-from app.models.user import User
-from app.schemas.rsvp import RsvpOut, RsvpSubmitPayload, RsvpSummary
+from app.schemas.rsvp import RsvpPage, RsvpSubmitPayload
 from app.services.rsvp_service import rsvp_service
 
-router = APIRouter(prefix="/api/events/{event_id}/rsvp", tags=["RSVP"])
+router = APIRouter(prefix="/api/rsvp", tags=["RSVP"])
 
 
-@router.post("", response_model=RsvpOut)
-def submit_rsvp(
-    event_id: int,
-    payload: RsvpSubmitPayload,
-    response: Response,
-    current_user: Optional[User] = Depends(get_current_user_optional),
-    tentative_edit_token: Optional[str] = Cookie(None),
-    db: Session = Depends(get_db)
-):
-    """Submit or update RSVP status. Going is refused once the event reaches its capacity limit."""
-    if not payload.edit_token and tentative_edit_token:
-        existing = db.query(RSVP).filter(
-            RSVP.event_id == event_id,
-            RSVP.edit_token == tentative_edit_token
-        ).first()
-        if existing and existing.participant_name.strip().lower() == payload.participant_name.strip().lower():
-            payload.edit_token = tentative_edit_token
-
-    rsvp = rsvp_service.submit_rsvp(
-        event_id=event_id,
-        payload=payload,
-        current_user=current_user,
-        db=db
-    )
-
-    response.set_cookie(
-        key="tentative_edit_token",
-        value=rsvp.edit_token,
-        max_age=60 * 60 * 24 * 30,
-        samesite="lax",
-        secure=False
-    )
-
-    return RsvpOut.model_validate(rsvp)
+@router.get("/{token}", response_model=RsvpPage)
+def get_rsvp(token: str, db: Session = Depends(get_db)):
+    """The event and the invitee's current answer, for their RSVP link."""
+    return rsvp_service.get_page(token, db)
 
 
-@router.get("", response_model=RsvpSummary)
-def get_rsvp_summary(
-    event_id: int,
-    edit_token: Optional[str] = Query(None),
-    tentative_edit_token: Optional[str] = Cookie(None),
-    db: Session = Depends(get_db)
-):
-    """Get RSVP totals and attendance lists."""
-    token = edit_token or tentative_edit_token
-    return rsvp_service.get_rsvp_summary(event_id=event_id, edit_token=token, db=db)
-
-
-@router.get("/export.csv")
-def export_rsvp_csv(
-    event_id: int,
-    db: Session = Depends(get_db)
-):
-    """Download attendance roster as CSV."""
-    csv_data = rsvp_service.export_csv(event_id=event_id, db=db)
-    return Response(
-        content=csv_data,
-        media_type="text/csv",
-        headers={"Content-Disposition": f'attachment; filename="tentative-rsvps-{event_id}.csv"'}
-    )
+@router.post("/{token}", response_model=RsvpPage, dependencies=[Depends(rate_limit(max_requests=30, window_seconds=60))])
+def submit_rsvp(token: str, payload: RsvpSubmitPayload, db: Session = Depends(get_db)):
+    """Going, maybe or not going. Open after the host picks a time, until the event starts."""
+    return rsvp_service.submit(token, payload.status, db)

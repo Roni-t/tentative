@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.core.encryption import mask_phone, decrypt_phone
 from app.models.event import Event
-from app.models.rsvp import RSVP
+from app.models.invitee import Invitee
 from app.models.user import User
 from app.schemas.admin import AdminEventOut, AdminUserOut, SystemStatusOut
 
@@ -16,7 +16,7 @@ class AdminService:
     def get_system_status(self, db: Session) -> SystemStatusOut:
         total_users = db.query(User).count()
         total_events = db.query(Event).count()
-        total_rsvps = db.query(RSVP).count()
+        total_rsvps = db.query(Invitee).filter(Invitee.rsvp_status.isnot(None)).count()
 
         return SystemStatusOut(
             status="maintenance" if _is_maintenance_mode else "online",

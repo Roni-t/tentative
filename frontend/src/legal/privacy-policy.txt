@@ -53,7 +53,7 @@ We use information to:
 - Run the core scheduling features: collecting availability, building the availability heatmap, handling RSVPs, and letting hosts finalize a time.
 - Send text messages and in-app notifications related to events you host or are invited to (see Section 5).
 - Show change history and activity on an event page.
-- Generate calendar files (.ics) and CSV exports that you request.
+- Generate calendar files (.ics) that you request.
 - Prevent fraud, spam, and abuse, enforce our Terms and Conditions, and keep the Service secure.
 - Back up event data so it can be restored after a failure.
 - Fix bugs, troubleshoot, and improve the Service.
@@ -68,7 +68,7 @@ We do not sell your personal information. We do not share your personal informat
 
 Tentative is a shared tool, so some of your information is visible to other people in the events you join:
 
-- The host and any co-hosts can see invitees' names, availability, RSVP status, and poll votes, and can export the RSVP list as a CSV file. Once exported, that file is under the host's control, not ours.
+- The host and any co-hosts can see invitees' names, availability, RSVP status, and poll votes.
 - Other invitees may see participant names, the availability heatmap, which participants are available in a selected time slot, and the event's change history.
 - Participants never see your phone number unless you share it yourself.
 - Hosts can hide some event details from invitees (for example, for a surprise party).
@@ -145,7 +145,7 @@ You can:
 
 Depending on where you live, you may have additional rights, such as the right to access, correct, delete, or receive a copy of your personal information, or to appeal a decision we make about your request. To exercise these rights, contact us at kxn210043@utdallas.edu. We will verify your request, generally by confirming control of your phone number, and respond within the time required by applicable law. We will not discriminate against you for exercising your rights.
 
-Note that if you delete your account, content you contributed to other people's events (such as availability or RSVPs) may be removed or shown as from a "Deleted user," and copies a host has already exported (for example, a CSV file) are outside our control.
+Note that if you delete your account, content you contributed to other people's events (such as availability or RSVPs) may be removed or shown as from a "Deleted user," and copies others have already downloaded (for example, a calendar file) are outside our control.
 
 
 11. CHILDREN'S PRIVACY

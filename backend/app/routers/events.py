@@ -18,7 +18,6 @@ from app.schemas.event import (
 )
 from app.services.event_service import event_service
 from app.services.invitee_service import invitee_service
-from app.services.notification_service import notification_service
 from app.core.timefmt import format_local, to_utc
 
 router = APIRouter(prefix="/api/events", tags=["Events"])
@@ -150,12 +149,6 @@ def finalize_event(
     )
 
     if payload.notify_participants:
-        notification_service.notify_all_invitees(
-            event=event,
-            message=f"Event '{event.title}' is finalized for {event.finalized_start_time.strftime('%b %d at %I:%M %p')}.",
-            notification_type="finalized",
-            db=db
-        )
         invitee_service.notify_finalized(event, db)  # FR-22: texted in each invitee's timezone
 
     return _format_event_out(event, current_user, db)
@@ -169,12 +162,7 @@ def cancel_event(
 ):
     """Cancel event and alert participants."""
     event = event_service.cancel_event(event_id=event_id, user=current_user, db=db)
-    notification_service.notify_all_invitees(
-        event=event,
-        message=f"Event '{event.title}' was canceled by the host.",
-        notification_type="canceled",
-        db=db
-    )
+    invitee_service.notify_canceled(event, db)
     return _format_event_out(event, current_user, db)
 
 

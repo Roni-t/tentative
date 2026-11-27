@@ -39,7 +39,6 @@ class Event(Base):
     creator = relationship("User", back_populates="events_created")
     group = relationship("Group", back_populates="events")
     availabilities = relationship("Availability", back_populates="event", cascade="all, delete-orphan")
-    rsvps = relationship("RSVP", back_populates="event", cascade="all, delete-orphan")
     shareable_urls = relationship("ShareableURL", back_populates="event", cascade="all, delete-orphan")
     changelog_entries = relationship("ChangeLogEntry", back_populates="event", cascade="all, delete-orphan")
     co_hosts = relationship("EventCoHost", back_populates="event", cascade="all, delete-orphan")

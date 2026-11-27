@@ -17,6 +17,8 @@ class InviteeOut(BaseModel):
     sms_opted_out: bool = False
     response_token: str
     link: str
+    rsvp_status: Optional[str] = None  # going / maybe / not_going, after the host picks a time
+    rsvp_link: str
 
 
 class InviteePhonePayload(BaseModel):

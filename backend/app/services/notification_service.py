@@ -5,7 +5,6 @@ from app.adapters.sms_adapter import get_sms_adapter
 from app.core.encryption import decrypt_phone, mask_phone
 from app.models.event import Event
 from app.models.notification import Notification
-from app.models.rsvp import RSVP
 from app.models.user import User
 
 
@@ -49,12 +48,6 @@ class NotificationService:
         if recipient.startswith("+") or recipient.replace("-", "").isdigit():
             sms = get_sms_adapter()
             sms.send_notification(recipient, message)
-
-    def notify_all_invitees(self, event: Event, message: str, notification_type: str, db: Session):
-        rsvps = db.query(RSVP).filter(RSVP.event_id == event.id).all()
-        for r in rsvps:
-            recip = r.participant_phone or r.participant_name
-            self.notify_participant(recip, event, message, notification_type, db)
 
 
 notification_service = NotificationService()

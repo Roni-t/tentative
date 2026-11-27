@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Check, Copy, Share } from 'lucide-react';
 import { api } from '../api/client';
-import { Event, Invitee } from '../types';
+import { Event, Invitee, RsvpStatus } from '../types';
 import { useToast } from '../context/ToastContext';
+import { shortDateInZone, timeInZone, zoneName } from '../utils/zoned';
 
 interface InviteeListProps {
   event: Event;
@@ -15,6 +16,12 @@ const RESPONSE_PILL = {
   responded: `${pill} border-emerald-400/60 text-emerald-300`,
   waiting: `${pill} border-zinc-600 text-zinc-400`,
 };
+// After the host picks a time the column shows RSVPs: going green, maybe white, not going red, no answer gray
+const RSVP_PILL: Record<RsvpStatus, { label: string; className: string }> = {
+  going: { label: 'Going', className: `${pill} border-emerald-400/60 text-emerald-300` },
+  maybe: { label: 'Maybe', className: `${pill} border-white/60 text-white` },
+  not_going: { label: 'Not going', className: `${pill} border-red-400/60 text-red-300` },
+};
 
 const iconButton =
   'w-8 h-8 inline-flex items-center justify-center rounded-lg border border-white/15 text-zinc-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer';
@@ -26,6 +33,9 @@ export const InviteeList: React.FC<InviteeListProps> = ({ event, groupLink }) =>
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const copiedTimer = useRef<number>();
   const canShare = typeof navigator !== 'undefined' && !!navigator.share;
+  // Once a time is set the list switches to RSVPs, and share/copy hand out RSVP links instead
+  const rsvpMode = event.status === 'finalized' && !!event.finalized_start_time;
+  const linkFor = (invitee: Invitee) => (rsvpMode ? invitee.rsvp_link : invitee.link);
 
   const load = async () => {
     try {
@@ -41,8 +51,15 @@ export const InviteeList: React.FC<InviteeListProps> = ({ event, groupLink }) =>
 
   useEffect(() => () => window.clearTimeout(copiedTimer.current), []);
 
-  const inviteMessage = (invitee: Invitee) =>
-    `${event.creator_name || 'Someone'} would like to know when you can meet for ${event.title}! ${invitee.link}`;
+  const host = event.creator_name || 'Someone';
+  const inviteMessage = (invitee: Invitee) => {
+    if (rsvpMode && event.finalized_start_time) {
+      const start = event.finalized_start_time;
+      const when = `${shortDateInZone(start, event.timezone)} at ${timeInZone(start, event.timezone)} ${zoneName(start, event.timezone)}`;
+      return `${host} set a time for ${event.title}: ${when}. Are you coming? ${invitee.rsvp_link}`;
+    }
+    return `${host} would like to know when you can meet for ${event.title}! ${invitee.link}`;
+  };
 
   const copy = async (text: string) => {
     try {
@@ -57,7 +74,7 @@ export const InviteeList: React.FC<InviteeListProps> = ({ event, groupLink }) =>
 
   // Copy is the link only; the message is for the share sheet
   const copyLink = async (invitee: Invitee) => {
-    if (!(await copy(invitee.link))) return;
+    if (!(await copy(linkFor(invitee)))) return;
     setCopiedId(invitee.id);
     window.clearTimeout(copiedTimer.current);
     copiedTimer.current = window.setTimeout(() => setCopiedId(null), 1500);
@@ -96,7 +113,10 @@ export const InviteeList: React.FC<InviteeListProps> = ({ event, groupLink }) =>
         <div>
           <h2 className="text-base font-bold text-white">Invitees</h2>
           <p className="text-xs text-zinc-400 mt-1">
-            Send each person their own link from your phone. Phone numbers are never shown here.
+            {rsvpMode
+              ? 'The time is set. Send each person their RSVP link to ask if they are coming.'
+              : 'Send each person their own link from your phone.'}{' '}
+            Phone numbers are never shown here.
           </p>
         </div>
         <button
@@ -132,7 +152,7 @@ export const InviteeList: React.FC<InviteeListProps> = ({ event, groupLink }) =>
             <thead className="text-zinc-500">
               <tr className="border-b border-white/10">
                 <th scope="col" className="py-2 px-2 max-sm:px-1.5 font-medium sm:w-[55%]">Name</th>
-                <th scope="col" className="py-2 px-2 max-sm:px-1.5 font-medium sm:w-[17%]">Response</th>
+                <th scope="col" className="py-2 px-2 max-sm:px-1.5 font-medium sm:w-[17%]">{rsvpMode ? 'RSVP' : 'Response'}</th>
                 <th scope="col" className="py-2 px-2 max-sm:px-1.5 font-medium">Updates</th>
                 <th scope="col" className="py-2 px-2 max-sm:px-1.5">
                   <span className="sr-only">Actions</span>
@@ -149,21 +169,29 @@ export const InviteeList: React.FC<InviteeListProps> = ({ event, groupLink }) =>
                     )}
                   </td>
                   <td className="py-3 px-2 max-sm:px-1.5">
-                    <span className={invitee.responded_at ? RESPONSE_PILL.responded : RESPONSE_PILL.waiting}>
-                      {invitee.responded_at ? 'Responded' : 'Not responded'}
-                    </span>
+                    {rsvpMode ? (
+                      invitee.rsvp_status ? (
+                        <span className={RSVP_PILL[invitee.rsvp_status].className}>{RSVP_PILL[invitee.rsvp_status].label}</span>
+                      ) : (
+                        <span className={RESPONSE_PILL.waiting}>Not responded</span>
+                      )
+                    ) : (
+                      <span className={invitee.responded_at ? RESPONSE_PILL.responded : RESPONSE_PILL.waiting}>
+                        {invitee.responded_at ? 'Responded' : 'Not responded'}
+                      </span>
+                    )}
                   </td>
                   <td className={`py-3 px-2 max-sm:px-1.5 ${invitee.can_text ? 'text-emerald-300' : 'text-zinc-500'}`}>
                     {textStatus(invitee)}
                   </td>
                   <td className="py-3 px-2 max-sm:px-1.5">
-                    {!invitee.joined_via_link && (
+                    {(rsvpMode || !invitee.joined_via_link) && (
                       <div className="flex max-sm:flex-col items-end justify-end gap-1.5">
                         {canShare && (
                           <button
                             onClick={() => share(invitee)}
-                            aria-label={`Share ${invitee.name}'s link`}
-                            title="Share"
+                            aria-label={`Share ${invitee.name}'s ${rsvpMode ? 'RSVP ' : ''}link`}
+                            title={rsvpMode ? 'Share RSVP link' : 'Share'}
                             className={iconButton}
                           >
                             <Share className="w-3.5 h-3.5" />
@@ -171,8 +199,8 @@ export const InviteeList: React.FC<InviteeListProps> = ({ event, groupLink }) =>
                         )}
                         <button
                           onClick={() => copyLink(invitee)}
-                          aria-label={`Copy ${invitee.name}'s link`}
-                          title="Copy link"
+                          aria-label={`Copy ${invitee.name}'s ${rsvpMode ? 'RSVP ' : ''}link`}
+                          title={rsvpMode ? 'Copy RSVP link' : 'Copy link'}
                           className={iconButton}
                         >
                           {copiedId === invitee.id ? (
