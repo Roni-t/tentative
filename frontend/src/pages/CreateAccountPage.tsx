@@ -9,6 +9,7 @@ import { PlanetLogo } from '../components/PlanetLogo';
 import { DevSmsBanner } from '../components/DevSmsBanner';
 import { CodeEntry } from '../components/auth/CodeEntry';
 import { AuthOutcome, Outcome } from '../components/auth/AuthOutcome';
+import { LegalNote, PrivacyLink, TermsLink } from '../components/LegalLinks';
 import { User, Phone, ArrowRight, Lock } from 'lucide-react';
 
 const inputClass =
@@ -188,12 +189,10 @@ export const CreateAccountPage: React.FC = () => {
                       className={inputClass}
                     />
                   </div>
-                  <p id="phone-privacy" className="mt-1.5 text-[11px] text-zinc-500">
-                    {/* New tab, so the form isn't lost */}
-                    <Link to="/privacy" target="_blank" rel="noopener" className="underline decoration-zinc-600 underline-offset-2 hover:text-white hover:decoration-white transition-colors">
-                      Privacy policy
-                    </Link>
-                  </p>
+                  <LegalNote id="phone-privacy" className="mt-1.5">
+                    By creating an account, you agree to the <TermsLink /> and <PrivacyLink>Privacy Policy</PrivacyLink>.
+                    Msg &amp; data rates may apply.
+                  </LegalNote>
                 </div>
 
                 <button type="submit" disabled={loading} className={primaryButton}>

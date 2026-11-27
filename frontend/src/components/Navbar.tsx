@@ -43,14 +43,16 @@ export const Navbar: React.FC = () => {
         className="pointer-events-none absolute inset-x-0 top-0 h-28 -z-10 bg-gradient-to-b from-black from-50% via-black/85 to-transparent transition-opacity duration-500"
         style={{ opacity: scrolled ? 1 : 0 }}
       />
-      <div className="max-w-6xl mx-auto flex items-center justify-between">
+      <div className="max-w-6xl mx-auto flex items-center justify-between gap-2">
         <Link
           to="/"
           onClick={() => pathname === '/' && window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="inline-flex items-center space-x-2.5"
+          className="inline-flex items-center space-x-2.5 shrink-0"
+          aria-label="Tentative home"
         >
           <PlanetLogo size={26} />
-          <span className="font-mono text-xs tracking-wide text-zinc-300">tentative</span>
+          {/* Logo only on phones, so the links and sign-in button fit */}
+          <span className="hidden sm:inline font-mono text-xs tracking-wide text-zinc-300">tentative</span>
         </Link>
 
         <nav className="glass-pill-nav flex items-center p-1 rounded-full">
@@ -60,7 +62,7 @@ export const Navbar: React.FC = () => {
               <Link
                 key={to}
                 to={to}
-                className={`relative px-4 py-1.5 rounded-full text-sm transition-colors duration-300 ${
+                className={`relative px-3 sm:px-4 py-1.5 rounded-full text-[13px] sm:text-sm transition-colors duration-300 ${
                   active ? 'text-black' : 'text-zinc-400 hover:text-white'
                 }`}
               >
@@ -77,7 +79,7 @@ export const Navbar: React.FC = () => {
           })}
         </nav>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 shrink-0">
           {user ? (
             <>
               <span className="hidden sm:block text-sm text-zinc-300 px-3">{user.name}</span>
@@ -90,7 +92,7 @@ export const Navbar: React.FC = () => {
               </button>
             </>
           ) : (
-            <Link to="/login" className="pill pill-light !py-2 !px-4 !text-xs">
+            <Link to="/login" className="pill pill-light !py-2 !px-3 sm:!px-4 !text-xs whitespace-nowrap">
               Sign in
             </Link>
           )}
