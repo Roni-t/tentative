@@ -10,7 +10,6 @@ export const BugReportPage: React.FC = () => {
   const { showToast } = useToast();
 
   const [name, setName] = useState(user?.name || '');
-  const [contact, setContact] = useState('');
   const [pageUrl, setPageUrl] = useState(window.location.href);
   const [description, setDescription] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -22,7 +21,7 @@ export const BugReportPage: React.FC = () => {
 
     setLoading(true);
     try {
-      await api.submitBugReport(name.trim(), contact.trim(), pageUrl.trim(), description.trim());
+      await api.submitBugReport(name.trim(), pageUrl.trim(), description.trim());
       setSubmitted(true);
       showToast('Bug report filed. Thank you for helping improve Tentative!', 'success');
     } catch (err: any) {
@@ -64,32 +63,19 @@ export const BugReportPage: React.FC = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Your Name</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Reese Asher"
-                  className="w-full px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:border-cosmic-purple"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Phone (optional)</label>
-                <input
-                  type="text"
-                  value={contact}
-                  onChange={(e) => setContact(e.target.value)}
-                  placeholder="e.g. (972) 555-0142"
-                  aria-describedby="contact-privacy"
-                  className="w-full px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:border-cosmic-purple"
-                />
-                <LegalNote id="contact-privacy" className="mt-2.5">
-                  <PrivacyLink />
-                </LegalNote>
-              </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Your Name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Reese Asher"
+                aria-describedby="name-privacy"
+                className="w-full px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:border-cosmic-purple"
+              />
+              <LegalNote id="name-privacy" className="mt-2.5">
+                <PrivacyLink />
+              </LegalNote>
             </div>
 
             <div>

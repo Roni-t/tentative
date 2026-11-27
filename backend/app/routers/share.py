@@ -4,7 +4,7 @@ from app.core.dependencies import get_current_user, get_current_user_optional
 from app.database import get_db
 from app.models.event import Event
 from app.models.user import User
-from app.schemas.event import EventOut, ExpiryUpdatePayload, ShareableURLOut
+from app.schemas.event import EventOut, ShareableURLOut
 from app.services.event_service import event_service
 from app.services.share_link_service import share_link_service
 from app.routers.events import _format_event_out
@@ -30,62 +30,26 @@ def resolve_share_token(
     return _format_event_out(event, current_user, db)
 
 
-@router.post("/api/events/{event_id}/share/rotate", response_model=ShareableURLOut)
-def rotate_event_url(
+@router.post("/api/events/{event_id}/group-link", response_model=ShareableURLOut)
+def get_group_link(
     event_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Rotate the shareable URL. The previous link expires immediately. Creator only."""
-    event = event_service.get_event(event_id, current_user, db)
-    new_url = share_link_service.rotate_url(event=event, user_id=current_user.id, db=db)
-    
-    event_service.log_change(
-        event_id=event.id,
-        user_id=current_user.id,
-        action="url_rotated",
-        details="Shareable URL rotated to a new token.",
-        db=db
-    )
-
+    """The link for "Copy group link". If it has expired (30 days, no deadline) a new one is made."""
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found.")
+    if not event_service.is_host_or_cohost(event, current_user, db):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only the host or a co-host can do this.")
+    previous = share_link_service.active_link(event, db)
+    link = share_link_service.current_group_link(event, db)
+    if previous is None or previous.id != link.id:
+        event_service.log_change(event.id, current_user.id, "url_rotated", "Expired group link replaced with a new one.", db)
     return ShareableURLOut(
-        token=new_url.token,
-        share_url=f"/share/{new_url.token}",
-        expires_at=new_url.expires_at,
-        is_active=new_url.is_active,
-        created_at=new_url.created_at
-    )
-
-
-@router.post("/api/events/{event_id}/share/expiry", response_model=ShareableURLOut)
-def update_url_expiry(
-    event_id: int,
-    payload: ExpiryUpdatePayload,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Extend, customize, or immediately expire the link."""
-    event = event_service.get_event(event_id, current_user, db)
-    url_rec = share_link_service.update_expiry(
-        event=event,
-        user_id=current_user.id,
-        option=payload.expiry_option,
-        custom_date=payload.custom_expiry_date,
-        db=db
-    )
-
-    event_service.log_change(
-        event_id=event.id,
-        user_id=current_user.id,
-        action="expiry_updated",
-        details=f"Link expiry set to {url_rec.expires_at.isoformat()}.",
-        db=db
-    )
-
-    return ShareableURLOut(
-        token=url_rec.token,
-        share_url=f"/share/{url_rec.token}",
-        expires_at=url_rec.expires_at,
-        is_active=url_rec.is_active,
-        created_at=url_rec.created_at
+        token=link.token,
+        share_url=f"/share/{link.token}",
+        expires_at=share_link_service.expiry_for(link, event),
+        is_active=link.is_active,
+        created_at=link.created_at,
     )

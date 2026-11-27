@@ -79,50 +79,32 @@ export interface HeatmapResponse {
   cached_at: string;
 }
 
-export type RsvpStatus = 'going' | 'maybe' | 'not_going' | 'waitlisted';
+export type RsvpStatus = 'going' | 'maybe' | 'not_going';
 
-export interface Rsvp {
-  id: number;
-  event_id: number;
-  participant_name: string;
-  participant_phone?: string | null;
-  status: RsvpStatus;
-  waitlist_position?: number | null;
-  edit_token: string;
-  updated_at: string;
+// FR-19: a host's text update, previewed before it is sent
+export interface HostUpdateResult {
+  preview: string;
+  recipients_count: number;
+  opted_out_count: number;
+  confirm_text: string;
+  sent_count: number;
+  message: string;
 }
 
-export interface RsvpSummary {
+// What an invitee's RSVP link shows (DEV-167)
+export interface RsvpPage {
   event_id: number;
-  total_invitees: number;
-  count_going: number;
-  count_maybe: number;
-  count_not_going: number;
-  count_waitlisted: number;
-  count_no_response: number;
+  title: string;
+  location?: string | null;
+  timezone: string;
+  finalized_start_time?: string | null;
+  finalized_end_time?: string | null;
+  name: string;
+  rsvp_status?: RsvpStatus | null;
+  open: boolean;
+  closed_reason?: string | null;
   capacity_limit?: number | null;
-  current_status?: RsvpStatus | null;
-  current_waitlist_position?: number | null;
-  rsvps: Rsvp[];
-}
-
-export interface CommentReply {
-  id: number;
-  author_name: string;
-  is_host_reply: boolean;
-  content: string;
-  created_at: string;
-}
-
-export interface Comment {
-  id: number;
-  event_id: number;
-  author_name: string;
-  is_question: boolean;
-  content: string;
-  parent_id?: number | null;
-  created_at: string;
-  replies: CommentReply[];
+  spots_left?: number | null;
 }
 
 export interface ChangeLog {
@@ -165,7 +147,6 @@ export interface AdminEvent {
 export interface BugReport {
   id: number;
   user_name?: string | null;
-  contact?: string | null;
   page_url?: string | null;
   description: string;
   status: string;
@@ -182,4 +163,6 @@ export interface Invitee {
   sms_opted_out: boolean;
   response_token: string;
   link: string;
+  rsvp_status?: RsvpStatus | null;
+  rsvp_link: string;
 }

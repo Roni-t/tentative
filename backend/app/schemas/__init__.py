@@ -14,7 +14,6 @@ from app.schemas.event import (
     EventOut,
     FinalizeEventPayload,
     CoHostAddPayload,
-    ExpiryUpdatePayload,
     ChangeLogOut,
     ShareableURLOut,
 )
@@ -27,13 +26,7 @@ from app.schemas.availability import (
 )
 from app.schemas.rsvp import (
     RsvpSubmitPayload,
-    RsvpOut,
-    RsvpSummary,
-)
-from app.schemas.comment import (
-    CommentCreatePayload,
-    CommentOut,
-    CommentReplyOut,
+    RsvpPage,
 )
 from app.schemas.admin import (
     SystemStatusOut,
@@ -60,7 +53,6 @@ __all__ = [
     "EventOut",
     "FinalizeEventPayload",
     "CoHostAddPayload",
-    "ExpiryUpdatePayload",
     "ChangeLogOut",
     "ShareableURLOut",
     "TimeSlot",
@@ -69,11 +61,7 @@ __all__ = [
     "HeatmapResponse",
     "HeatmapSlotOut",
     "RsvpSubmitPayload",
-    "RsvpOut",
-    "RsvpSummary",
-    "CommentCreatePayload",
-    "CommentOut",
-    "CommentReplyOut",
+    "RsvpPage",
     "SystemStatusOut",
     "AdminUserOut",
     "AdminEventOut",

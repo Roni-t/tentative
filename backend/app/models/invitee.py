@@ -21,6 +21,9 @@ class Invitee(Base):
     joined_via_link = Column(Boolean, default=False, nullable=False)
     responded_at = Column(DateTime, nullable=True)
     reminder_sent_at = Column(DateTime, nullable=True)
+    # RSVP after the host picks a time, made through the invitee's RSVP link: 'going', 'maybe', 'not_going'
+    rsvp_status = Column(String(16), nullable=True)
+    rsvp_updated_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     event = relationship("Event")

@@ -1,207 +1,111 @@
-import csv
-import io
+"""RSVP through each invitee's RSVP link, after the host picks a time.
+
+The link carries the invitee's personal token, so it identifies them on any device without a login.
+The answer is stored on the invitee row; no phone number is involved.
+"""
 from datetime import datetime, timezone
 from typing import Optional
+
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from app.core.security import generate_secure_token
-from app.models.availability import Availability
+
+from app.core.security import ensure_utc
 from app.models.event import Event
-from app.models.rsvp import RSVP
+from app.models.invitee import Invitee
 from app.models.user import User
-from app.schemas.rsvp import RsvpOut, RsvpSubmitPayload, RsvpSummary
+from app.schemas.rsvp import RsvpPage
 from app.services.event_service import event_service
 from app.services.notification_service import notification_service
 
+STATUSES = ("going", "maybe", "not_going")
+
 
 class RsvpService:
-    def submit_rsvp(
-        self,
-        event_id: int,
-        payload: RsvpSubmitPayload,
-        current_user: Optional[User],
-        db: Session
-    ) -> RSVP:
-        event = db.query(Event).filter(Event.id == event_id).first()
-        if not event:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+    def _find(self, token: str, db: Session) -> Invitee:
+        invitee = db.query(Invitee).filter(Invitee.response_token == token).first()
+        if not invitee:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="This link is not valid.")
+        return invitee
 
+    def _closed_reason(self, event: Event) -> Optional[str]:
         if event.status == "canceled":
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Event has been canceled.")
+            return "This event was canceled."
+        if event.status != "finalized" or not event.finalized_start_time:
+            return "You can RSVP once the host picks a time."
+        if ensure_utc(event.finalized_start_time) <= datetime.now(timezone.utc):
+            return "This event has already started."
+        return None
 
-        # Check if event has already started
-        now = datetime.now(timezone.utc)
-        if event.finalized_start_time and now > event.finalized_start_time.replace(tzinfo=timezone.utc):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot alter RSVP after event has started.")
+    def _going_count(self, event_id: int, db: Session) -> int:
+        return db.query(Invitee).filter(Invitee.event_id == event_id, Invitee.rsvp_status == "going").count()
 
-        if event_service.is_user_blocked(event_id, payload.participant_name, db):
+    def get_page(self, token: str, db: Session) -> RsvpPage:
+        invitee = self._find(token, db)
+        event = invitee.event
+        reason = self._closed_reason(event)
+        spots_left = None
+        if event.capacity_limit is not None:
+            spots_left = max(0, event.capacity_limit - self._going_count(event.id, db))
+        return RsvpPage(
+            event_id=event.id,
+            title=event.title,
+            location=event.location,
+            timezone=event.timezone,
+            finalized_start_time=event.finalized_start_time,
+            finalized_end_time=event.finalized_end_time,
+            name=invitee.name,
+            rsvp_status=invitee.rsvp_status,
+            open=reason is None,
+            closed_reason=reason,
+            capacity_limit=event.capacity_limit,
+            spots_left=spots_left,
+        )
+
+    def submit(self, token: str, new_status: str, db: Session) -> RsvpPage:
+        invitee = self._find(token, db)
+        event = invitee.event
+        new_status = (new_status or "").strip().lower()
+        if new_status not in STATUSES:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Choose going, maybe or not going.")
+
+        reason = self._closed_reason(event)
+        if reason:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=reason)
+
+        if event_service.is_user_blocked(event.id, invitee.name, db):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are blocked from this event.")
 
-        edit_token = payload.edit_token.strip() if payload.edit_token else generate_secure_token(16)
-        
-        # Look for existing RSVP
-        existing = db.query(RSVP).filter(
-            RSVP.event_id == event_id,
-            RSVP.edit_token == edit_token
-        ).first()
+        # Capacity limit, no waitlist: once full, nobody else can say they're going.
+        # Someone already going keeps their spot when they answer again.
+        if (new_status == "going" and invitee.rsvp_status != "going" and event.capacity_limit is not None
+                and self._going_count(event.id, db) >= event.capacity_limit):
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="This event is full.")
 
-        prev_status = existing.status if existing else None
-        target_status = payload.status.lower()
-
-        if target_status not in ["going", "maybe", "not_going"]:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid RSVP status")
-
-        waitlist_pos = None
-
-        # Check capacity & waitlist logic
-        if target_status == "going":
-            if event.capacity_limit is not None:
-                # Count current going (excluding this user if they were already going)
-                going_query = db.query(RSVP).filter(
-                    RSVP.event_id == event_id,
-                    RSVP.status == "going"
-                )
-                if existing and existing.status == "going":
-                    going_query = going_query.filter(RSVP.id != existing.id)
-                
-                current_going_count = going_query.count()
-
-                if current_going_count >= event.capacity_limit:
-                    target_status = "waitlisted"
-                    # Determine FIFO position
-                    max_pos = db.query(RSVP).filter(
-                        RSVP.event_id == event_id,
-                        RSVP.status == "waitlisted"
-                    ).count()
-                    waitlist_pos = max_pos + 1
-
-        # Check if a previously going participant is freeing up a spot
-        freed_spot = (prev_status == "going" and target_status != "going")
-
-        if existing:
-            existing.participant_name = payload.participant_name.strip()
-            if payload.participant_phone:
-                existing.participant_phone = payload.participant_phone.strip()
-            existing.status = target_status
-            existing.waitlist_position = waitlist_pos
-            existing.updated_at = now
-            rsvp_record = existing
-        else:
-            rsvp_record = RSVP(
-                event_id=event_id,
-                user_id=current_user.id if current_user else None,
-                participant_name=payload.participant_name.strip(),
-                participant_phone=payload.participant_phone.strip() if payload.participant_phone else None,
-                edit_token=edit_token,
-                status=target_status,
-                waitlist_position=waitlist_pos,
-                created_at=now,
-                updated_at=now
-            )
-            db.add(rsvp_record)
-
+        changed = invitee.rsvp_status != new_status
+        invitee.rsvp_status = new_status
+        invitee.rsvp_updated_at = datetime.now(timezone.utc)
         db.commit()
-        db.refresh(rsvp_record)
 
-        # Notify host of RSVP change
-        notification_service.notify_host(
-            event=event,
-            message=f"{rsvp_record.participant_name} changed RSVP status to '{target_status}'.",
-            notification_type="rsvp_update",
-            db=db
-        )
-
-        # If a spot freed up, auto-promote next in line
-        if freed_spot:
-            self.promote_next_waitlist_attendee(event, db)
-
-        return rsvp_record
-
-    def promote_next_waitlist_attendee(self, event: Event, db: Session):
-        """FIFO Waitlist auto-promotion."""
-        next_waitlisted = db.query(RSVP).filter(
-            RSVP.event_id == event.id,
-            RSVP.status == "waitlisted"
-        ).order_by(RSVP.waitlist_position.asc(), RSVP.created_at.asc()).first()
-
-        if next_waitlisted:
-            next_waitlisted.status = "going"
-            next_waitlisted.waitlist_position = None
-            next_waitlisted.updated_at = datetime.now(timezone.utc)
-            db.commit()
-
-            # Re-index remaining waitlisted users
-            remaining = db.query(RSVP).filter(
-                RSVP.event_id == event.id,
-                RSVP.status == "waitlisted"
-            ).order_by(RSVP.waitlist_position.asc()).all()
-
-            for idx, r in enumerate(remaining, start=1):
-                r.waitlist_position = idx
-            db.commit()
-
-            # Notify promoted attendee
-            notification_service.notify_participant(
-                recipient=next_waitlisted.participant_phone or next_waitlisted.participant_name,
-                event=event,
-                message=f"You're off the waitlist! A spot opened up for '{event.title}'. Your RSVP is now Going.",
-                notification_type="waitlist_promoted",
-                db=db
+        if changed:
+            label = {"going": "going", "maybe": "maybe", "not_going": "not going"}[new_status]
+            notification_service.notify_host(
+                event=event, message=f'{invitee.name} RSVPed "{label}" for "{event.title}".',
+                notification_type="rsvp_update", db=db,
             )
+        return self.get_page(token, db)
 
-    def get_rsvp_summary(self, event_id: int, edit_token: Optional[str], db: Session) -> RsvpSummary:
-        event = db.query(Event).filter(Event.id == event_id).first()
-        if not event:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
 
-        rsvps = db.query(RSVP).filter(RSVP.event_id == event_id).order_by(RSVP.updated_at.desc()).all()
-        
-        # Also find any respondents who filled availability but haven't explicitly set RSVP
-        availability_names = {a.participant_name for a in db.query(Availability).filter(Availability.event_id == event_id).all()}
-        rsvp_names = {r.participant_name for r in rsvps}
-        no_response_count = max(0, len(availability_names - rsvp_names))
-
-        count_going = sum(1 for r in rsvps if r.status == "going")
-        count_maybe = sum(1 for r in rsvps if r.status == "maybe")
-        count_not_going = sum(1 for r in rsvps if r.status == "not_going")
-        count_waitlisted = sum(1 for r in rsvps if r.status == "waitlisted")
-
-        current_status = None
-        current_waitlist_pos = None
-        if edit_token:
-            for r in rsvps:
-                if r.edit_token == edit_token:
-                    current_status = r.status
-                    current_waitlist_pos = r.waitlist_position
-                    break
-
-        return RsvpSummary(
-            event_id=event_id,
-            total_invitees=len(rsvps) + no_response_count,
-            count_going=count_going,
-            count_maybe=count_maybe,
-            count_not_going=count_not_going,
-            count_waitlisted=count_waitlisted,
-            count_no_response=no_response_count,
-            capacity_limit=event.capacity_limit,
-            current_status=current_status,
-            current_waitlist_position=current_waitlist_pos,
-            rsvps=[RsvpOut.model_validate(r) for r in rsvps]
-        )
-
-    def export_csv(self, event_id: int, db: Session) -> str:
-        summary = self.get_rsvp_summary(event_id, None, db)
-        output = io.StringIO()
-        writer = csv.writer(output)
-        writer.writerow(["Name", "Status", "Waitlist Rank", "Last Updated (UTC)"])
-        for r in summary.rsvps:
-            writer.writerow([
-                r.participant_name,
-                r.status.upper(),
-                r.waitlist_position if r.waitlist_position else "-",
-                r.updated_at.strftime("%Y-%m-%d %H:%M:%S")
-            ])
-        return output.getvalue()
+    def my_token(self, event_id: int, token: Optional[str], user: Optional[User], db: Session) -> Optional[str]:
+        """The viewer's RSVP token on this event: the personal token saved in their browser, or their account's invitee row."""
+        if token:
+            mine = db.query(Invitee).filter(Invitee.event_id == event_id, Invitee.response_token == token).first()
+            if mine:
+                return mine.response_token
+        if user:
+            mine = db.query(Invitee).filter(Invitee.event_id == event_id, Invitee.phone_hash == user.phone_hash).first()
+            if mine:
+                return mine.response_token
+        return None
 
 
 rsvp_service = RsvpService()

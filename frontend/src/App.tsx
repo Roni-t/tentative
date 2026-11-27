@@ -20,9 +20,7 @@ import { EventDetailsPage } from './pages/EventDetailsPage';
 import { RespondAvailabilityPage } from './pages/RespondAvailabilityPage';
 import { HeatmapPage } from './pages/HeatmapPage';
 import { FinalizePage } from './pages/FinalizePage';
-import { RsvpListPage } from './pages/RsvpListPage';
-import { DiscussionPage } from './pages/DiscussionPage';
-import { ShareExpiryPage } from './pages/ShareExpiryPage';
+import { RsvpPage } from './pages/RsvpPage';
 import { RecurrencePage } from './pages/RecurrencePage';
 import { AdminPage } from './pages/AdminPage';
 import { BugReportPage } from './pages/BugReportPage';
@@ -74,13 +72,11 @@ const AnimatedRoutes: React.FC = () => {
           <Route path="/events/:id/respond" element={<RespondAvailabilityPage />} />
           <Route path="/events/:id/heatmap" element={<HeatmapPage />} />
           <Route path="/events/:id/finalize" element={<RequireAuth><FinalizePage /></RequireAuth>} />
-          <Route path="/events/:id/rsvps" element={<RsvpListPage />} />
-          <Route path="/events/:id/discussion" element={<DiscussionPage />} />
-          <Route path="/events/:id/share" element={<RequireAuth><ShareExpiryPage /></RequireAuth>} />
           <Route path="/events/:id/recurrence" element={<RequireAuth><RecurrencePage /></RequireAuth>} />
 
           {/* Shareable Link Routes (Invitee Anonymous Routes) */}
           <Route path="/share/:token" element={<ShareRedirect />} />
+          <Route path="/rsvp/:token" element={<RsvpPage />} />
           <Route path="/share/:token/respond" element={<RespondAvailabilityPage />} />
           <Route path="/share/:token/heatmap" element={<HeatmapPage />} />
           <Route path="/share/:token/finalize" element={<FinalizePage />} />

@@ -1,4 +1,4 @@
-import type { AuthResponse, CodeSentResponse, DevSmsNotice, Invitee, User } from '../types';
+import type { AuthResponse, CodeSentResponse, DevSmsNotice, HostUpdateResult, Invitee, RsvpPage, RsvpStatus, User } from '../types';
 
 const API_BASE = '/api';
 
@@ -184,15 +184,25 @@ class ApiClient {
     return this.request<any>(`/share/${token}`);
   }
 
-  async rotateShareUrl(eventId: number | string) {
-    return this.request<any>(`/events/${eventId}/share/rotate`, { method: 'POST' });
+  // The group link for "Copy group link". An expired one is replaced with a new link (DEV-172).
+  async getGroupLink(eventId: number | string) {
+    return this.request<{ token: string; expires_at: string }>(`/events/${eventId}/group-link`, { method: 'POST' });
   }
 
-  async updateShareExpiry(eventId: number | string, option: string, customDate?: string) {
-    return this.request<any>(`/events/${eventId}/share/expiry`, {
+  // FR-19: text an update to every invitee who gets texts. With preview, nothing is sent.
+  async sendHostUpdate(eventId: number | string, message: string, preview: boolean) {
+    return this.request<HostUpdateResult>(`/events/${eventId}/updates${preview ? '?preview=true' : ''}`, {
       method: 'POST',
-      body: JSON.stringify({ expiry_option: option, custom_expiry_date: customDate }),
+      body: JSON.stringify({ message }),
     });
+  }
+
+  // Which RSVP link is this viewer's, for the event page's "Submit RSVP" card
+  async getMyRsvp(eventId: number | string) {
+    const token = this.getEditToken(eventId);
+    return this.request<{ token: string | null }>(
+      `/events/${eventId}/my-rsvp${token ? `?token=${encodeURIComponent(token)}` : ''}`
+    );
   }
 
   // Invitees
@@ -246,37 +256,15 @@ class ApiClient {
     return this.request<any>(`/events/${eventId}/heatmap${refresh ? '?refresh=true' : ''}`);
   }
 
-  // RSVP
-  async submitRsvp(eventId: number | string, participantName: string, status: string, contact?: string, editToken?: string) {
-    const data = await this.request<any>(`/events/${eventId}/rsvp`, {
+  // RSVP through an invitee's RSVP link (DEV-167)
+  async getRsvp(token: string) {
+    return this.request<RsvpPage>(`/rsvp/${encodeURIComponent(token)}`);
+  }
+
+  async submitRsvp(token: string, status: RsvpStatus) {
+    return this.request<RsvpPage>(`/rsvp/${encodeURIComponent(token)}`, {
       method: 'POST',
-      body: JSON.stringify({
-        participant_name: participantName,
-        participant_phone: contact,
-        edit_token: editToken || this.getEditToken(eventId),
-        status,
-      }),
-    });
-    if (data.edit_token) {
-      this.setEditToken(eventId, data.edit_token);
-    }
-    return data;
-  }
-
-  async getRsvpSummary(eventId: number | string, editToken?: string) {
-    const token = editToken || this.getEditToken(eventId);
-    return this.request<any>(`/events/${eventId}/rsvp${token ? `?edit_token=${token}` : ''}`);
-  }
-
-  // Comments
-  async getComments(eventId: number | string) {
-    return this.request<any[]>(`/events/${eventId}/comments`);
-  }
-
-  async addComment(eventId: number | string, authorName: string, content: string, isQuestion: boolean = false, parentId?: number) {
-    return this.request<any>(`/events/${eventId}/comments`, {
-      method: 'POST',
-      body: JSON.stringify({ author_name: authorName, content, is_question: isQuestion, parent_id: parentId }),
+      body: JSON.stringify({ status }),
     });
   }
 
@@ -306,10 +294,10 @@ class ApiClient {
   }
 
   // Bug Reports
-  async submitBugReport(userName: string, contact: string, pageUrl: string, description: string) {
+  async submitBugReport(userName: string, pageUrl: string, description: string) {
     return this.request<any>('/bug-reports', {
       method: 'POST',
-      body: JSON.stringify({ user_name: userName, contact: contact, page_url: pageUrl, description }),
+      body: JSON.stringify({ user_name: userName, page_url: pageUrl, description }),
     });
   }
 
