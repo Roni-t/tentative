@@ -13,6 +13,7 @@ export const TextOptIn: React.FC<TextOptInProps> = ({ editToken, onDone }) => {
   const [step, setStep] = useState<'phone' | 'code' | 'done'>('phone');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
+  const [codeRejected, setCodeRejected] = useState(false);
   const [maskedPhone, setMaskedPhone] = useState('');
   const [expiresAt, setExpiresAt] = useState<number | null>(null);
   const [message, setMessage] = useState('');
@@ -44,6 +45,8 @@ export const TextOptIn: React.FC<TextOptInProps> = ({ editToken, onDone }) => {
       setStep('done');
     } catch (err: any) {
       setError(err.message || 'That code did not work');
+      setCodeRejected(true);
+      setCode('');
     } finally {
       setBusy(false);
     }
@@ -96,7 +99,11 @@ export const TextOptIn: React.FC<TextOptInProps> = ({ editToken, onDone }) => {
           <form onSubmit={verify} className="space-y-4">
             <CodeEntry
               code={code}
-              onChange={setCode}
+              onChange={(value) => {
+                setCode(value);
+                setCodeRejected(false);
+              }}
+              invalid={codeRejected}
               expiresAt={expiresAt}
               maskedPhone={maskedPhone}
               onResend={sendCode}
