@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 import { api } from '../api/client';
-import { Event } from '../types';
+import { Event, RecurrenceInfo } from '../types';
 import { dateKeyInZone, timeRangeInZone } from '../utils/zoned';
 import { Repeat, ArrowLeft, Calendar, Clock, Check } from 'lucide-react';
 
@@ -24,6 +24,8 @@ export const RecurrencePage: React.FC = () => {
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [endDate, setEndDate] = useState('');
   const [event, setEvent] = useState<Event | null>(null);
+  const [saved, setSaved] = useState<RecurrenceInfo | null>(null);
+  const [saving, setSaving] = useState(false);
 
   // The series starts from the event's finalized day, or its first candidate day
   useEffect(() => {
@@ -40,6 +42,15 @@ export const RecurrencePage: React.FC = () => {
         const end = new Date(start);
         end.setDate(end.getDate() + 56);
         setEndDate(toDateKey(end));
+        // UC-11 (Aaron): if a pattern was already saved, show it instead of the defaults
+        return api.getRecurrence(id).then((rec) => {
+          setSaved(rec);
+          if (rec.is_recurring && rec.frequency && rec.end_date) {
+            setFrequency(rec.frequency);
+            setSelectedDays(rec.days_of_week);
+            setEndDate(rec.end_date);
+          }
+        });
       })
       .catch(() => {});
   }, [id]);
@@ -64,9 +75,30 @@ export const RecurrencePage: React.FC = () => {
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  // UC-11 (Aaron): save the pattern to the backend; it validates and returns every date in the series
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    showToast('Recurring series pattern configured and saved!', 'success');
+    if (!id) return;
+    setSaving(true);
+    try {
+      const rec = await api.setRecurrence(id, frequency, selectedDays, endDate);
+      setSaved(rec);
+      showToast(`Saved: ${rec.occurrences.length} meetings until ${rec.end_date}.`, 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Could not save the recurrence.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRemove = async () => {
+    if (!id) return;
+    try {
+      setSaved(await api.removeRecurrence(id));
+      showToast('This event no longer repeats.', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Could not remove the recurrence.', 'error');
+    }
   };
 
   // Preview: the next dates that match the chosen days, every week or every other week
@@ -155,13 +187,28 @@ export const RecurrencePage: React.FC = () => {
             />
           </div>
 
-          <div className="pt-2 flex justify-end">
+          <div className="pt-2 flex items-center justify-between gap-3">
+            <span className="text-[11px] text-zinc-400">
+              {saved?.is_recurring
+                ? `Saved: repeats ${saved.frequency} on ${saved.days_of_week.join(', ')} until ${saved.end_date} (${saved.occurrences.length} meetings)`
+                : 'Not saved yet: this event does not repeat.'}
+            </span>
+            {saved?.is_recurring && (
+              <button
+                type="button"
+                onClick={handleRemove}
+                className="px-4 py-2.5 rounded-full text-xs font-bold border border-white/15 text-zinc-300 hover:text-white transition-all cursor-pointer"
+              >
+                Stop repeating
+              </button>
+            )}
             <button
               type="submit"
+              disabled={saving || selectedDays.length === 0 || !endDate}
               className="px-6 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 flex items-center space-x-1.5 transition-all cursor-pointer"
             >
               <Check className="w-4 h-4 text-black" />
-              <span>Save Recurrence</span>
+              <span>{saving ? 'Saving...' : 'Save Recurrence'}</span>
             </button>
           </div>
         </form>

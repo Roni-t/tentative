@@ -1,4 +1,4 @@
-import type { AuthResponse, CodeSentResponse, DevSmsNotice, Invitee, User } from '../types';
+import type { AuthResponse, CodeSentResponse, DevSmsNotice, GroupInfo, Invitee, RecurrenceInfo, TimeSlot, User } from '../types';
 
 const API_BASE = '/api';
 
@@ -177,6 +177,47 @@ class ApiClient {
 
   async getChangelog(id: number | string) {
     return this.request<any[]>(`/events/${id}/changelog`);
+  }
+
+  // NF-10 Import availability from an external calendar file (Reese)
+  async importCalendar(eventId: number | string, icsText: string) {
+    return this.request<{ busy_events_found: number; total_slots: number; free_slots: TimeSlot[] }>(
+      `/events/${eventId}/availability/import-ics`,
+      { method: 'POST', body: JSON.stringify({ ics_text: icsText }) },
+    );
+  }
+
+  // FR-24 Group share links (Daniel)
+  async listGroups() {
+    return this.request<GroupInfo[]>('/groups');
+  }
+
+  async createGroup(name: string, eventIds: number[]) {
+    return this.request<GroupInfo>('/groups', { method: 'POST', body: JSON.stringify({ name, event_ids: eventIds }) });
+  }
+
+  async rotateGroupLink(groupId: number) {
+    return this.request<GroupInfo>(`/groups/${groupId}/share/rotate`, { method: 'POST' });
+  }
+
+  async openGroupLink(token: string) {
+    return this.request<GroupInfo>(`/share/group/${token}`);
+  }
+
+  // UC-11 Recurring events (FR-1, Aaron)
+  async getRecurrence(id: number | string) {
+    return this.request<RecurrenceInfo>(`/events/${id}/recurrence`);
+  }
+
+  async setRecurrence(id: number | string, frequency: string, daysOfWeek: string[], endDate: string) {
+    return this.request<RecurrenceInfo>(`/events/${id}/recurrence`, {
+      method: 'PUT',
+      body: JSON.stringify({ frequency, days_of_week: daysOfWeek, end_date: endDate }),
+    });
+  }
+
+  async removeRecurrence(id: number | string) {
+    return this.request<RecurrenceInfo>(`/events/${id}/recurrence`, { method: 'DELETE' });
   }
 
   async getGoogleCalendarUrl(id: number | string) {

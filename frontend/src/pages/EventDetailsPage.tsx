@@ -277,6 +277,19 @@ export const EventDetailsPage: React.FC = () => {
         </div>
       )}
 
+      {/* FR-13 (Trinity): a canceled event that had a time can be removed from calendars */}
+      {event.status === 'canceled' && event.finalized_start_time && (
+        <div className="p-5 rounded-3xl glass-panel border border-red-500/30 bg-red-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="text-xs text-slate-300">
+            This event was canceled. If you added it to your calendar, open this file to remove it.
+          </div>
+          <a href={`/api/events/${event.id}/export.ics`} download className="pill pill-dark !py-2 !px-4 !text-xs">
+            <Download className="w-3.5 h-3.5" />
+            <span>Remove from calendar (.ics)</span>
+          </a>
+        </div>
+      )}
+
       {/* A short guide for hosts, so it is clear what to do next */}
       {canManage && event.status === 'collecting' && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

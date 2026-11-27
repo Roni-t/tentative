@@ -15,10 +15,13 @@ from app.schemas.event import (
     EventOut,
     EventUpdatePayload,
     FinalizeEventPayload,
+    RecurrenceOut,
+    RecurrencePayload,
 )
 from app.services.event_service import event_service
 from app.services.invitee_service import invitee_service
 from app.services.notification_service import notification_service
+from app.services.recurrence_service import recurrence_service
 from app.core.timefmt import format_local, to_utc
 
 router = APIRouter(prefix="/api/events", tags=["Events"])
@@ -247,7 +250,18 @@ def _finalized_event(event_id: int, db: Session) -> Event:
 
 @router.get("/{event_id}/export.ics")
 def export_ics(event_id: int, db: Session = Depends(get_db)):
-    """Download the finalized event as a .ics file (works in Apple, Google and Outlook calendars)."""
+    """Download the finalized event as a .ics file (works in Apple, Google and Outlook calendars).
+
+    FR-13 (Trinity): if the event was canceled after a time was picked, the same link returns a
+    cancellation file that removes the event from the calendar it was added to.
+    """
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if event and event.status == "canceled" and event.finalized_start_time:
+        return Response(
+            content=make_ics(event, cancel=True),
+            media_type="text/calendar",
+            headers={"Content-Disposition": f'attachment; filename="tentative-{event.id}-canceled.ics"'},
+        )
     event = _finalized_event(event_id, db)
     return Response(
         content=make_ics(event),
@@ -260,3 +274,44 @@ def export_ics(event_id: int, db: Session = Depends(get_db)):
 def get_google_calendar_url(event_id: int, db: Session = Depends(get_db)):
     """A link that opens Google Calendar with the finalized event filled in."""
     return {"url": google_calendar_url(_finalized_event(event_id, db))}
+
+
+# UC-11 Host can set recurring events (FR-1, Aaron)
+def _manageable_event(event_id: int, user: User, db: Session) -> Event:
+    event = event_service.get_event(event_id, user, db)
+    if not event_service.is_host_or_cohost(event, user, db):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only the host or a co-host can change the recurrence.")
+    return event
+
+
+@router.get("/{event_id}/recurrence", response_model=RecurrenceOut)
+def get_recurrence(event_id: int, db: Session = Depends(get_db)):
+    """The event's saved recurrence and the dates in the series (empty if it doesn't repeat)."""
+    event = event_service.get_event(event_id, None, db)
+    return recurrence_service.to_out(event, recurrence_service.get_rule(event.id, db))
+
+
+@router.put("/{event_id}/recurrence", response_model=RecurrenceOut)
+def set_recurrence(
+    event_id: int,
+    payload: RecurrencePayload,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Save a weekly or bi-weekly pattern for the event (host or co-host only)."""
+    event = _manageable_event(event_id, current_user, db)
+    rule = recurrence_service.set_recurrence(event, payload.frequency, ",".join(payload.days_of_week), payload.end_date, db)
+    out = recurrence_service.to_out(event, rule)
+    day_names = ", ".join(out["days_of_week"])
+    event_service.log_change(event.id, current_user.id, "updated",
+                             f"Set to repeat {rule.frequency} on {day_names} until {out['end_date']} ({len(out['occurrences'])} meetings).", db)
+    return out
+
+
+@router.delete("/{event_id}/recurrence", response_model=RecurrenceOut)
+def remove_recurrence(event_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Stop the event from repeating (host or co-host only)."""
+    event = _manageable_event(event_id, current_user, db)
+    recurrence_service.remove(event.id, db)
+    event_service.log_change(event.id, current_user.id, "updated", "Recurrence removed.", db)
+    return recurrence_service.to_out(event, None)

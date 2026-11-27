@@ -13,6 +13,7 @@ from app.routers import (
     bug_reports_router,
     comments_router,
     events_router,
+    groups_router,
     invitees_router,
     rsvp_router,
     share_router,
@@ -77,6 +78,7 @@ app.include_router(comments_router)
 app.include_router(admin_router)
 app.include_router(bug_reports_router)
 app.include_router(invitees_router)
+app.include_router(groups_router)
 
 
 @app.get("/api/health")
