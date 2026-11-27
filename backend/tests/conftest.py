@@ -56,6 +56,14 @@ def reset_in_memory_state():
     yield
 
 
+@pytest.fixture(autouse=True)
+def console_sms(request, monkeypatch):
+    """Tests print texts instead of sending them, even if Twilio settings are in the environment."""
+    if "twilio_live" not in request.keywords:
+        from app.config import settings
+        monkeypatch.setattr(settings, "SMS_PROVIDER", "console")
+
+
 @pytest.fixture
 def sms_outbox(monkeypatch):
     """Capture every SMS the app sends as {"kind", "phone", "message"} dicts, in send order."""

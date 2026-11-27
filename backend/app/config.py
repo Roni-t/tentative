@@ -26,7 +26,8 @@ class Settings(BaseSettings):
     SMS_PROVIDER: str = os.getenv("SMS_PROVIDER", "console")  # 'console' or 'twilio'
     TWILIO_ACCOUNT_SID: str = os.getenv("TWILIO_ACCOUNT_SID", "")
     TWILIO_AUTH_TOKEN: str = os.getenv("TWILIO_AUTH_TOKEN", "")
-    TWILIO_PHONE_NUMBER: str = os.getenv("TWILIO_PHONE_NUMBER", "")
+    TWILIO_PHONE_NUMBER: str = os.getenv("TWILIO_PHONE_NUMBER", "")  # sends reminders and other texts
+    TWILIO_VERIFY_SERVICE_SID: str = os.getenv("TWILIO_VERIFY_SERVICE_SID", "")  # sends and checks sign-in codes
     
     # Semester Expiry Default (Dec 18 of current year)
     DEFAULT_SEMESTER_END_DATE: str = os.getenv("DEFAULT_SEMESTER_END_DATE", "2026-12-18")
@@ -69,6 +70,19 @@ class Settings(BaseSettings):
     def dev_sms_enabled(self) -> bool:
         """Expose verification codes to the client only when no real SMS is sent, or in development."""
         return self.SMS_PROVIDER.lower() == "console" or self.ENVIRONMENT == "development"
+
+    @property
+    def uses_twilio_verify(self) -> bool:
+        return self.SMS_PROVIDER.lower() == "twilio"
+
+    def require_sms_settings(self) -> None:
+        """Stop startup if Twilio is chosen but not fully set up, instead of quietly sending nothing."""
+        if not self.uses_twilio_verify:
+            return
+        names = ("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_PHONE_NUMBER", "TWILIO_VERIFY_SERVICE_SID")
+        missing = [name for name in names if not getattr(self, name).strip()]
+        if missing:
+            raise RuntimeError(f"SMS_PROVIDER=twilio but these are not set: {', '.join(missing)}")
 
     model_config = SettingsConfigDict(
         env_file=".env",

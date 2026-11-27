@@ -13,6 +13,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.adapters import twilio_verify
 from app.adapters.sms_adapter import get_sms_adapter
 from app.config import settings
 from app.core.encryption import encrypt_phone, hash_phone, mask_phone, normalize_phone, validate_name, validate_phone
@@ -50,6 +51,18 @@ class AuthService:
 
     def send_code(self, normalized: str, db: Session) -> Dict:
         """Replace any pending code for this phone with a fresh one and text it."""
+        if settings.uses_twilio_verify:
+            try:
+                twilio_verify.start(normalized)
+            except twilio_verify.VerifyError as e:
+                raise HTTPException(status_code=e.status_code, detail=e.message)
+            return {
+                "message": "Verification code sent.",
+                "phone_masked": mask_phone(normalized),
+                "expires_in_seconds": twilio_verify.CODE_TTL_SECONDS,
+                "dev_code": None,
+            }
+
         p_hash = hash_phone(normalized)
         now = datetime.now(timezone.utc)
 
@@ -84,6 +97,15 @@ class AuthService:
         code = (code or "").strip()
         if not (len(code) == 6 and code.isdigit()):
             raise _bad_request("Enter the 6-digit code we texted you.")
+
+        if settings.uses_twilio_verify:
+            try:
+                approved = twilio_verify.check(normalized, code)
+            except twilio_verify.VerifyError as e:
+                raise HTTPException(status_code=e.status_code, detail=e.message)
+            if not approved:
+                raise _bad_request("That code didn't work. Please try again.")
+            return
 
         p_hash = hash_phone(normalized)
         db_code = db.query(VerificationCode).filter(VerificationCode.phone_hash == p_hash).first()
