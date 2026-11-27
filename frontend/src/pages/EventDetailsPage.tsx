@@ -8,6 +8,7 @@ import { formatDateTimeLong } from '../utils/format';
 import { Modal } from '../components/Modal';
 import { ChangeHistoryModal } from '../components/ChangeHistoryModal';
 import { InviteeList } from '../components/InviteeList';
+import { HostUpdateModal } from '../components/HostUpdateModal';
 import {
   Calendar,
   Clock,
@@ -15,6 +16,7 @@ import {
   Users,
   Sparkles,
   CalendarCheck,
+  MessageSquareText,
   Repeat,
   History,
   CheckCircle2,
@@ -47,6 +49,7 @@ export const EventDetailsPage: React.FC = () => {
   const [googleCalendarUrl, setGoogleCalendarUrl] = useState('');
   // The viewer's own RSVP link token, if they're an invitee (saved in this browser or found by their account)
   const [myRsvpToken, setMyRsvpToken] = useState<string | null>(null);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
 
   const fetchEvent = async () => {
     if (!id) return;
@@ -361,25 +364,24 @@ export const EventDetailsPage: React.FC = () => {
             </div>
           </Link>
         ) : canManage ? (
-          <a
-            href="#invitees"
-            className="glass-panel p-6 rounded-3xl border border-white/10 hover:border-emerald-400/50 transition-all flex flex-col justify-between group"
+          <button
+            type="button"
+            onClick={() => setIsUpdateModalOpen(true)}
+            className="text-left glass-panel p-6 rounded-3xl border border-white/10 hover:border-white/30 transition-all flex flex-col justify-between group cursor-pointer"
           >
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-400/15 text-emerald-300 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <CalendarCheck className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-2xl bg-white/10 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
+                <MessageSquareText className="w-5 h-5" />
               </div>
-              <h3 className="text-base font-bold text-white group-hover:text-emerald-300 transition-colors">
-                Collect RSVPs
-              </h3>
+              <h3 className="text-base font-bold text-white transition-colors">Text an update</h3>
               <p className="text-xs text-slate-400">
-                Invitees RSVP with their own link. Copy each one from the invitee list below.
+                Let everyone who gets texts know about a change, like a new room.
               </p>
             </div>
-            <div className="mt-4 pt-3 border-t border-white/5 text-xs text-emerald-300 font-semibold flex items-center space-x-1">
-              <span>Go to invitees</span>
+            <div className="mt-4 pt-3 border-t border-white/5 text-xs text-slate-300 font-semibold flex items-center space-x-1">
+              <span>Write an update</span>
             </div>
-          </a>
+          </button>
         ) : (
           <div className="glass-panel p-6 rounded-3xl border border-white/10 flex flex-col justify-between">
             <div className="space-y-3">
@@ -421,6 +423,7 @@ export const EventDetailsPage: React.FC = () => {
       )}
 
       {/* Modals */}
+      <HostUpdateModal event={event} isOpen={isUpdateModalOpen} onClose={() => setIsUpdateModalOpen(false)} />
       {/* Cancel Confirmation Modal (UC-4) */}
       <Modal isOpen={isCancelModalOpen} onClose={() => setIsCancelModalOpen(false)} title="Cancel Event">
         <div className="space-y-4">

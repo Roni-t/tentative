@@ -81,6 +81,16 @@ export interface HeatmapResponse {
 
 export type RsvpStatus = 'going' | 'maybe' | 'not_going';
 
+// FR-19: a host's text update, previewed before it is sent
+export interface HostUpdateResult {
+  preview: string;
+  recipients_count: number;
+  opted_out_count: number;
+  confirm_text: string;
+  sent_count: number;
+  message: string;
+}
+
 // What an invitee's RSVP link shows (DEV-167)
 export interface RsvpPage {
   event_id: number;

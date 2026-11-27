@@ -1,4 +1,4 @@
-import type { AuthResponse, CodeSentResponse, DevSmsNotice, Invitee, RsvpPage, RsvpStatus, User } from '../types';
+import type { AuthResponse, CodeSentResponse, DevSmsNotice, HostUpdateResult, Invitee, RsvpPage, RsvpStatus, User } from '../types';
 
 const API_BASE = '/api';
 
@@ -187,6 +187,14 @@ class ApiClient {
   // The group link for "Copy group link". An expired one is replaced with a new link (DEV-172).
   async getGroupLink(eventId: number | string) {
     return this.request<{ token: string; expires_at: string }>(`/events/${eventId}/group-link`, { method: 'POST' });
+  }
+
+  // FR-19: text an update to every invitee who gets texts. With preview, nothing is sent.
+  async sendHostUpdate(eventId: number | string, message: string, preview: boolean) {
+    return this.request<HostUpdateResult>(`/events/${eventId}/updates${preview ? '?preview=true' : ''}`, {
+      method: 'POST',
+      body: JSON.stringify({ message }),
+    });
   }
 
   // Which RSVP link is this viewer's, for the event page's "Submit RSVP" card
