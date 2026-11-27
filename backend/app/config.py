@@ -41,7 +41,6 @@ class Settings(BaseSettings):
     
     # Rate Limiting
     RATE_LIMIT_AUTH_PER_MINUTE: int = 10
-    RATE_LIMIT_COMMENTS_PER_MINUTE: int = 20
     RATE_LIMIT_INVITES_PER_MINUTE: int = 30
     
     # CORS

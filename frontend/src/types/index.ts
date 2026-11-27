@@ -106,25 +106,6 @@ export interface RsvpSummary {
   rsvps: Rsvp[];
 }
 
-export interface CommentReply {
-  id: number;
-  author_name: string;
-  is_host_reply: boolean;
-  content: string;
-  created_at: string;
-}
-
-export interface Comment {
-  id: number;
-  event_id: number;
-  author_name: string;
-  is_question: boolean;
-  content: string;
-  parent_id?: number | null;
-  created_at: string;
-  replies: CommentReply[];
-}
-
 export interface ChangeLog {
   id: number;
   action: string;

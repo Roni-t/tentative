@@ -15,7 +15,6 @@ import {
   Users,
   Sparkles,
   Share2,
-  MessageSquare,
   Repeat,
   History,
   CheckCircle2,
@@ -364,28 +363,6 @@ export const EventDetailsPage: React.FC = () => {
           </div>
         </Link>
 
-        {/* Discussion */}
-        <Link
-          to={`/events/${event.id}/discussion`}
-          className="glass-panel p-6 rounded-3xl border border-white/10 hover:border-white/30 transition-all flex flex-col justify-between group"
-        >
-          <div className="space-y-3">
-            <div className="w-10 h-10 rounded-2xl bg-zinc-400/20 text-zinc-300 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <MessageSquare className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-white group-hover:text-zinc-200 transition-colors">
-              Discussion & Inquiries
-            </h3>
-            <p className="text-xs text-slate-400">
-              Public inquiries, questions, and host responses for attendees.
-            </p>
-          </div>
-          <div className="mt-4 pt-3 border-t border-white/5 text-xs text-zinc-200 font-semibold flex items-center space-x-1">
-            <span>Open discussion</span>
-            
-          </div>
-        </Link>
-
         {/* Share & Expiry */}
         <Link
           to={`/events/${event.id}/share`}
@@ -464,7 +441,7 @@ export const EventDetailsPage: React.FC = () => {
       <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="Delete Event Permanently">
         <div className="space-y-4">
           <p className="text-xs text-red-300">
-            Warning: This action cannot be undone. All responses, heatmap data, comments, and shareable links
+            Warning: This action cannot be undone. All responses, heatmap data, and shareable links
             will be permanently removed.
           </p>
           <div className="flex justify-end space-x-2 pt-2">
@@ -488,7 +465,7 @@ export const EventDetailsPage: React.FC = () => {
       <Modal isOpen={isCohostModalOpen} onClose={() => setIsCohostModalOpen(false)} title="Assign Co-Host">
         <form onSubmit={handleAddCohost} className="space-y-4">
           <p className="text-xs text-slate-400">
-            Co-hosts can edit the event, finalize times, and reply to comments, but cannot permanently delete the event.
+            Co-hosts can edit the event and finalize times, but cannot permanently delete the event.
           </p>
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5">

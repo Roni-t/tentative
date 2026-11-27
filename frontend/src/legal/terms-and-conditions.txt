@@ -57,7 +57,7 @@ You may choose to connect a Google, Microsoft Outlook, or CalDAV calendar. You a
 You agree not to:
 
 - Use the Service for any unlawful, harmful, fraudulent, or deceptive purpose.
-- Harass, threaten, abuse, or impersonate any person, or post hateful, sexually explicit, or violent content in event details, comments, or polls.
+- Harass, threaten, abuse, or impersonate any person, or post hateful, sexually explicit, or violent content in event details or polls.
 - Send spam or unsolicited messages, or use invitations or SMS features to contact people who have not agreed to it.
 - Collect or harvest other users' information, including phone numbers, without their consent.
 - Attempt to get around rate limits, permission checks, share-link rotation, or other security features, or access events, accounts, or data you are not authorized to access.
@@ -70,7 +70,7 @@ We may remove content, cancel events, limit features, or suspend or terminate ac
 
 8. YOUR CONTENT
 
-"Your Content" means the information you submit to the Service, including event details, availability, RSVPs, comments, and poll votes. You keep ownership of Your Content. You give Tentative a limited, non-exclusive, royalty-free, worldwide license to host, store, copy, display, and process Your Content only as needed to operate, secure, back up, and improve the Service, and to show it to the participants of the events where you posted it. This license ends when Your Content is deleted from the Service, except for copies in backups that are overwritten on a rolling basis and copies other users have already exported.
+"Your Content" means the information you submit to the Service, including event details, availability, RSVPs, and poll votes. You keep ownership of Your Content. You give Tentative a limited, non-exclusive, royalty-free, worldwide license to host, store, copy, display, and process Your Content only as needed to operate, secure, back up, and improve the Service, and to show it to the participants of the events where you posted it. This license ends when Your Content is deleted from the Service, except for copies in backups that are overwritten on a rolling basis and copies other users have already exported.
 
 You are responsible for Your Content and confirm that you have the rights needed to submit it.
 

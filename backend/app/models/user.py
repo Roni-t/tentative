@@ -18,6 +18,5 @@ class User(Base):
     events_created = relationship("Event", back_populates="creator", cascade="all, delete-orphan")
     availabilities = relationship("Availability", back_populates="user")
     rsvps = relationship("RSVP", back_populates="user")
-    comments = relationship("Comment", back_populates="user")
     sessions = relationship("Session", back_populates="user", cascade="all, delete-orphan")
     changelog_entries = relationship("ChangeLogEntry", back_populates="user")
