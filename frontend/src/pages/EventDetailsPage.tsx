@@ -386,7 +386,8 @@ export const EventDetailsPage: React.FC = () => {
         </Link>
       </div>
 
-      {canManage && event.status === 'collecting' && (
+      {/* Before a time is set it tracks responses; after, it tracks RSVPs (DEV-169). Hidden for canceled events. */}
+      {canManage && event.status !== 'canceled' && (
         <InviteeList event={event} groupLink={`${window.location.origin}/share/${shareToken}/respond`} />
       )}
 
