@@ -34,7 +34,7 @@ docker compose up --build
 - App: http://localhost:8080
 - API docs: http://localhost:8080/api/docs
 
-Set `SMS_PROVIDER=console` in `.env` to skip Twilio. Codes then show up in the dev banner and the backend log.
+Set `SMS_PROVIDER=console` in `.env` to skip Twilio. Codes then show up in the dev banner and the backend log. With `SMS_PROVIDER=twilio`, sign-in codes are sent and checked by Twilio Verify, and the backend won't start until every Twilio variable is set.
 
 The project has no database migrations. If the tables change (for example after pulling new models), reset the local database with `docker compose down -v` and start again. This deletes the local demo data.
 
@@ -47,7 +47,9 @@ The project has no database migrations. If the tables change (for example after 
 | `FERNET_KEY` | Encrypts phone numbers in the database |
 | `PHONE_HASH_SALT` | Salt for the phone lookup hash |
 | `SMS_PROVIDER` | `console` (log only) or `twilio` |
-| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` | Twilio settings, only needed when `SMS_PROVIDER=twilio` |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` | Twilio account, only needed when `SMS_PROVIDER=twilio` |
+| `TWILIO_PHONE_NUMBER` | Number that sends reminders and other texts |
+| `TWILIO_VERIFY_SERVICE_SID` | Twilio Verify service (`VA...`) that sends and checks sign-in codes |
 | `PUBLIC_APP_URL` | Base URL used in links inside texts |
 | `SEED_ON_STARTUP` | Adds demo data when `true` |
 | `ADMIN_NAME`, `ADMIN_PHONE` | Admin account created at startup |
@@ -68,6 +70,8 @@ cd backend
 pip install -r requirements.txt pytest
 pytest
 ```
+
+Tests never send texts. To also check the Twilio settings in `.env` against the real Verify service (no text is sent), run `TWILIO_LIVE_TESTS=1 pytest tests/test_twilio_verify_live.py`.
 
 Some older UC-14 and UC-15 tests and one FR-22 test fail because teammates' branches were merged with different login and finalize rules. They are not related to the invite flow.
 

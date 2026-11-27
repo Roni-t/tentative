@@ -25,6 +25,7 @@ logger = logging.getLogger("tentative")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    settings.require_sms_settings()
     logger.info("Creating database tables")
     Base.metadata.create_all(bind=engine)
 
