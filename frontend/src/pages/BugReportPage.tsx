@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { LegalNote, PrivacyLink } from '../components/LegalLinks';
 import { Bug, Send, CheckCircle2 } from 'lucide-react';
 
 export const BugReportPage: React.FC = () => {
@@ -82,8 +83,12 @@ export const BugReportPage: React.FC = () => {
                   value={contact}
                   onChange={(e) => setContact(e.target.value)}
                   placeholder="e.g. (972) 555-0142"
+                  aria-describedby="contact-privacy"
                   className="w-full px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:border-cosmic-purple"
                 />
+                <LegalNote id="contact-privacy" className="mt-2.5">
+                  <PrivacyLink />
+                </LegalNote>
               </div>
             </div>
 

@@ -9,6 +9,7 @@ import { PlanetLogo } from '../components/PlanetLogo';
 import { DevSmsBanner } from '../components/DevSmsBanner';
 import { CodeEntry } from '../components/auth/CodeEntry';
 import { AuthOutcome, Outcome } from '../components/auth/AuthOutcome';
+import { LegalNote, PrivacyLink, TermsLink } from '../components/LegalLinks';
 import { User, Phone, ArrowRight, Lock } from 'lucide-react';
 
 const inputClass =
@@ -184,9 +185,14 @@ export const CreateAccountPage: React.FC = () => {
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="(972) 555-0142"
                       required
+                      aria-describedby="phone-privacy"
                       className={inputClass}
                     />
                   </div>
+                  <LegalNote id="phone-privacy" className="mt-1.5">
+                    By creating an account, you agree to the <TermsLink /> and <PrivacyLink>Privacy Policy</PrivacyLink>.
+                    Msg &amp; data rates may apply.
+                  </LegalNote>
                 </div>
 
                 <button type="submit" disabled={loading} className={primaryButton}>

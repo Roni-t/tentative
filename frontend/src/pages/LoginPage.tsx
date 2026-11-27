@@ -9,6 +9,7 @@ import { afterAuthPath } from '../utils/createDraft';
 import { DevSmsBanner } from '../components/DevSmsBanner';
 import { CodeEntry } from '../components/auth/CodeEntry';
 import { AuthOutcome, Outcome } from '../components/auth/AuthOutcome';
+import { LegalNote, PrivacyLink } from '../components/LegalLinks';
 import { Phone, ArrowRight, Lock } from 'lucide-react';
 
 const inputClass =
@@ -166,9 +167,13 @@ export const LoginPage: React.FC = () => {
                       placeholder="(972) 555-0142"
                       required
                       autoFocus
+                      aria-describedby="phone-privacy"
                       className={inputClass}
                     />
                   </div>
+                  <LegalNote id="phone-privacy" className="mt-2.5">
+                    <PrivacyLink />
+                  </LegalNote>
                 </div>
 
                 <button type="submit" disabled={loading} className={primaryButton}>
