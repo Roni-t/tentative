@@ -1,198 +1,93 @@
-# 🪐 Tentative — Group Scheduling Web App
+# Tentative
 
-> **"Find the time. Anywhere in the galaxy."**
-> A modern group scheduling platform designed with deep-space aesthetics and Apple-smooth micro-interactions.
+A group scheduling web app. A host creates an event with candidate dates, then sends each invitee a personal link. Invitees paint when they are free, and the app shows a heatmap of the best times. The host picks a time and finalizes it.
 
----
+Built for UT Dallas CS 3354 (Fall 2026).
 
-## 📋 Overview
+## How invites work
 
-Tentative solves the coordination challenge of scheduling meetings across conflicting calendars. A host schedules an event with candidate dates, slot lengths, and daily windows. Invitees open a shared, unguessable cryptographic link and paint their availability without needing an account. The platform aggregates all responses into an instant, color-coded overlap heatmap that highlights optimal meeting slots. The host then finalizes the time, exports standard `.ics` / Google Calendar invites, and notifies participants.
+- The host adds invitees by name. Each invitee gets their own unique link.
+- The host sends the link from their own phone with the Share button (phone share sheet) or the Copy button (copies the message and link).
+- A general group link also exists. Anyone who opens it types their name and shows up on the list as "joined via link".
+- Invitees do not need an account. Their link lets them respond and edit later.
+- After responding, an invitee can enter a phone number to get texts. We text a code to check the number, then create their account. Only verified numbers get reminders and the final time.
+- The invitee list shows whether each person responded and whether we can text them. It never shows phone numbers.
 
-Based on the **UT Dallas CS 3354 Fall 2026 Software Engineering Specification** by Asher, Dhaliwal, Hines, Hunt, Nguyen, Pundir, and Ribakoff.
+## Calendar export
 
----
+Once an event is finalized, the event page shows two buttons for everyone who opens it:
 
-## 🏗️ Architecture & Layered Design
+- **Download .ics** gives a calendar file that works in Apple Calendar, Google Calendar and Outlook (`GET /api/events/{id}/export.ics`).
+- **Google Calendar** opens Google Calendar with the event filled in (`GET /api/events/{id}/google-calendar-url`).
 
-Tentative strictly adheres to the 4-tier layered architecture specified in the engineering document:
+Both return an error until the event has a final time. The code is in `backend/app/adapters/calendar_export.py`.
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                   Layer 1: Web Client (React 18 + TS)                  │
-│   LandingPage · AuthPages · EventDashboard · AvailabilityGrid ·        │
-│   HeatmapGrid · FinalizePage · RsvpReview · Discussion · AdminConsole │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │ HTTP / JSON
-┌───────────────────────────────────▼────────────────────────────────────┐
-│                  Layer 2: API Layer (FastAPI Routers)                  │
-│   /api/auth · /api/events · /api/share · /api/rsvp · /api/comments ·   │
-│   RateLimiter · SessionMiddleware · AdminGuard · OpenAPI docs          │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │
-┌───────────────────────────────────▼────────────────────────────────────┐
-│                 Layer 3: Services (Business Logic)                     │
-│   AuthService · EventService · HeatmapService · RsvpService ·          │
-│   NotificationService · ShareLinkService · RecurrenceService           │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │
-┌───────────────────────────────────▼────────────────────────────────────┐
-│               Layer 4: Infrastructure & Adapters                       │
-│   SQLAlchemy 2.x Repositories · Fernet PhoneEncryptor ·                 │
-│   Console / Twilio SMS Adapter · RFC 5545 IcsExporter · Scheduler Job  │
-└────────────────────────────────────────────────────────────────────────┘
-```
+## Run it
 
----
-
-## ⚡ Quick Start
-
-Create your local `.env`, then run the entire stack using Docker Compose:
+You need Docker.
 
 ```bash
-cp .env.example .env   # first time only
+cp .env.example .env
 docker compose up --build
 ```
 
-The web application is exposed at **[http://localhost:8080](http://localhost:8080)**.
-- **Frontend App**: `http://localhost:8080`
-- **Backend API & Swagger Docs**: `http://localhost:8080/api/docs`
+- App: http://localhost:8080
+- API docs: http://localhost:8080/api/docs
 
----
+Set `SMS_PROVIDER=console` in `.env` to skip Twilio. Codes then show up in the dev banner and the backend log.
 
-## 🔑 Environment Variables
+The project has no database migrations. If the tables change (for example after pulling new models), reset the local database with `docker compose down -v` and start again. This deletes the local demo data.
 
-Docker Compose loads these from `.env` in the project root, which is gitignored. Copy `.env.example` to create it; the sample values work for local use.
+## Environment variables
 
-| Variable | Default Value | Description |
-|---|---|---|
-| `DATABASE_URL` | `sqlite:////app/data/tentative.db` | SQLite database file persisted on Docker volume |
-| `SECRET_KEY` | `tentative-celestial-production-secret-key-2026` | Key for signing JWT session tokens |
-| `FERNET_KEY` | `dGVudGF0aXZlLWZlcm5ldC1zZWNyZXQtMzItYnl0ZXMh` | 32 url-safe base64 bytes for encrypting phone numbers at rest |
-| `PHONE_HASH_SALT` | `tentative_space_salt_2026` | Salt for deterministic phone lookup hashes |
-| `SMS_PROVIDER` | `console` | `console` logs codes & surfaces dev banner; `twilio` sends live SMS |
-| `TWILIO_ACCOUNT_SID` | `""` | Twilio Account SID (when `SMS_PROVIDER=twilio`) |
-| `TWILIO_AUTH_TOKEN` | `""` | Twilio Auth Token |
-| `TWILIO_PHONE_NUMBER` | `""` | Twilio From Phone Number |
-| `DEFAULT_SEMESTER_END_DATE` | `2026-12-18` | Default link expiration date for fall semester |
-| `ADMIN_NAME` | `Admin Commander` | Pre-seeded administrator account name |
-| `ADMIN_PHONE` | `+19725550100` | Pre-seeded administrator phone number |
-| `SEED_ON_STARTUP` | `true` | Pre-populates 8 participants and demo event |
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | SQLite database path |
+| `SECRET_KEY` | Signs login tokens |
+| `FERNET_KEY` | Encrypts phone numbers in the database |
+| `PHONE_HASH_SALT` | Salt for the phone lookup hash |
+| `SMS_PROVIDER` | `console` (log only) or `twilio` |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` | Twilio settings, only needed when `SMS_PROVIDER=twilio` |
+| `PUBLIC_APP_URL` | Base URL used in links inside texts |
+| `SEED_ON_STARTUP` | Adds demo data when `true` |
+| `ADMIN_NAME`, `ADMIN_PHONE` | Admin account created at startup |
 
----
+## Quick tour
 
-## 🚀 2-Minute Demo Script
+1. Open the home page and click "View demo heatmap" to see seeded data with 8 participants.
+2. Click "Get started" and log in with a phone number. In console mode the code appears in the dev banner.
+3. Create an event, open it, and add invitees in the Invitees section. Use Share or Copy to send each link.
+4. Open an invitee link in a private window, paint availability, and save. You will be asked if you want a text when the time is set.
+5. Back on the event page, the list shows that invitee as responded.
+6. Open the heatmap, pick the best slot, and finalize. Invitees with verified numbers get a text.
 
-Follow these steps to experience all 15 use cases in 2 minutes:
-
-### 1. View the Landing Page & Celestial Hero
-1. Navigate to `http://localhost:8080`.
-2. Notice the dark celestial starfield, ambient drifting nebula glow, the central 3D-styled animated planet with tilted orbital rings, and floating frosted-glass chips (`7 of 8 responded`, `Best overlap: Wed 2–3 PM`).
-
-### 2. Explore the Pre-Seeded Heatmap (UC-14)
-1. Click **"View Demo Heatmap"** on the hero (or click "Demo Heatmap" in the nav).
-2. The page loads the "Software Engineering Team Meeting" with **8 seeded participants** (Alex Morgan, Jamie Chen, Priya Shah, Daniel Kim, Sofia Patel, Marcus Lee, Emma Wilson, Noah Davis).
-3. Hover/click over **Wednesday Sep 16, 2:00 PM – 3:00 PM**:
-   - The cell radiates in intense cosmic purple/cyan glow.
-   - The sidebar displays **7 of 8 participants available**: Alex, Jamie, Priya, Daniel, Sofia, Marcus, Emma.
-   - Notice the unresponded/busy attendee: Noah Davis.
-4. Toggle to the **"Ranked List"** view to verify screen-reader accessible alternatives.
-
-### 3. Passwordless SMS Host Login (UC-1, UC-2)
-1. In the top-right nav, click **"Sign in"**.
-2. Enter the host demo phone: `+1 (972) 555-0142` and submit.
-3. Observe the **Dev SMS Dispatch floating banner** in the bottom-left corner with the generated 6-digit code.
-4. Click **"Use code"** to auto-fill the code and enter the orbit as **Kaelan Nguyen**.
-
-### 4. Review RSVP & FIFO Waitlist Auto-Promotion (UC-5, UC-9, UC-10)
-1. Go to **"RSVP List"** for the meeting.
-2. Notice the counter: **3 Going**, **2 Maybe**, **1 Not Going**, **1 Waitlisted** (Capacity Limit is set to 3).
-   - Alex, Jamie, Priya are **Going**.
-   - Emma Wilson is **Waitlisted (Rank #1)**.
-3. Test FIFO promotion:
-   - In the RSVP form, select **"Alex Morgan"** and change status from **Going** to **Not Going**.
-   - Spot opens up! Immediately, **Emma Wilson is auto-promoted** to **Going**, and a notification is dispatched!
-4. Click **"Export CSV"** to download `tentative-rsvps-1.csv`.
-
-### 5. Finalize the Meeting & Calendar Sync (UC-8, UC-15)
-1. Click **"Heatmap"**, select the top recommended slot (Wed 2:00–3:00 PM), and click **"Lock In & Finalize This Time"**.
-2. Review the confirmation panel, leave "Notify all participants via SMS alert" checked, and click **"Confirm & Finalize Orbit"**.
-3. The event status updates to **Finalized**.
-4. Test calendar integration:
-   - Click **"Export .ics"** to download RFC 5545 calendar file.
-   - Click **"Google Calendar"** to see pre-filled event link.
-
-### 6. Share Link Rotation & Expiration (UC-7)
-1. Click **"Share & Expiry Link"**.
-2. Click **"Rotate Token"**. Notice the share token changes immediately and the old link dies.
-3. Visiting an expired token routes to the friendly **"This orbit has ended"** page.
-
-### 7. Event Discussion & Inquiries (UC-13)
-1. Click **"Discussion & Inquiries"**.
-2. See existing attendee questions and host answers.
-3. Post a new question ("Is attendance mandatory?") and reply to it in real-time.
-
-### 8. Admin Console (UC-6)
-1. Log in with admin phone `+19725550100` (code in dev banner).
-2. Visit **"Admin"** in the nav.
-3. View server uptime telemetry, database path, active events, and account management tools.
-
----
-
-## 🧪 Running Automated Tests
-
-To execute the backend test suite covering verification codes, URL rotation, heatmap overlap algorithms, and FIFO waitlist promotions:
+## Tests
 
 ```bash
-# Inside docker
-docker compose exec backend pytest
-
-# Or locally (with backend dependencies installed)
-cd backend && pytest
+cd backend
+pip install -r requirements.txt pytest
+pytest
 ```
 
----
+Some older UC-14 and UC-15 tests and one FR-22 test fail because teammates' branches were merged with different login and finalize rules. They are not related to the invite flow.
 
-## 📂 Project Structure
+## Project layout
 
 ```
-tentative/
-├── docker-compose.yml          # Container orchestration (port 8080)
-├── .env.example                # Sample environment configuration
-├── Makefile                    # Developer shortcuts
-├── README.md                   # Documentation & demo script
-├── backend/
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   ├── pytest.ini
-│   ├── app/
-│   │   ├── config.py           # Settings & Pydantic config
-│   │   ├── database.py         # SQLAlchemy engine & SQLite session
-│   │   ├── main.py             # FastAPI entrypoint, CORS, lifespan
-│   │   ├── seed.py             # 8-participant demo seed
-│   │   ├── core/
-│   │   │   ├── encryption.py   # Fernet cipher & phone hashing
-│   │   │   ├── security.py     # JWT & cryptographically secure tokens
-│   │   │   ├── rate_limiter.py # Sliding-window rate limiter
-│   │   │   └── dependencies.py # Auth and admin route guards
-│   │   ├── models/             # User, Event, Availability, RSVP, etc.
-│   │   ├── schemas/            # Pydantic input/output contracts
-│   │   ├── adapters/
-│   │   │   ├── sms_adapter.py  # Console & Twilio SMS adapters
-│   │   │   ├── ics_exporter.py # RFC 5545 iCalendar & Google links
-│   │   │   └── scheduler.py    # Background cleanup for expired URLs
-│   │   ├── services/           # Core domain logic
-│   │   └── routers/            # Clean REST API endpoints
-│   └── tests/                  # Pytest test suite
-└── frontend/
-    ├── Dockerfile              # Multi-stage build (Node 20 -> Nginx)
-    ├── nginx.conf              # SPA routing + API reverse proxy
-    ├── package.json
-    ├── tailwind.config.js      # Deep space theme & glow shadows
-    └── src/
-        ├── App.tsx             # React router & global shell
-        ├── components/         # HeroPlanet, HeatmapGrid, StarField, etc.
-        ├── context/            # AuthContext & ToastContext
-        ├── pages/              # 16 complete responsive views
-        └── utils/              # Timezone & date formatters
+backend/app/
+  main.py          app setup
+  config.py        settings from .env
+  database.py      database connection
+  models/          database tables
+  schemas/         request and response shapes
+  routers/         API routes
+  services/        main logic
+  adapters/        SMS sending and the cleanup job
+  core/            security, phone encryption, rate limiting
+backend/tests/     pytest tests
+frontend/src/
+  pages/           one file per page
+  components/      shared pieces (heatmap, grid, invitee list)
+  context/         login and toast state
+  api/client.ts    all API calls
 ```

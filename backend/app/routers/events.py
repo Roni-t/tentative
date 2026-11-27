@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
-from app.adapters.ics_exporter import generate_google_calendar_url, generate_ics
+from app.adapters.calendar_export import google_calendar_url, make_ics
 from app.core.dependencies import get_current_user, get_current_user_optional
 from app.database import get_db
 from app.models.event import Event, EventCoHost
@@ -19,9 +19,14 @@ from app.schemas.event import (
 from app.services.event_service import event_service
 from app.services.invitee_service import invitee_service
 from app.services.notification_service import notification_service
-from app.core.timefmt import format_local
+from app.core.timefmt import format_local, to_utc
 
 router = APIRouter(prefix="/api/events", tags=["Events"])
+
+
+def as_utc(dt):
+    # SQLite gives back naive times. Mark them as UTC so the browser does not read them as local time.
+    return to_utc(dt) if dt else None
 
 
 def _format_event_out(event: Event, current_user: Optional[User], db: Session) -> EventOut:
@@ -59,19 +64,19 @@ def _format_event_out(event: Event, current_user: Optional[User], db: Session) -
         daily_start_time=event.daily_start_time,
         daily_end_time=event.daily_end_time,
         slot_duration_minutes=event.slot_duration_minutes,
-        deadline=event.deadline,
+        deadline=as_utc(event.deadline),
         deadline_display=format_local(event.deadline, event.timezone) if event.deadline else None,
         capacity_limit=event.capacity_limit,
         is_hidden_details=event.is_hidden_details,
         status=event.status,
-        finalized_start_time=event.finalized_start_time,
-        finalized_end_time=event.finalized_end_time,
+        finalized_start_time=as_utc(event.finalized_start_time),
+        finalized_end_time=as_utc(event.finalized_end_time),
         created_by_id=event.created_by_id,
         creator_name=event.creator.name if event.creator else "Unknown",
         created_at=event.created_at,
         updated_at=event.updated_at,
         active_token=active_url.token if active_url else None,
-        expires_at=active_url.expires_at if active_url else None,
+        expires_at=as_utc(active_url.expires_at) if active_url else None,
         is_host=is_host,
         is_cohost=is_cohost,
         respondents_count=unique_respondents,
@@ -231,54 +236,27 @@ def get_changelog(
     return result
 
 
-@router.get("/{event_id}/export.ics")
-def export_ics(
-    event_id: int,
-    db: Session = Depends(get_db)
-):
-    """Download standard RFC 5545 iCalendar (.ics) file."""
+def _finalized_event(event_id: int, db: Session) -> Event:
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+    if event.status != "finalized" or not event.finalized_start_time:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This event has no final time yet.")
+    return event
 
-    st = event.finalized_start_time or datetime.now(timezone.utc)
-    et = event.finalized_end_time or st
 
-    ics_content = generate_ics(
-        event_id=event.id,
-        title=event.title,
-        description=event.description or "",
-        location=event.location or "",
-        start_time=st,
-        end_time=et
-    )
-
-    filename = f"tentative-{event.id}.ics"
+@router.get("/{event_id}/export.ics")
+def export_ics(event_id: int, db: Session = Depends(get_db)):
+    """Download the finalized event as a .ics file (works in Apple, Google and Outlook calendars)."""
+    event = _finalized_event(event_id, db)
     return Response(
-        content=ics_content,
+        content=make_ics(event),
         media_type="text/calendar",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        headers={"Content-Disposition": f'attachment; filename="tentative-{event.id}.ics"'},
     )
 
 
 @router.get("/{event_id}/google-calendar-url")
-def get_google_calendar_url(
-    event_id: int,
-    db: Session = Depends(get_db)
-):
-    """Return quick web URL for 'Add to Google Calendar'."""
-    event = db.query(Event).filter(Event.id == event_id).first()
-    if not event:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
-
-    st = event.finalized_start_time or datetime.now(timezone.utc)
-    et = event.finalized_end_time or st
-
-    url = generate_google_calendar_url(
-        title=event.title,
-        description=event.description or "",
-        location=event.location or "",
-        start_time=st,
-        end_time=et
-    )
-    return {"url": url}
+def get_google_calendar_url(event_id: int, db: Session = Depends(get_db)):
+    """A link that opens Google Calendar with the finalized event filled in."""
+    return {"url": google_calendar_url(_finalized_event(event_id, db))}

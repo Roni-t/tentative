@@ -57,10 +57,10 @@ export const ShareExpiryPage: React.FC = () => {
     setRotating(true);
     try {
       const res = await api.rotateShareUrl(id);
-      showToast('Shareable link rotated! Old link is now dead.', 'success');
+      showToast('New link made. The old link no longer works.', 'success');
       fetchEvent();
     } catch (err: any) {
-      showToast(err.message || 'Failed to rotate URL', 'error');
+      showToast(err.message || 'Could not make a new link', 'error');
     } finally {
       setRotating(false);
     }
@@ -110,7 +110,7 @@ export const ShareExpiryPage: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="text-xs font-bold text-white uppercase tracking-wider flex items-center space-x-1.5">
             <Share2 className="w-4 h-4 text-white" />
-            <span>Active Cryptographic Share Link</span>
+            <span>Group share link</span>
           </div>
           {event.expires_at && (
             <span className="text-[11px] font-mono text-slate-400">
@@ -145,10 +145,10 @@ export const ShareExpiryPage: React.FC = () => {
             <div>
               <div className="text-xs font-bold text-white flex items-center space-x-1.5">
                 <ShieldAlert className="w-4 h-4 text-amber-400" />
-                <span>Rotate URL</span>
+                <span>Replace the link</span>
               </div>
               <p className="text-[11px] text-slate-400">
-                Immediately terminates the current link and generates a new token. Old link shows "This orbit has ended".
+                Stops the current link right away and makes a new one.
               </p>
             </div>
             <button
@@ -157,7 +157,7 @@ export const ShareExpiryPage: React.FC = () => {
               className="px-4 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-semibold flex items-center space-x-1.5 shrink-0 transition-colors"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${rotating ? 'animate-spin' : ''}`} />
-              <span>Rotate Token</span>
+              <span>Make new link</span>
             </button>
           </div>
         )}
@@ -209,7 +209,7 @@ export const ShareExpiryPage: React.FC = () => {
             <button
               type="submit"
               disabled={updatingExpiry}
-              className="px-6 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-colors cursor-pointer"
+              className="px-6 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 transition-colors cursor-pointer"
             >
               {updatingExpiry ? 'Saving...' : 'Apply Expiry Setting'}
             </button>

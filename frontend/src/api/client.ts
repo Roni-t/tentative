@@ -1,6 +1,22 @@
-import type { AuthResponse, CodeSentResponse, DevSmsNotice, User } from '../types';
+import type { AuthResponse, CodeSentResponse, DevSmsNotice, Invitee, User } from '../types';
 
 const API_BASE = '/api';
+
+// The server stores times in UTC but SQLite gives them back without a "Z" (like 2026-11-26T15:00:00).
+// A browser reads that as local time, which shifts every time by the viewer's UTC offset.
+// Add the "Z" to any date-time string that has no time zone so it is read as UTC.
+const NAIVE_DATETIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?$/;
+
+const markUtc = (value: any): any => {
+  if (typeof value === 'string') return NAIVE_DATETIME.test(value) ? value + 'Z' : value;
+  if (Array.isArray(value)) return value.map(markUtc);
+  if (value && typeof value === 'object') {
+    const out: Record<string, any> = {};
+    for (const key of Object.keys(value)) out[key] = markUtc(value[key]);
+    return out;
+  }
+  return value;
+};
 
 class ApiClient {
   private getToken(): string | null {
@@ -15,15 +31,16 @@ class ApiClient {
     }
   }
 
-  getEditToken(): string | null {
-    return localStorage.getItem('tentative_edit_token');
+  // Each event has its own token, so answering one event does not affect another
+  getEditToken(eventId: number | string): string | null {
+    return localStorage.getItem(`tentative_edit_token_${eventId}`);
   }
 
-  setEditToken(token: string | null) {
+  setEditToken(eventId: number | string, token: string | null) {
     if (token) {
-      localStorage.setItem('tentative_edit_token', token);
+      localStorage.setItem(`tentative_edit_token_${eventId}`, token);
     } else {
-      localStorage.removeItem('tentative_edit_token');
+      localStorage.removeItem(`tentative_edit_token_${eventId}`);
     }
   }
 
@@ -62,7 +79,7 @@ class ApiClient {
     // Check if response is empty or blob/text
     const contentType = res.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
-      return res.json();
+      return markUtc(await res.json());
     }
     return res.text() as unknown as T;
   }
@@ -182,20 +199,50 @@ class ApiClient {
     });
   }
 
+  // Invitees
+  async listInvitees(eventId: number | string) {
+    return this.request<Invitee[]>(`/events/${eventId}/invitees`);
+  }
+
+  async addInvitee(eventId: number | string, name: string) {
+    return this.request<Invitee>(`/events/${eventId}/invitees`, {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    });
+  }
+
+  async newInviteeLink(eventId: number | string, inviteeId: number) {
+    return this.request<Invitee>(`/events/${eventId}/invitees/${inviteeId}/new-link`, { method: 'POST' });
+  }
+
+  async requestInviteePhoneCode(token: string, phone: string) {
+    return this.request<CodeSentResponse>(`/invite/${token}/phone/request-code`, {
+      method: 'POST',
+      body: JSON.stringify({ phone }),
+    });
+  }
+
+  async verifyInviteePhone(token: string, phone: string, code: string) {
+    return this.request<{ message: string; account_created: boolean }>(`/invite/${token}/phone/verify`, {
+      method: 'POST',
+      body: JSON.stringify({ phone, code }),
+    });
+  }
+
   // Availability & Heatmap
   async submitAvailability(eventId: number | string, participantName: string, slots: { start_time: string; end_time: string }[], editToken?: string) {
     const data = await this.request<any>(`/events/${eventId}/availability`, {
       method: 'POST',
-      body: JSON.stringify({ participant_name: participantName, edit_token: editToken || this.getEditToken(), slots }),
+      body: JSON.stringify({ participant_name: participantName, edit_token: editToken || this.getEditToken(eventId), slots }),
     });
     if (data.edit_token) {
-      this.setEditToken(data.edit_token);
+      this.setEditToken(eventId, data.edit_token);
     }
     return data;
   }
 
   async getMyAvailability(eventId: number | string, editToken?: string) {
-    const token = editToken || this.getEditToken();
+    const token = editToken || this.getEditToken(eventId);
     return this.request<{ start_time: string; end_time: string }[]>(`/events/${eventId}/availability/me${token ? `?edit_token=${token}` : ''}`);
   }
 
@@ -209,19 +256,19 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify({
         participant_name: participantName,
-        participant_email_or_phone: contact,
-        edit_token: editToken || this.getEditToken(),
+        participant_phone: contact,
+        edit_token: editToken || this.getEditToken(eventId),
         status,
       }),
     });
     if (data.edit_token) {
-      this.setEditToken(data.edit_token);
+      this.setEditToken(eventId, data.edit_token);
     }
     return data;
   }
 
   async getRsvpSummary(eventId: number | string, editToken?: string) {
-    const token = editToken || this.getEditToken();
+    const token = editToken || this.getEditToken(eventId);
     return this.request<any>(`/events/${eventId}/rsvp${token ? `?edit_token=${token}` : ''}`);
   }
 
@@ -263,10 +310,10 @@ class ApiClient {
   }
 
   // Bug Reports
-  async submitBugReport(userName: string, emailOrPhone: string, pageUrl: string, description: string) {
+  async submitBugReport(userName: string, contact: string, pageUrl: string, description: string) {
     return this.request<any>('/bug-reports', {
       method: 'POST',
-      body: JSON.stringify({ user_name: userName, email_or_phone: emailOrPhone, page_url: pageUrl, description }),
+      body: JSON.stringify({ user_name: userName, contact: contact, page_url: pageUrl, description }),
     });
   }
 

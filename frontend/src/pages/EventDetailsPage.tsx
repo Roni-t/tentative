@@ -7,6 +7,7 @@ import { useToast } from '../context/ToastContext';
 import { formatDateTimeLong } from '../utils/format';
 import { Modal } from '../components/Modal';
 import { ChangeHistoryModal } from '../components/ChangeHistoryModal';
+import { InviteeList } from '../components/InviteeList';
 import {
   Calendar,
   Clock,
@@ -21,9 +22,9 @@ import {
   AlertTriangle,
   UserPlus,
   ShieldAlert,
+  Trash2,
   Download,
   ExternalLink,
-  Trash2,
 } from 'lucide-react';
 
 export const EventDetailsPage: React.FC = () => {
@@ -118,7 +119,7 @@ export const EventDetailsPage: React.FC = () => {
   if (loading) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-16 text-center text-slate-500 animate-pulse">
-        Loading orbit details...
+        Loading event...
       </div>
     );
   }
@@ -151,7 +152,7 @@ export const EventDetailsPage: React.FC = () => {
                   ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                   : event.status === 'canceled'
                   ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                  : 'bg-cosmic-purple/20 text-purple-300 border border-purple-500/30'
+                  : 'bg-cosmic-purple/20 text-zinc-200 border border-zinc-400/30'
               }`}
             >
               {event.status === 'collecting' ? 'Collecting Responses' : event.status}
@@ -245,10 +246,10 @@ export const EventDetailsPage: React.FC = () => {
             </div>
             <div>
               <div className="text-[10px] uppercase font-bold tracking-wider text-emerald-400">
-                Orbit Locked & Finalized
+                Time finalized
               </div>
               <div className="text-base sm:text-lg font-bold text-white mt-0.5">
-                {formatDateTimeLong(event.finalized_start_time)}
+                {formatDateTimeLong(event.finalized_start_time, event.timezone)}
               </div>
               <div className="text-xs text-slate-400 mt-0.5">
                 Location: {event.location || 'Online'}
@@ -256,27 +257,42 @@ export const EventDetailsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          {/* Add the finalized time to a calendar */}
+          <div className="flex flex-wrap items-center gap-2">
             <a
               href={`/api/events/${event.id}/export.ics`}
               download
-              className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-white border border-white/10 flex items-center space-x-1.5 transition-colors"
+              className="pill pill-dark !py-2 !px-4 !text-xs"
             >
-              <Download className="w-3.5 h-3.5 text-cosmic-cyan" />
-              <span>Export .ics</span>
+              <Download className="w-3.5 h-3.5" />
+              <span>Download .ics</span>
             </a>
             {googleCalendarUrl && (
-              <a
-                href={googleCalendarUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-xs font-semibold text-emerald-300 border border-emerald-500/30 flex items-center space-x-1.5 transition-colors"
-              >
+              <a href={googleCalendarUrl} target="_blank" rel="noreferrer" className="pill pill-dark !py-2 !px-4 !text-xs">
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span>Google Calendar</span>
               </a>
             )}
           </div>
+        </div>
+      )}
+
+      {/* A short guide for hosts, so it is clear what to do next */}
+      {canManage && event.status === 'collecting' && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            ['1', 'Add your invitees', 'Add each person below and send them their own link.'],
+            ['2', 'Wait for responses', 'People paint when they are free. Check the heatmap any time.'],
+            ['3', 'Pick the best time', 'Choose a time on the heatmap and finalize it.'],
+          ].map(([number, title, text]) => (
+            <div key={number} className="flex items-start space-x-3 px-1 py-1">
+              <span className="font-mono text-xs text-zinc-500 pt-0.5">{number}</span>
+              <div>
+                <div className="text-sm font-semibold text-white">{title}</div>
+                <div className="text-xs text-zinc-400 mt-0.5 leading-relaxed">{text}</div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -299,8 +315,8 @@ export const EventDetailsPage: React.FC = () => {
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-white/5 text-xs text-cosmic-purple font-semibold flex items-center space-x-1">
-            <span>Explore Heatmap</span>
-            <span>→</span>
+            <span>See the heatmap</span>
+            
           </div>
         </Link>
 
@@ -321,8 +337,8 @@ export const EventDetailsPage: React.FC = () => {
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-white/5 text-xs text-cosmic-cyan font-semibold flex items-center space-x-1">
-            <span>Paint Free Slots</span>
-            <span>→</span>
+            <span>Add my times</span>
+            
           </div>
         </Link>
 
@@ -343,8 +359,8 @@ export const EventDetailsPage: React.FC = () => {
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-white/5 text-xs text-cosmic-pink font-semibold flex items-center space-x-1">
-            <span>View Attendance</span>
-            <span>→</span>
+            <span>See who's coming</span>
+            
           </div>
         </Link>
 
@@ -354,19 +370,19 @@ export const EventDetailsPage: React.FC = () => {
           className="glass-panel p-6 rounded-3xl border border-white/10 hover:border-white/30 transition-all flex flex-col justify-between group"
         >
           <div className="space-y-3">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 rounded-2xl bg-zinc-400/20 text-zinc-300 flex items-center justify-center group-hover:scale-110 transition-transform">
               <MessageSquare className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-white group-hover:text-indigo-300 transition-colors">
+            <h3 className="text-base font-bold text-white group-hover:text-zinc-200 transition-colors">
               Discussion & Inquiries
             </h3>
             <p className="text-xs text-slate-400">
               Public inquiries, questions, and host responses for attendees.
             </p>
           </div>
-          <div className="mt-4 pt-3 border-t border-white/5 text-xs text-indigo-300 font-semibold flex items-center space-x-1">
-            <span>Join Discussion</span>
-            <span>→</span>
+          <div className="mt-4 pt-3 border-t border-white/5 text-xs text-zinc-200 font-semibold flex items-center space-x-1">
+            <span>Open discussion</span>
+            
           </div>
         </Link>
 
@@ -383,12 +399,12 @@ export const EventDetailsPage: React.FC = () => {
               Share & Expiry Link
             </h3>
             <p className="text-xs text-slate-400">
-              Copy shareable link, rotate token if compromised, or modify expiry date.
+              Copy the group link, replace it if it leaks, or change when it expires.
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-white/5 text-xs text-slate-300 font-semibold flex items-center space-x-1">
-            <span>Configure Link</span>
-            <span>→</span>
+            <span>Manage link</span>
+            
           </div>
         </Link>
 
@@ -402,18 +418,22 @@ export const EventDetailsPage: React.FC = () => {
               <Repeat className="w-5 h-5" />
             </div>
             <h3 className="text-base font-bold text-white group-hover:text-white transition-colors">
-              Recurring Orbit Series
+              Repeat this event
             </h3>
             <p className="text-xs text-slate-400">
               Configure weekly or biweekly repeats with calendar recurrence preview.
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-white/5 text-xs text-slate-300 font-semibold flex items-center space-x-1">
-            <span>Manage Recurrence</span>
-            <span>→</span>
+            <span>Set up repeats</span>
+            
           </div>
         </Link>
       </div>
+
+      {canManage && event.status === 'collecting' && (
+        <InviteeList event={event} groupLink={`${window.location.origin}/share/${shareToken}/respond`} />
+      )}
 
       {/* Modals */}
       {/* Cancel Confirmation Modal (UC-4) */}

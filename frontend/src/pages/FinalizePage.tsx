@@ -4,17 +4,22 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../api/client';
 import { Event, HeatmapResponse } from '../types';
 import { useToast } from '../context/ToastContext';
-import { formatSlotRange, formatDateHeading } from '../utils/format';
-import { format, parseISO } from 'date-fns';
+import { formatDateHeading } from '../utils/format';
+import { longDateInZone, shortDateInZone, timeRangeInZone } from '../utils/zoned';
+import { RocketLaunch, ROCKET_LAUNCH_MS } from '../components/RocketLaunch';
+import { DEMO_TOKEN } from '../utils/demo';
 import { CheckCircle2, ArrowLeft, Clock, MapPin, Sparkles, Send, Lock } from 'lucide-react';
 
 export const FinalizePage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id: idParam, token } = useParams<{ id?: string; token?: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   const { showToast } = useToast();
 
+  const isDemo = token === DEMO_TOKEN;
   const [event, setEvent] = useState<Event | null>(null);
+  // Opened with a share link (the demo) the event id comes from the event itself
+  const id = idParam || (event ? String(event.id) : undefined);
   const [heatmap, setHeatmap] = useState<HeatmapResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -26,33 +31,35 @@ export const FinalizePage: React.FC = () => {
   const [selectedEnd, setSelectedEnd] = useState<string>(stateEnd || '');
   const [notifySms, setNotifySms] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [isOrbitLocking, setIsOrbitLocking] = useState(false);
+  const [isLaunching, setIsLaunching] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
-    Promise.all([api.getEvent(id), api.getHeatmap(id)])
-      .then(([ev, hm]) => {
-        setEvent(ev);
-        setHeatmap(hm);
-        if (!selectedStart && hm.best_slots.length > 0) {
-          setSelectedStart(hm.best_slots[0].start_time);
-          setSelectedEnd(hm.best_slots[0].end_time);
-        }
-      })
+    const load = async () => {
+      const ev = token ? await api.resolveShareToken(token) : await api.getEvent(idParam!);
+      const hm = await api.getHeatmap(ev.id);
+      setEvent(ev);
+      setHeatmap(hm);
+      if (!selectedStart && hm.best_slots.length > 0) {
+        setSelectedStart(hm.best_slots[0].start_time);
+        setSelectedEnd(hm.best_slots[0].end_time);
+      }
+    };
+    load()
       .catch((err) => showToast(err.message || 'Error loading finalize options', 'error'))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [idParam, token]);
 
   const handleConfirmFinalize = async () => {
     if (!id || !selectedStart || !selectedEnd) return;
     setSubmitting(true);
     try {
-      await api.finalizeEvent(id, selectedStart, selectedEnd, notifySms);
-      setIsOrbitLocking(true);
+      // The demo only plays the animation. Nothing is sent to the server.
+      if (!isDemo) await api.finalizeEvent(id, selectedStart, selectedEnd, notifySms);
+      setIsLaunching(true);
       setTimeout(() => {
-        showToast('Orbit successfully locked and finalized!', 'success');
-        navigate(`/events/${id}`);
-      }, 2300);
+        showToast(isDemo ? 'Demo only. Nothing was saved.' : 'Meeting time finalized', isDemo ? 'info' : 'success');
+        navigate(isDemo ? `/share/${DEMO_TOKEN}/heatmap` : `/events/${id}`);
+      }, ROCKET_LAUNCH_MS);
     } catch (err: any) {
       showToast(err.message || 'Failed to finalize meeting time', 'error');
       setSubmitting(false);
@@ -65,89 +72,17 @@ export const FinalizePage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6 relative">
-      {/* Orbit Lock Modal / Full Screen Animation */}
       <AnimatePresence>
-        {isOrbitLocking && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-space-950/90 backdrop-blur-2xl px-4"
-          >
-            <div className="relative flex flex-col items-center justify-center text-center space-y-6 max-w-md w-full">
-              {/* Concentric Rotating Rings Aligning */}
-              <div className="relative w-64 h-64 flex items-center justify-center">
-                {/* Outermost Ring */}
-                <motion.div
-                  initial={{ rotate: 0, scale: 0.8, opacity: 0.4 }}
-                  animate={{ rotate: [0, 360, 720], scale: 1, opacity: 0.8 }}
-                  transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
-                  className="absolute w-56 h-56 rounded-full border border-cosmic-purple/50 border-dashed"
-                />
-
-                {/* Middle Ring */}
-                <motion.div
-                  initial={{ rotate: 180, scale: 0.85 }}
-                  animate={{ rotate: [180, -180, 0], scale: 1 }}
-                  transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
-                  className="absolute w-44 h-44 rounded-full border-2 border-cosmic-cyan/60"
-                  style={{ borderRightColor: 'transparent', borderLeftColor: 'transparent' }}
-                />
-
-                {/* Innermost Ring */}
-                <motion.div
-                  initial={{ rotate: -90, scale: 0.9 }}
-                  animate={{ rotate: [-90, 270, 0], scale: 1 }}
-                  transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
-                  className="absolute w-32 h-32 rounded-full border-2 border-cosmic-pink/70"
-                  style={{ borderTopColor: 'transparent' }}
-                />
-
-                {/* Central Lock Emblem */}
-                <motion.div
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: [0, 1.25, 1], opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 0.8, type: 'spring', stiffness: 350, damping: 20 }}
-                  className="relative z-10 w-20 h-20 rounded-full bg-white p-[2px] shadow-[0_0_30px_rgba(255,255,255,0.7)] flex items-center justify-center text-white"
-                >
-                  <div className="w-full h-full rounded-full bg-black flex items-center justify-center">
-                    <Lock className="w-8 h-8 text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.9)]" />
-                  </div>
-                </motion.div>
-
-                {/* Flash Burst Shockwave */}
-                <motion.div
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  animate={{ scale: [0.5, 2.4], opacity: [0, 0.9, 0] }}
-                  transition={{ duration: 1, delay: 1.2, ease: 'easeOut' }}
-                  className="absolute w-40 h-40 rounded-full bg-white blur-xl"
-                />
-              </div>
-
-              {/* Status Text with spring reveal */}
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 1 }}
-                className="space-y-2"
-              >
-                <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>ORBIT LOCKED</span>
-                </div>
-                <h3 className="text-2xl font-extrabold text-white tracking-tight">Meeting Time Finalized!</h3>
-                <p className="text-xs font-mono text-cosmic-cyan">
-                  {format(parseISO(selectedStart), 'EEEE, MMMM d, yyyy')} · {formatSlotRange(selectedStart, selectedEnd)}
-                </p>
-                <p className="text-xs text-slate-400">Aligning all participant calendars...</p>
-              </motion.div>
-            </div>
-          </motion.div>
+        {isLaunching && (
+          <RocketLaunch
+            dateText={longDateInZone(selectedStart, event.timezone)}
+            timeText={timeRangeInZone(selectedStart, selectedEnd, event.timezone)}
+          />
         )}
       </AnimatePresence>
 
       <Link
-        to={`/events/${event.id}/heatmap`}
+        to={isDemo ? `/share/${DEMO_TOKEN}/heatmap` : `/events/${event.id}/heatmap`}
         className="inline-flex items-center space-x-1.5 text-xs text-slate-400 hover:text-white transition-colors"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
@@ -167,8 +102,14 @@ export const FinalizePage: React.FC = () => {
           <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
             <h2 className="text-sm font-bold text-white flex items-center space-x-2">
               <Sparkles className="w-4 h-4 text-cosmic-purple" />
-              <span>Top Time Options from Overlap Matrix</span>
+              <span>Best times</span>
             </h2>
+
+            {heatmap.best_slots.length === 0 && (
+              <p className="text-sm text-zinc-400 leading-relaxed py-6">
+                Nobody has responded yet. Send out the invitee links, and the best times will show up here.
+              </p>
+            )}
 
             <div className="space-y-3">
               {heatmap.best_slots.map((slot, index) => {
@@ -199,10 +140,10 @@ export const FinalizePage: React.FC = () => {
                         </div>
                         <div>
                           <div className="text-xs font-bold text-white">
-                            {format(parseISO(slot.start_time), 'EEEE, MMM d')}
+                            {shortDateInZone(slot.start_time, event.timezone)}
                           </div>
                           <div className="text-xs font-mono text-cosmic-cyan">
-                            {formatSlotRange(slot.start_time, slot.end_time)}
+                            {timeRangeInZone(slot.start_time, slot.end_time, event.timezone)}
                           </div>
                         </div>
                       </div>
@@ -226,16 +167,16 @@ export const FinalizePage: React.FC = () => {
         {/* Right Column: Confirmation Box */}
         <div className="lg:col-span-5">
           <div className="glass-panel p-6 rounded-3xl border border-white/15 sticky top-24 space-y-4">
-            <h3 className="text-sm font-bold text-white">Lock Orbit Selection</h3>
+            <h3 className="text-sm font-bold text-white">Your selection</h3>
 
             {selectedStart && selectedEnd ? (
               <div className="space-y-4">
                 <div>
                   <div className="text-lg font-bold text-white">
-                    {format(parseISO(selectedStart), 'EEEE, MMMM d, yyyy')}
+                    {longDateInZone(selectedStart, event.timezone)}
                   </div>
                   <div className="text-sm font-mono text-cosmic-purple font-semibold">
-                    {formatSlotRange(selectedStart, selectedEnd)}
+                    {timeRangeInZone(selectedStart, selectedEnd, event.timezone)}
                   </div>
                 </div>
 
@@ -257,7 +198,7 @@ export const FinalizePage: React.FC = () => {
                       id="notifySms"
                       checked={notifySms}
                       onChange={(e) => setNotifySms(e.target.checked)}
-                      className="w-4 h-4 rounded text-cosmic-purple bg-white/10 border-white/20 focus:ring-cosmic-purple cursor-pointer"
+                      className="accent-white w-4 h-4 rounded text-cosmic-purple bg-white/10 border-white/20 focus:ring-cosmic-purple cursor-pointer"
                     />
                     <label htmlFor="notifySms" className="text-xs text-slate-300 cursor-pointer flex items-center space-x-1">
                       <Send className="w-3 h-3 text-cosmic-purple" />
@@ -271,11 +212,11 @@ export const FinalizePage: React.FC = () => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={handleConfirmFinalize}
-                    disabled={submitting || isOrbitLocking}
-                    className="w-full py-3 rounded-2xl text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_20px_rgba(255,255,255,0.4)] flex items-center justify-center space-x-2 transition-all disabled:opacity-50 cursor-pointer"
+                    disabled={submitting || isLaunching}
+                    className="w-full py-3 rounded-2xl text-xs font-bold bg-white text-black hover:bg-zinc-200 flex items-center justify-center space-x-2 transition-all disabled:opacity-50 cursor-pointer"
                   >
                     <CheckCircle2 className="w-4 h-4 text-black" />
-                    <span>{submitting ? 'Locking orbit...' : 'Confirm & Finalize Orbit'}</span>
+                    <span>{submitting ? 'Finalizing...' : 'Confirm and finalize'}</span>
                   </motion.button>
                   <Link
                     to={`/events/${event.id}`}

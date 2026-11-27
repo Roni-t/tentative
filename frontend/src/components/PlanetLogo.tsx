@@ -7,75 +7,37 @@ interface PlanetLogoProps {
   isSpinning?: boolean;
 }
 
+// Small version of the hero planet: shaded sphere with a ring that passes in front and behind
 export const PlanetLogo: React.FC<PlanetLogoProps> = ({ size = 32, className = '', isSpinning = false }) => {
   return (
     <div className={`relative inline-flex items-center justify-center ${className}`} style={{ width: size, height: size }}>
-      <svg
-        viewBox="0 0 64 64"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-full overflow-visible"
-      >
+      <svg viewBox="0 0 64 64" fill="none" className="w-full h-full overflow-visible" aria-hidden="true">
         <defs>
-          <linearGradient id="planetGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#FFFFFF" />
-            <stop offset="55%" stopColor="#E4E4E7" />
-            <stop offset="100%" stopColor="#52525B" />
+          <radialGradient id="pl-body" cx="34%" cy="28%" r="85%">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="35%" stopColor="#d4d4d8" />
+            <stop offset="70%" stopColor="#6b6b74" />
+            <stop offset="100%" stopColor="#141417" />
+          </radialGradient>
+          <linearGradient id="pl-ring" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#fff" stopOpacity="0.1" />
+            <stop offset="35%" stopColor="#fff" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#fff" stopOpacity="0.2" />
           </linearGradient>
-          <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#FFFFFF" />
-            <stop offset="45%" stopColor="#D4D4D8" />
-            <stop offset="100%" stopColor="#FFFFFF" />
-          </linearGradient>
-          <filter id="planetGlow" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="3.5" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
         </defs>
 
-        {/* Outer glowing aura */}
-        <circle cx="32" cy="32" r="18" fill="#FFFFFF" opacity="0.22" filter="url(#planetGlow)" />
-
-        {/* Back of the tilted ring (rendered behind planet sphere) */}
-        <path
-          d="M 6 32 A 26 7.5 0 0 1 58 32"
-          stroke="url(#ringGrad)"
-          strokeWidth="3.2"
-          strokeLinecap="round"
-          opacity="0.4"
-          transform="rotate(-22 32 32)"
-        />
-
-        {/* Planet Sphere (dead-center at 32, 32) */}
-        <circle
-          cx="32"
-          cy="32"
-          r="15"
-          fill="url(#planetGrad)"
-          filter="url(#planetGlow)"
-        />
-
-        {/* Atmosphere specular highlight */}
-        <path
-          d="M 21 25 A 13 13 0 0 1 41 21"
-          stroke="rgba(255,255,255,0.55)"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-        />
-
-        {/* Front of the tilted ring (rendered in front of planet sphere) */}
+        <g transform="rotate(-17 32 32)">
+          <path d="M 4 32 A 28 8 0 0 1 60 32" stroke="url(#pl-ring)" strokeWidth="2" opacity="0.4" />
+        </g>
+        <circle cx="32" cy="32" r="15" fill="url(#pl-body)" />
         <motion.g
           animate={isSpinning ? { rotate: [0, 360] } : undefined}
           transition={isSpinning ? { duration: 3, repeat: Infinity, ease: 'linear' } : undefined}
           style={{ originX: '32px', originY: '32px' }}
         >
-          <path
-            d="M 58 32 A 26 7.5 0 0 1 6 32"
-            stroke="url(#ringGrad)"
-            strokeWidth="3.2"
-            strokeLinecap="round"
-            transform="rotate(-22 32 32)"
-          />
+          <g transform="rotate(-17 32 32)">
+            <path d="M 4 32 A 28 8 0 0 0 60 32" stroke="url(#pl-ring)" strokeWidth="2.2" />
+          </g>
         </motion.g>
       </svg>
     </div>

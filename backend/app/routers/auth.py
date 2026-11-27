@@ -34,7 +34,7 @@ def _user_out(user: User) -> UserOut:
     return UserOut(
         id=user.id,
         name=user.name,
-        phone_masked=mask_phone(plain_phone) if plain_phone else "••••",
+        phone_masked=mask_phone(plain_phone) if plain_phone else "****",
         is_admin=user.is_admin,
         created_at=user.created_at,
     )

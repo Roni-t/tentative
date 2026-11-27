@@ -3,9 +3,10 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { Event, HeatmapResponse, HeatmapSlot } from '../types';
 import { HeatmapGrid } from '../components/HeatmapGrid';
+import { DEMO_TOKEN } from '../utils/demo';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { ArrowLeft, RefreshCw, Download, Sparkles, PlusCircle } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Sparkles, PlusCircle } from 'lucide-react';
 
 export const HeatmapPage: React.FC = () => {
   const { id, token } = useParams<{ id?: string; token?: string }>();
@@ -57,9 +58,11 @@ export const HeatmapPage: React.FC = () => {
     loadData(true);
   };
 
+  const isDemo = token === DEMO_TOKEN;
+
   const handleSelectSlotForFinalize = (slot: HeatmapSlot) => {
     if (!event) return;
-    navigate(`/events/${event.id}/finalize`, {
+    navigate(isDemo ? `/share/${DEMO_TOKEN}/finalize` : `/events/${event.id}/finalize`, {
       state: {
         startTime: slot.start_time,
         endTime: slot.end_time,
@@ -70,7 +73,7 @@ export const HeatmapPage: React.FC = () => {
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-16 text-center text-slate-500 animate-pulse">
-        Calculating alignment matrix and radiant heatmap...
+        Loading the heatmap...
       </div>
     );
   }
@@ -86,7 +89,8 @@ export const HeatmapPage: React.FC = () => {
     );
   }
 
-  const isHostOrCohost = event.is_host || event.is_cohost;
+  // In the demo, everyone gets the finalize buttons so they can try it out
+  const isHostOrCohost = event.is_host || event.is_cohost || isDemo;
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -117,17 +121,9 @@ export const HeatmapPage: React.FC = () => {
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
           </button>
-          <a
-            href={`/api/events/${event.id}/export.ics`}
-            download
-            className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 text-xs font-medium flex items-center space-x-1.5 transition-colors"
-          >
-            <Download className="w-3.5 h-3.5 text-cosmic-cyan" />
-            <span>Export .ics</span>
-          </a>
           <Link
             to={token ? `/share/${token}/respond` : `/events/${event.id}/respond`}
-            className="px-4 py-2 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-bold shadow-[0_0_15px_rgba(255,255,255,0.35)] flex items-center space-x-1.5 transition-all"
+            className="px-4 py-2 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-bold flex items-center space-x-1.5 transition-all"
           >
             <PlusCircle className="w-3.5 h-3.5 text-black" />
             <span>Paint My Times</span>
@@ -135,8 +131,15 @@ export const HeatmapPage: React.FC = () => {
         </div>
       </div>
 
+      {isDemo && (
+        <div className="glass-panel rounded-2xl px-5 py-3 text-xs text-zinc-300">
+          This is a demo event. Pick a time and finalize it to see what happens. Nothing is saved.
+        </div>
+      )}
+
       {/* Heatmap Grid & Inspector Component */}
       <HeatmapGrid
+        timezone={event.timezone}
         heatmap={heatmap}
         candidateDates={event.candidate_dates}
         isHostOrCohost={isHostOrCohost}

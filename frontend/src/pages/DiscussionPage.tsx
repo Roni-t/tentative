@@ -147,7 +147,7 @@ export const DiscussionPage: React.FC = () => {
                 onClick={() => setIsQuestion(true)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-colors ${
                   isQuestion
-                    ? 'bg-cosmic-cyan/20 text-cyan-300 border border-cosmic-cyan/40'
+                    ? 'bg-cosmic-cyan/20 text-zinc-200 border border-cosmic-cyan/40'
                     : 'bg-white/5 text-slate-400 hover:text-white'
                 }`}
               >
@@ -160,7 +160,7 @@ export const DiscussionPage: React.FC = () => {
                 onClick={() => setIsQuestion(false)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-colors ${
                   !isQuestion
-                    ? 'bg-cosmic-purple/20 text-purple-300 border border-cosmic-purple/40'
+                    ? 'bg-cosmic-purple/20 text-zinc-200 border border-cosmic-purple/40'
                     : 'bg-white/5 text-slate-400 hover:text-white'
                 }`}
               >
@@ -172,7 +172,7 @@ export const DiscussionPage: React.FC = () => {
             <button
               type="submit"
               disabled={posting}
-              className="px-6 py-2 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_15px_rgba(255,255,255,0.3)] flex items-center space-x-1.5 transition-all disabled:opacity-50 cursor-pointer"
+              className="px-6 py-2 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 flex items-center space-x-1.5 transition-all disabled:opacity-50 cursor-pointer"
             >
               <Send className="w-3.5 h-3.5 text-black" />
               <span>{posting ? 'Posting...' : 'Post Message'}</span>
@@ -222,7 +222,7 @@ export const DiscussionPage: React.FC = () => {
                     <span
                       className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
                         c.is_question
-                          ? 'bg-cosmic-cyan/20 text-cyan-300 border border-cosmic-cyan/30'
+                          ? 'bg-cosmic-cyan/20 text-zinc-200 border border-cosmic-cyan/30'
                           : 'bg-white/5 text-slate-400 border border-white/10'
                       }`}
                     >
@@ -245,7 +245,7 @@ export const DiscussionPage: React.FC = () => {
                           <div className="flex items-center space-x-1.5">
                             <span className="font-bold text-white">{rep.author_name}</span>
                             {rep.is_host_reply && (
-                              <span className="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase bg-cosmic-purple/30 text-purple-300 border border-cosmic-purple/40">
+                              <span className="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase bg-cosmic-purple/30 text-zinc-200 border border-cosmic-purple/40">
                                 Host Reply
                               </span>
                             )}
@@ -293,7 +293,7 @@ export const DiscussionPage: React.FC = () => {
                       </button>
                       <button
                         onClick={() => handlePostReply(c.id)}
-                        className="px-4 py-1.5 rounded-xl text-xs font-bold bg-cosmic-purple hover:bg-cosmic-purple/80 text-white"
+                        className="px-4 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-zinc-200 text-black transition-colors"
                       >
                         Send Reply
                       </button>

@@ -33,7 +33,6 @@ export const RsvpListPage: React.FC = () => {
 
   // Attendee self RSVP state
   const [participantName, setParticipantName] = useState(user?.name || '');
-  const [contactInfo, setContactInfo] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<RsvpStatus>('going');
   const [submittingRsvp, setSubmittingRsvp] = useState(false);
 
@@ -65,7 +64,7 @@ export const RsvpListPage: React.FC = () => {
     }
     setSubmittingRsvp(true);
     try {
-      const updated = await api.submitRsvp(id, participantName.trim(), selectedStatus, contactInfo.trim());
+      const updated = await api.submitRsvp(id, participantName.trim(), selectedStatus);
       if (updated.status === 'waitlisted') {
         showToast(`Event capacity reached. You are on the waitlist at position #${updated.waitlist_position}`, 'info');
       } else {
@@ -163,16 +162,6 @@ export const RsvpListPage: React.FC = () => {
                 className="w-full px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:border-white"
               />
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1">Phone or Email (for SMS updates)</label>
-              <input
-                type="text"
-                value={contactInfo}
-                onChange={(e) => setContactInfo(e.target.value)}
-                placeholder="e.g. +19725550142"
-                className="w-full px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:border-white"
-              />
-            </div>
           </div>
 
           <div>
@@ -221,7 +210,7 @@ export const RsvpListPage: React.FC = () => {
 
           {summary.current_waitlist_position && (
             <div className="p-3 rounded-2xl bg-zinc-900 border border-zinc-700 text-xs text-zinc-200">
-              ⚡ You are currently on the waitlist at <strong>Position #{summary.current_waitlist_position}</strong>.
+              You are currently on the waitlist at <strong>Position #{summary.current_waitlist_position}</strong>.
               If a spot opens up, you will be automatically promoted to Going.
             </div>
           )}
@@ -230,7 +219,7 @@ export const RsvpListPage: React.FC = () => {
             <button
               type="submit"
               disabled={submittingRsvp}
-              className="px-6 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-all disabled:opacity-50 cursor-pointer"
+              className="px-6 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 transition-all disabled:opacity-50 cursor-pointer"
             >
               {submittingRsvp ? 'Saving...' : 'Save Response'}
             </button>
@@ -277,7 +266,6 @@ export const RsvpListPage: React.FC = () => {
               <tr>
                 <th className="py-3.5 px-4 sm:px-6">Attendee</th>
                 <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4 hidden sm:table-cell">Contact</th>
                 <th className="py-3.5 px-4 text-right">Updated</th>
               </tr>
             </thead>
@@ -313,9 +301,6 @@ export const RsvpListPage: React.FC = () => {
                       >
                         {r.status.replace('_', ' ')}
                       </span>
-                    </td>
-                    <td className="py-3.5 px-4 hidden sm:table-cell text-slate-400 font-mono">
-                      {r.participant_email_or_phone || '—'}
                     </td>
                     <td className="py-3.5 px-4 text-right text-slate-500 font-mono text-[11px]">
                       {format(parseISO(r.updated_at), 'MMM d, h:mm a')}

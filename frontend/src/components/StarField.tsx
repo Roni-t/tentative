@@ -1,200 +1,157 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
+
+interface Star {
+  x: number;
+  y: number;
+  radius: number;
+  alpha: number;
+  speed: number;
+  twinkle: number;
+}
 
 interface ShootingStar {
   x: number;
   y: number;
-  length: number;
-  speed: number;
   dx: number;
   dy: number;
+  length: number;
   opacity: number;
-  active: boolean;
 }
+
+const makeStar = (width: number, height: number): Star => ({
+  x: Math.random() * width,
+  y: Math.random() * height,
+  radius: Math.random() * 1.3 + 0.3,
+  alpha: Math.random() * 0.7 + 0.2,
+  speed: Math.random() * 0.12 + 0.04,
+  twinkle: Math.random() * 0.02 + 0.005,
+});
 
 export const StarField: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const glowRef = useRef<HTMLDivElement | null>(null);
-
-  // High-performance direct DOM transform tracking with zero React re-renders
-  useEffect(() => {
-    let rafId: number;
-    const handleMouseMove = (e: MouseEvent) => {
-      cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => {
-        if (glowRef.current) {
-          glowRef.current.style.transform = `translate3d(${e.clientX - 225}px, ${e.clientY - 225}px, 0)`;
-        }
-      });
-    };
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      cancelAnimationFrame(rafId);
-    };
-  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
 
-    let animationFrameId: number;
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let width = 0;
+    let height = 0;
+    let stars: Star[] = [];
+    let meteor: ShootingStar | null = null;
+    let nextMeteorAt = Date.now() + 5000;
+    let frame = 0;
 
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    resize();
-    window.addEventListener('resize', resize);
+    // Match the canvas to the window, and keep the star density the same when the window changes size.
+    const fit = () => {
+      const oldWidth = width;
+      const oldHeight = height;
+      width = window.innerWidth;
+      height = window.innerHeight;
 
-    // Generate stars
-    const starCount = Math.floor((window.innerWidth * window.innerHeight) / 6500);
-    const stars = Array.from({ length: starCount }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      radius: Math.random() * 1.3 + 0.3,
-      alpha: Math.random() * 0.7 + 0.2,
-      speed: Math.random() * 0.12 + 0.04,
-      twinkle: Math.random() * 0.02 + 0.005,
-    }));
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    // Shooting star state
-    let shootingStar: ShootingStar = {
-      x: 0,
-      y: 0,
-      length: 0,
-      speed: 0,
-      dx: 0,
-      dy: 0,
-      opacity: 0,
-      active: false,
-    };
-
-    let nextShootTime = Date.now() + Math.random() * 6000 + 4000;
-
-    const spawnShootingStar = () => {
-      const startX = Math.random() * canvas.width * 0.8;
-      const startY = Math.random() * canvas.height * 0.3;
-      const angle = (Math.PI / 4) + (Math.random() * 0.2 - 0.1); // ~45 deg downward
-      const speed = Math.random() * 8 + 12;
-      shootingStar = {
-        x: startX,
-        y: startY,
-        length: Math.random() * 80 + 60,
-        speed,
-        dx: Math.cos(angle) * speed,
-        dy: Math.sin(angle) * speed,
-        opacity: 0.85,
-        active: true,
-      };
+      if (oldWidth && oldHeight) {
+        stars.forEach((s) => {
+          s.x = (s.x / oldWidth) * width;
+          s.y = (s.y / oldHeight) * height;
+        });
+      }
+      const target = Math.floor((width * height) / 6500);
+      while (stars.length < target) stars.push(makeStar(width, height));
+      stars.length = Math.min(stars.length, target);
+      draw();
     };
 
-    const render = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Draw stars
-      stars.forEach((star) => {
+    const draw = () => {
+      ctx.clearRect(0, 0, width, height);
+      for (const s of stars) {
         ctx.beginPath();
-        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(235, 240, 255, ${star.alpha})`;
+        ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(235, 240, 255, ${s.alpha})`;
         ctx.fill();
-
-        if (!reducedMotion) {
-          star.y -= star.speed;
-          if (star.y < 0) {
-            star.y = canvas.height;
-            star.x = Math.random() * canvas.width;
-          }
-          star.alpha += (Math.random() - 0.5) * star.twinkle;
-          if (star.alpha < 0.2) star.alpha = 0.2;
-          if (star.alpha > 0.85) star.alpha = 0.85;
-        }
-      });
-
-      // Render & update shooting star
-      if (!reducedMotion) {
-        const now = Date.now();
-        if (!shootingStar.active && now > nextShootTime) {
-          spawnShootingStar();
-          nextShootTime = now + Math.random() * 8000 + 6000;
-        }
-
-        if (shootingStar.active) {
-          const tailX = shootingStar.x - (shootingStar.dx / shootingStar.speed) * shootingStar.length;
-          const tailY = shootingStar.y - (shootingStar.dy / shootingStar.speed) * shootingStar.length;
-
-          const grad = ctx.createLinearGradient(tailX, tailY, shootingStar.x, shootingStar.y);
-          grad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-          grad.addColorStop(0.6, `rgba(220, 225, 235, ${shootingStar.opacity * 0.4})`);
-          grad.addColorStop(1, `rgba(255, 255, 255, ${shootingStar.opacity})`);
-
-          ctx.beginPath();
-          ctx.moveTo(tailX, tailY);
-          ctx.lineTo(shootingStar.x, shootingStar.y);
-          ctx.strokeStyle = grad;
-          ctx.lineWidth = 1.8;
-          ctx.stroke();
-
-          shootingStar.x += shootingStar.dx;
-          shootingStar.y += shootingStar.dy;
-          shootingStar.opacity -= 0.015;
-
-          if (
-            shootingStar.opacity <= 0 ||
-            shootingStar.x > canvas.width ||
-            shootingStar.y > canvas.height
-          ) {
-            shootingStar.active = false;
-          }
-        }
-
-        animationFrameId = requestAnimationFrame(render);
+      }
+      if (meteor) {
+        const speed = Math.hypot(meteor.dx, meteor.dy);
+        const tailX = meteor.x - (meteor.dx / speed) * meteor.length;
+        const tailY = meteor.y - (meteor.dy / speed) * meteor.length;
+        const grad = ctx.createLinearGradient(tailX, tailY, meteor.x, meteor.y);
+        grad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+        grad.addColorStop(1, `rgba(255, 255, 255, ${meteor.opacity})`);
+        ctx.beginPath();
+        ctx.moveTo(tailX, tailY);
+        ctx.lineTo(meteor.x, meteor.y);
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 1.6;
+        ctx.stroke();
       }
     };
 
-    render();
+    const step = () => {
+      for (const s of stars) {
+        s.y -= s.speed;
+        if (s.y < 0) {
+          s.y = height;
+          s.x = Math.random() * width;
+        }
+        s.alpha = Math.min(0.85, Math.max(0.2, s.alpha + (Math.random() - 0.5) * s.twinkle));
+      }
+
+      const now = Date.now();
+      if (!meteor && now > nextMeteorAt) {
+        const angle = Math.PI / 4 + (Math.random() * 0.2 - 0.1);
+        const speed = Math.random() * 8 + 12;
+        meteor = {
+          x: Math.random() * width * 0.8,
+          y: Math.random() * height * 0.3,
+          dx: Math.cos(angle) * speed,
+          dy: Math.sin(angle) * speed,
+          length: Math.random() * 80 + 60,
+          opacity: 0.85,
+        };
+        nextMeteorAt = now + Math.random() * 8000 + 6000;
+      }
+      if (meteor) {
+        meteor.x += meteor.dx;
+        meteor.y += meteor.dy;
+        meteor.opacity -= 0.015;
+        if (meteor.opacity <= 0 || meteor.x > width || meteor.y > height) meteor = null;
+      }
+
+      draw();
+      frame = requestAnimationFrame(step);
+    };
+
+    fit();
+    window.addEventListener('resize', fit);
+    if (!reducedMotion) frame = requestAnimationFrame(step);
 
     return () => {
-      window.removeEventListener('resize', resize);
-      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('resize', fit);
+      cancelAnimationFrame(frame);
     };
   }, []);
 
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-black">
-      {/* Background canvas for stars and meteor streaks */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full opacity-70" />
 
-      {/* Subtle interactive cursor light glow that follows mouse pointer */}
+      {/* Faint light patches. These are sized in vw so they scale with the window. */}
       <div
-        ref={glowRef}
-        className="absolute w-[450px] h-[450px] rounded-full pointer-events-none will-change-transform"
-        style={{
-          background: 'radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%)',
-          transform: 'translate3d(-1000px, -1000px, 0)',
-        }}
-      />
-
-      {/* Atmospheric monochrome silver/white gradient glows using GPU-friendly radial gradients */}
-      <div
-        className="absolute -top-[20%] -left-[10%] w-[55vw] h-[55vw] rounded-full pointer-events-none"
-        style={{
-          background: 'radial-gradient(circle, rgba(255, 255, 255, 0.035) 0%, transparent 70%)',
-        }}
+        className="absolute -top-[20%] -left-[10%] w-[55vw] h-[55vw] rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(255, 255, 255, 0.07) 0%, transparent 70%)' }}
       />
       <div
-        className="absolute top-[35%] -right-[15%] w-[50vw] h-[50vw] rounded-full pointer-events-none"
-        style={{
-          background: 'radial-gradient(circle, rgba(255, 255, 255, 0.025) 0%, transparent 70%)',
-        }}
+        className="absolute top-[35%] -right-[15%] w-[50vw] h-[50vw] rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%)' }}
       />
       <div
-        className="absolute -bottom-[20%] left-[20%] w-[55vw] h-[55vw] rounded-full pointer-events-none"
-        style={{
-          background: 'radial-gradient(circle, rgba(255, 255, 255, 0.025) 0%, transparent 70%)',
-        }}
+        className="absolute -bottom-[20%] left-[20%] w-[55vw] h-[55vw] rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%)' }}
       />
     </div>
   );

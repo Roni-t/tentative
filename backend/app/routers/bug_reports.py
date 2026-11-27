@@ -18,7 +18,7 @@ def create_bug_report(
     """File a bug report or platform feedback."""
     report = BugReport(
         user_name=payload.user_name,
-        email_or_phone=payload.email_or_phone,
+        contact=payload.contact,
         page_url=payload.page_url,
         description=payload.description
     )

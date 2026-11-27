@@ -5,7 +5,17 @@ from app.core.dependencies import get_current_user
 from app.core.rate_limiter import rate_limit
 from app.database import get_db
 from app.models.user import User
-from app.schemas.invitee import HostUpdateOut, HostUpdatePayload, InviteeCreatePayload, InviteeOut, OptOutPayload
+from app.schemas.invitee import (
+    HostUpdateOut,
+    HostUpdatePayload,
+    InviteeCreatePayload,
+    InviteeOut,
+    InviteePhonePayload,
+    InviteePhoneVerifyOut,
+    InviteePhoneVerifyPayload,
+    OptOutPayload,
+)
+from app.services.event_service import event_service
 from app.services.invitee_service import invitee_service
 
 router = APIRouter(tags=["Invitees & SMS"])
@@ -15,15 +25,37 @@ router = APIRouter(tags=["Invitees & SMS"])
              dependencies=[Depends(rate_limit(max_requests=30, window_seconds=60))])
 def add_invitee(event_id: int, payload: InviteeCreatePayload, current_user: User = Depends(get_current_user),
                 db: Session = Depends(get_db)):
-    """Host/co-host invites someone by phone; they are texted a personal response link."""
-    invitee = invitee_service.add_invitee(event_id, payload.name, payload.phone, payload.timezone, current_user, db)
-    return invitee_service.to_out(invitee, db, include_token=True)
+    """Host adds an invitee by name. The response has their personal link."""
+    event = event_service.get_event(event_id, current_user, db)
+    invitee = invitee_service.add_invitee(event_id, payload.name, current_user, db)
+    return invitee_service.to_out(event, invitee, db)
 
 
 @router.get("/api/events/{event_id}/invitees", response_model=List[InviteeOut])
 def list_invitees(event_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Host/co-host view of invitees: responded, reminder sent, and opted-out status."""
+    """Host view of the invitee list. Shows who responded and who can be texted, never phone numbers."""
     return invitee_service.list_invitees(event_id, current_user, db)
+
+
+@router.post("/api/events/{event_id}/invitees/{invitee_id}/new-link", response_model=InviteeOut)
+def new_invitee_link(event_id: int, invitee_id: int, current_user: User = Depends(get_current_user),
+                     db: Session = Depends(get_db)):
+    """Replace one invitee's link. The old link stops working."""
+    return invitee_service.regenerate_link(event_id, invitee_id, current_user, db)
+
+
+@router.post("/api/invite/{token}/phone/request-code",
+             dependencies=[Depends(rate_limit(max_requests=5, window_seconds=60))])
+def request_phone_code(token: str, payload: InviteePhonePayload, db: Session = Depends(get_db)):
+    """Invitee asks for a text when the time is set. We send a code to check the number is theirs."""
+    return invitee_service.request_phone_code(token, payload.phone, db)
+
+
+@router.post("/api/invite/{token}/phone/verify", response_model=InviteePhoneVerifyOut,
+             dependencies=[Depends(rate_limit(max_requests=10, window_seconds=60))])
+def verify_phone(token: str, payload: InviteePhoneVerifyPayload, db: Session = Depends(get_db)):
+    """Check the code, then create (or link) the invitee's account."""
+    return invitee_service.verify_phone(token, payload.phone, payload.code, payload.timezone, db)
 
 
 @router.post("/api/events/{event_id}/updates", response_model=HostUpdateOut,

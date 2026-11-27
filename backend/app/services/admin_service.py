@@ -43,7 +43,7 @@ class AdminService:
             result.append(AdminUserOut(
                 id=u.id,
                 name=u.name,
-                phone_masked=mask_phone(phone_plain) if phone_plain else "••••",
+                phone_masked=mask_phone(phone_plain) if phone_plain else "****",
                 is_admin=u.is_admin,
                 events_count=events_count,
                 created_at=u.created_at

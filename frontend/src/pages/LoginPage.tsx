@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { api } from '../api/client';
 import { PlanetLogo } from '../components/PlanetLogo';
+import { afterAuthPath } from '../utils/createDraft';
 import { DevSmsBanner } from '../components/DevSmsBanner';
 import { CodeEntry } from '../components/auth/CodeEntry';
 import { AuthOutcome, Outcome } from '../components/auth/AuthOutcome';
@@ -13,7 +14,7 @@ import { Phone, ArrowRight, Lock } from 'lucide-react';
 const inputClass =
   'w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-zinc-500 text-sm focus:border-white focus:ring-1 focus:ring-white transition-all';
 const primaryButton =
-  'w-full py-3 rounded-2xl text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_20px_rgba(255,255,255,0.35)] flex items-center justify-center space-x-2 transition-all disabled:opacity-50 cursor-pointer';
+  'w-full py-3 rounded-2xl text-xs font-bold bg-white text-black hover:bg-zinc-200 flex items-center justify-center space-x-2 transition-all disabled:opacity-50 cursor-pointer';
 
 /** UC-2: Login — phone number lookup, verify via SMS code, then a session is started. */
 export const LoginPage: React.FC = () => {
@@ -86,7 +87,7 @@ export const LoginPage: React.FC = () => {
     try {
       const user = await login(phone, code, keepSignedIn);
       showToast(`Welcome back, ${user.name}!`, 'success');
-      navigate('/events');
+      navigate(afterAuthPath());
     } catch (err: any) {
       setCode('');
       setOutcome(

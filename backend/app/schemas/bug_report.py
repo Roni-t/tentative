@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 class BugReportCreatePayload(BaseModel):
     user_name: Optional[str] = Field(None, max_length=128)
-    email_or_phone: Optional[str] = Field(None, max_length=128)
+    contact: Optional[str] = Field(None, max_length=128)
     page_url: Optional[str] = Field(None, max_length=512)
     description: str = Field(..., min_length=5)
 
@@ -13,7 +13,7 @@ class BugReportCreatePayload(BaseModel):
 class BugReportOut(BaseModel):
     id: int
     user_name: Optional[str] = None
-    email_or_phone: Optional[str] = None
+    contact: Optional[str] = None
     page_url: Optional[str] = None
     description: str
     status: str

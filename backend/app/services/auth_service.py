@@ -48,7 +48,7 @@ class AuthService:
     def _find_user(self, phone_hash: str, db: Session) -> Optional[User]:
         return db.query(User).filter(User.phone_hash == phone_hash).first()
 
-    def _send_code(self, normalized: str, db: Session) -> Dict:
+    def send_code(self, normalized: str, db: Session) -> Dict:
         """Replace any pending code for this phone with a fresh one and text it."""
         p_hash = hash_phone(normalized)
         now = datetime.now(timezone.utc)
@@ -79,7 +79,7 @@ class AuthService:
             "dev_code": code if settings.dev_sms_enabled else None,
         }
 
-    def _consume_code(self, normalized: str, code: str, db: Session) -> None:
+    def consume_code(self, normalized: str, code: str, db: Session) -> None:
         """Check the code matches and is not expired; consume it on success. Raises on failure."""
         code = (code or "").strip()
         if not (len(code) == 6 and code.isdigit()):
@@ -110,7 +110,7 @@ class AuthService:
         db.delete(db_code)
         db.commit()
 
-    def _start_session(self, user: User, keep_signed_in: bool, db: Session) -> Tuple[str, datetime]:
+    def start_session(self, user: User, keep_signed_in: bool, db: Session) -> Tuple[str, datetime]:
         """Create a revocable server-side session and a signed token that references it."""
         now = datetime.now(timezone.utc)
         hours = settings.SESSION_TTL_KEEP_SIGNED_IN_HOURS if keep_signed_in else settings.SESSION_TTL_DEFAULT_HOURS
@@ -128,7 +128,7 @@ class AuthService:
         normalized = _parse_phone(phone)
         if self._find_user(hash_phone(normalized), db):
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=PHONE_ALREADY_REGISTERED)
-        return self._send_code(normalized, db)
+        return self.send_code(normalized, db)
 
     def complete_registration(self, phone: str, name: str, code: str, db: Session) -> Tuple[User, str, datetime]:
         clean_name = _parse_name(name)
@@ -137,7 +137,7 @@ class AuthService:
         if self._find_user(p_hash, db):
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=PHONE_ALREADY_REGISTERED)
 
-        self._consume_code(normalized, code, db)
+        self.consume_code(normalized, code, db)
 
         user = User(
             name=clean_name,
@@ -154,7 +154,7 @@ class AuthService:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=PHONE_ALREADY_REGISTERED)
         db.refresh(user)
 
-        token, expires_at = self._start_session(user, keep_signed_in=True, db=db)
+        token, expires_at = self.start_session(user, keep_signed_in=True, db=db)
         return user, token, expires_at
 
     # --------------------------------------------------------------- UC-2
@@ -163,7 +163,7 @@ class AuthService:
         normalized = _parse_phone(phone)
         if not self._find_user(hash_phone(normalized), db):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=NO_ACCOUNT_FOUND)
-        return self._send_code(normalized, db)
+        return self.send_code(normalized, db)
 
     def complete_login(self, phone: str, code: str, keep_signed_in: bool, db: Session) -> Tuple[User, str, datetime]:
         normalized = _parse_phone(phone)
@@ -171,8 +171,8 @@ class AuthService:
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=NO_ACCOUNT_FOUND)
 
-        self._consume_code(normalized, code, db)
-        token, expires_at = self._start_session(user, keep_signed_in=keep_signed_in, db=db)
+        self.consume_code(normalized, code, db)
+        token, expires_at = self.start_session(user, keep_signed_in=keep_signed_in, db=db)
         return user, token, expires_at
 
     # ------------------------------------------------------------- logout

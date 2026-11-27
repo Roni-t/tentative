@@ -32,7 +32,9 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ['Instrument Sans', 'system-ui', 'sans-serif'],
+        mono: ['IBM Plex Mono', 'ui-monospace', 'monospace'],
+        serif: ['Instrument Serif', 'Georgia', 'serif'],
       },
       boxShadow: {
         'glow-sm': '0 0 15px -3px rgba(255, 255, 255, 0.35)',

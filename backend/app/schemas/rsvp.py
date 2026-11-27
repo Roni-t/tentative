@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 class RsvpSubmitPayload(BaseModel):
     participant_name: str = Field(..., min_length=1, max_length=128)
-    participant_email_or_phone: Optional[str] = None
+    participant_phone: Optional[str] = None
     edit_token: Optional[str] = None
     status: str = Field(..., description="'going', 'maybe', 'not_going'")
 
@@ -14,7 +14,7 @@ class RsvpOut(BaseModel):
     id: int
     event_id: int
     participant_name: str
-    participant_email_or_phone: Optional[str] = None
+    participant_phone: Optional[str] = None
     status: str
     waitlist_position: Optional[int] = None
     edit_token: str

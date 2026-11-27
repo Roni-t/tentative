@@ -1,116 +1,98 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { PlanetLogo } from './PlanetLogo';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, User as UserIcon } from 'lucide-react';
+import { LogOut } from 'lucide-react';
+
+const LINKS = [
+  { to: '/events', label: 'Events' },
+  { to: '/create', label: 'Create' },
+  { to: '/share/demo-orbit-2026/heatmap', label: 'Demo' },
+];
 
 export const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
-  const location = useLocation();
+  const { pathname } = useLocation();
+  const [hidden, setHidden] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  const isActive = (path: string) => location.pathname === path;
+  // The bar slides away while reading down the page and comes back when scrolling up,
+  // so it never sits on top of page content.
+  useEffect(() => {
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 12);
+      if (y > lastY && y > 90) setHidden(true);
+      else if (y < lastY) setHidden(false);
+      lastY = y;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   return (
-    <header className="sticky top-0 z-50 px-4 sm:px-8 py-3.5 backdrop-blur-2xl bg-space-950/70 border-b border-white/[0.06] transition-all">
+    <header
+      className="sticky top-0 z-50 px-4 sm:px-8 py-4 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+      style={{ transform: hidden ? 'translateY(-120%)' : 'translateY(0)' }}
+    >
+      {/* Dark fade behind the bar so page content does not collide with the logo and buttons */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-28 -z-10 bg-gradient-to-b from-black from-50% via-black/85 to-transparent transition-opacity duration-500"
+        style={{ opacity: scrolled ? 1 : 0 }}
+      />
       <div className="max-w-6xl mx-auto flex items-center justify-between">
-        {/* Brand */}
         <Link
           to="/"
-          onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })}
-          className="inline-flex items-center space-x-2.5 group cursor-pointer"
+          onClick={() => pathname === '/' && window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="inline-flex items-center space-x-2.5"
         >
-          <motion.div
-            whileHover={{ scale: 1.06, rotate: 6 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-            className="flex items-center justify-center shrink-0"
-          >
-            <PlanetLogo size={28} isSpinning={false} />
-          </motion.div>
-          <span className="text-lg font-bold tracking-tight text-white group-hover:text-zinc-300 transition-all leading-none inline-flex items-center -translate-y-[0.5px]">
-            Tentative
-          </span>
+          <PlanetLogo size={26} />
+          <span className="font-mono text-xs tracking-wide text-zinc-300">tentative</span>
         </Link>
 
-        {/* Minimal Center Navigation */}
-        <nav className="flex items-center space-x-1 glass-pill-nav p-1 rounded-full relative">
-          <Link
-            to="/events"
-            className={`relative px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors z-10 ${
-              isActive('/events') ? 'text-white' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            {isActive('/events') && (
-              <motion.div
-                layoutId="nav-pill"
-                className="absolute inset-0 bg-white/10 rounded-full border border-white/15 -z-10"
-                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-              />
-            )}
-            <span>Events</span>
-          </Link>
-
-          <Link
-            to="/create"
-            className={`relative px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors z-10 ${
-              isActive('/create') ? 'text-white' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            {isActive('/create') && (
-              <motion.div
-                layoutId="nav-pill"
-                className="absolute inset-0 bg-white/10 rounded-full border border-white/15 -z-10"
-                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-              />
-            )}
-            <span>Create</span>
-          </Link>
-
-          <Link
-            to="/share/demo-orbit-2026/heatmap"
-            className={`relative px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors z-10 ${
-              location.pathname.includes('demo-orbit-2026') ? 'text-white' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            {location.pathname.includes('demo-orbit-2026') && (
-              <motion.div
-                layoutId="nav-pill"
-                className="absolute inset-0 bg-white/10 rounded-full border border-white/15 -z-10"
-                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-              />
-            )}
-            <span>Demo</span>
-          </Link>
+        <nav className="glass-pill-nav flex items-center p-1 rounded-full">
+          {LINKS.map(({ to, label }) => {
+            const active = pathname === to;
+            return (
+              <Link
+                key={to}
+                to={to}
+                className={`relative px-4 py-1.5 rounded-full text-sm transition-colors duration-300 ${
+                  active ? 'text-black' : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                {active && (
+                  <motion.span
+                    layoutId="nav-pill"
+                    className="absolute inset-0 rounded-full bg-zinc-100"
+                    transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                  />
+                )}
+                <span className="relative">{label}</span>
+              </Link>
+            );
+          })}
         </nav>
 
-        {/* Right CTA */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2">
           {user ? (
-            <div className="flex items-center space-x-2">
-              <div className="hidden sm:flex items-center space-x-2 text-xs text-zinc-300 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-full">
-                <UserIcon className="w-3.5 h-3.5 text-white" />
-                <span className="font-semibold text-white">{user.name}</span>
-              </div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+            <>
+              <span className="hidden sm:block text-sm text-zinc-300 px-3">{user.name}</span>
+              <button
                 onClick={logout}
-                className="p-2 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 border border-zinc-800 transition-all cursor-pointer"
                 title="Sign out"
+                className="w-9 h-9 flex items-center justify-center rounded-full glass-pill-nav text-zinc-400 hover:text-white transition-colors cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5" />
-              </motion.button>
-            </div>
+              </button>
+            </>
           ) : (
-            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-              <Link
-                to="/login"
-                className="px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-black hover:bg-zinc-200 shadow-sm transition-all"
-              >
-                Sign in
-              </Link>
-            </motion.div>
+            <Link to="/login" className="pill pill-light !py-2 !px-4 !text-xs">
+              Sign in
+            </Link>
           )}
         </div>
       </div>

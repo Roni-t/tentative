@@ -12,9 +12,9 @@ export const NotFoundPage: React.FC = () => {
           <div className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cosmic-purple to-cosmic-pink">
             404
           </div>
-          <h1 className="text-2xl font-bold text-white">Lost in Deep Space</h1>
+          <h1 className="text-2xl font-bold text-white">Page not found</h1>
           <p className="text-xs text-slate-400">
-            The page or celestial orbit you are looking for does not exist or has drifted away.
+            The page you are looking for does not exist or has moved.
           </p>
         </div>
 
@@ -23,7 +23,7 @@ export const NotFoundPage: React.FC = () => {
           className="inline-flex items-center space-x-2 px-6 py-2.5 rounded-full text-xs font-semibold bg-white/10 hover:bg-white/20 text-white transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Return to Safety</span>
+          <span>Back to home</span>
         </Link>
       </div>
     </div>

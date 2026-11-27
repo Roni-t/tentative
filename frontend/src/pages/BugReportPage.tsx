@@ -9,7 +9,7 @@ export const BugReportPage: React.FC = () => {
   const { showToast } = useToast();
 
   const [name, setName] = useState(user?.name || '');
-  const [emailOrPhone, setEmailOrPhone] = useState('');
+  const [contact, setContact] = useState('');
   const [pageUrl, setPageUrl] = useState(window.location.href);
   const [description, setDescription] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -21,7 +21,7 @@ export const BugReportPage: React.FC = () => {
 
     setLoading(true);
     try {
-      await api.submitBugReport(name.trim(), emailOrPhone.trim(), pageUrl.trim(), description.trim());
+      await api.submitBugReport(name.trim(), contact.trim(), pageUrl.trim(), description.trim());
       setSubmitted(true);
       showToast('Bug report filed. Thank you for helping improve Tentative!', 'success');
     } catch (err: any) {
@@ -40,7 +40,7 @@ export const BugReportPage: React.FC = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-white tracking-tight">Report an Issue</h1>
-            <p className="text-xs text-slate-400">Found an anomaly in the orbit? Let our team know.</p>
+            <p className="text-xs text-slate-400">Found a problem? Let us know.</p>
           </div>
         </div>
 
@@ -76,12 +76,12 @@ export const BugReportPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Contact Email / Phone</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Phone (optional)</label>
                 <input
                   type="text"
-                  value={emailOrPhone}
-                  onChange={(e) => setEmailOrPhone(e.target.value)}
-                  placeholder="e.g. rxa230125@utdallas.edu"
+                  value={contact}
+                  onChange={(e) => setContact(e.target.value)}
+                  placeholder="e.g. (972) 555-0142"
                   className="w-full px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:border-cosmic-purple"
                 />
               </div>
@@ -115,7 +115,7 @@ export const BugReportPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_15px_rgba(255,255,255,0.3)] flex items-center space-x-1.5 transition-all disabled:opacity-50 cursor-pointer"
+                className="px-6 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 flex items-center space-x-1.5 transition-all disabled:opacity-50 cursor-pointer"
               >
                 <Send className="w-3.5 h-3.5 text-black" />
                 <span>{loading ? 'Submitting...' : 'Submit Report'}</span>

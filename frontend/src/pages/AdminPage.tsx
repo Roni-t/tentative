@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 export const AdminPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { showToast } = useToast();
 
   const [status, setStatus] = useState<SystemStatus | null>(null);
@@ -85,12 +85,14 @@ export const AdminPage: React.FC = () => {
     }
   };
 
+  if (authLoading) return null;
+
   if (!user?.is_admin) {
     return (
       <div className="max-w-md mx-auto px-4 py-20 text-center space-y-3">
         <Shield className="w-12 h-12 text-red-500 mx-auto" />
         <h2 className="text-xl font-bold text-white">Access Denied</h2>
-        <p className="text-xs text-slate-400">Admin privileges required to view this celestial console.</p>
+        <p className="text-xs text-slate-400">You need to be an admin to see this page.</p>
       </div>
     );
   }
@@ -163,7 +165,7 @@ export const AdminPage: React.FC = () => {
                 <span className="text-xs text-zinc-400">Server Status</span>
                 <span
                   className={`w-2.5 h-2.5 rounded-full ${
-                    status.status === 'online' ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'bg-amber-400'
+                    status.status === 'online' ? 'bg-white' : 'bg-amber-400'
                   }`}
                 />
               </div>
@@ -271,7 +273,7 @@ export const AdminPage: React.FC = () => {
                   <td className="py-3 px-4 font-mono text-slate-400">{u.phone_masked}</td>
                   <td className="py-3 px-4">
                     {u.is_admin ? (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-cosmic-purple/20 text-purple-300 border border-purple-500/30">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-cosmic-purple/20 text-zinc-200 border border-zinc-400/30">
                         Admin
                       </span>
                     ) : (

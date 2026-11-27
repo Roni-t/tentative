@@ -25,11 +25,9 @@ logger = logging.getLogger("tentative")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: create tables
-    logger.info("Initializing database tables...")
+    logger.info("Creating database tables")
     Base.metadata.create_all(bind=engine)
 
-    # Seed data if enabled
     if settings.SEED_ON_STARTUP:
         db = SessionLocal()
         try:
@@ -37,13 +35,12 @@ async def lifespan(app: FastAPI):
         finally:
             db.close()
 
-    # Launch background scheduler task
+    # Background job for cleanup and reminders
     scheduler_task = asyncio.create_task(start_scheduler_task())
-    logger.info("Tentative backend initialized and celestial orbits aligned.")
+    logger.info("Tentative backend started.")
 
     yield
 
-    # Shutdown
     scheduler_task.cancel()
     try:
         await scheduler_task
@@ -54,7 +51,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Tentative API",
-    description="Deep space group scheduling engine - finding time anywhere in the galaxy.",
+    description="Group scheduling: collect availability and pick the best time.",
     version="1.0.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
@@ -62,7 +59,6 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS setup
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -72,7 +68,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount API Routers
 app.include_router(auth_router)
 app.include_router(events_router)
 app.include_router(share_router)

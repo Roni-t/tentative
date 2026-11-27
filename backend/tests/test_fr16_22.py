@@ -45,7 +45,7 @@ def event_with_invitees(client, host):
 
 # ------------------------------------------------------------------ F-16 / FR-16
 
-def test_f16_deadline_saved_in_utc_and_shown_in_each_timezone(client, db_session, host, sms_outbox):
+def test_f16_deadline_saved_in_utc_and_shown_in_each_timezone(client, db_session, host):
     event = create_event(client, host, deadline="2026-11-25T17:00:00-06:00")
     assert event["status"] == "collecting"
 
@@ -59,14 +59,6 @@ def test_f16_deadline_saved_in_utc_and_shown_in_each_timezone(client, db_session
         2026, 11, 25, 23, 0, tzinfo=timezone.utc
     )
     assert fetched["deadline_display"] == "Wed, Nov 25, 5:00 PM CST"
-
-    # Each invite SMS carries the deadline in that invitee's own timezone
-    add_invitee(client, host, event["id"], "Invitee1", "+14695550101", "America/Chicago")
-    add_invitee(client, host, event["id"], "Invitee2", "+13105550102", "America/Los_Angeles")
-    (invite1,) = _texts_to(sms_outbox, "+14695550101")
-    (invite2,) = _texts_to(sms_outbox, "+13105550102")
-    assert "Respond by Wed, Nov 25, 5:00 PM CST" in invite1
-    assert "Respond by Wed, Nov 25, 3:00 PM PST" in invite2
 
 
 def test_f16_deadline_update_is_normalized_to_utc(client, db_session, host):
@@ -251,29 +243,24 @@ def test_f20_no_text_without_invitees(client, host, sms_outbox):
 
 # ------------------------------------------------------------------ F-21 / FR-21
 
-# The heatmap currently lays out each day's window in UTC rather than the event timezone (an FR-6 gap),
-# so F-21 uses a slot inside the 17:00-22:00 window as the heatmap sees it.
-HEATMAP_SLOT = [{"start_time": "2026-12-04T19:00:00Z", "end_time": "2026-12-04T21:00:00Z"}]
-
-
 def test_f21_host_finalizes_slot_everyone_is_free(client, db_session, host, event_with_invitees, sms_outbox):
     event, invitees = event_with_invitees
     for inv, (name, _, _) in zip(invitees, INVITEES):
-        submit_availability(client, event["id"], name, HEATMAP_SLOT, token=inv["response_token"])
-    submit_availability(client, event["id"], HOST_NAME, HEATMAP_SLOT)
+        submit_availability(client, event["id"], name, SLOT, token=inv["response_token"])
+    submit_availability(client, event["id"], HOST_NAME, SLOT)
 
     heatmap = client.get(f"/api/events/{event['id']}/heatmap?refresh=true").json()
     best = heatmap["best_slots"][0]
     assert best["count"] == best["total_participants"] == 4
 
-    assert best["start_time"].startswith("2026-12-04T19:00")
+    assert best["start_time"].startswith("2026-12-05T01:00")
     res = client.post(f"/api/events/{event['id']}/finalize",
-                      json={"start_time": best["start_time"], "end_time": "2026-12-04T21:00:00Z"}, headers=host)
+                      json={"start_time": best["start_time"], "end_time": SLOT[0]["end_time"]}, headers=host)
     assert res.status_code == 200
     page = client.get(f"/api/events/{event['id']}", headers=host).json()
     assert page["status"] == "finalized"
     assert ensure_utc(datetime.fromisoformat(page["finalized_start_time"].replace("Z", "+00:00"))) == datetime(
-        2026, 12, 4, 19, 0, tzinfo=timezone.utc
+        2026, 12, 5, 1, 0, tzinfo=timezone.utc
     )
 
     # Availability grid is locked for all invitees
@@ -326,17 +313,101 @@ def test_fr22_host_can_finalize_without_notifying(client, host, event_with_invit
 
 def test_invitee_management_rules(client, db_session, host, event_with_invitees):
     event, invitees = event_with_invitees
-    # Duplicate phone on the same event is rejected; invalid phones are rejected
-    dup = client.post(f"/api/events/{event['id']}/invitees", json={"name": "Again", "phone": "(469) 555-0101"},
-                      headers=host)
+    # The same number can't be verified twice on one event
+    token = client.post(f"/api/events/{event['id']}/invitees", json={"name": "Again"}, headers=host).json()["response_token"]
+    code = client.post(f"/api/invite/{token}/phone/request-code", json={"phone": "(469) 555-0101"}).json()["dev_code"]
+    dup = client.post(f"/api/invite/{token}/phone/verify", json={"phone": "(469) 555-0101", "code": code})
     assert dup.status_code == 409
-    bad = client.post(f"/api/events/{event['id']}/invitees", json={"name": "Bad", "phone": "555"}, headers=host)
+    # Invalid phones and bad links are rejected
+    bad = client.post(f"/api/invite/{token}/phone/request-code", json={"phone": "555"})
     assert bad.status_code == 400
-    # Only host/co-host can add or list invitees
+    assert client.post("/api/invite/nope/phone/request-code", json={"phone": "+14695550177"}).status_code == 404
+    # Only the host or a co-host can list invitees
     stranger = register_user(client, phone="+12145550177", name="Not The Host")
     assert client.get(f"/api/events/{event['id']}/invitees", headers=stranger).status_code == 403
-    # Phone numbers are masked in API output and encrypted at rest
+    # The list says who can be texted but never includes a phone number
     listed = client.get(f"/api/events/{event['id']}/invitees", headers=host).json()
-    assert all("555" not in i["phone_masked"] for i in listed)
-    row = db_session.query(Invitee).first()
+    assert all("phone" not in key for i in listed for key in i)
+    assert listed[0]["can_text"] is True
+    assert listed[-1]["can_text"] is False  # "Again" has no number yet
+    # Numbers are encrypted in the database
+    row = db_session.query(Invitee).filter(Invitee.phone_encrypted.isnot(None)).first()
     assert "4695550101" not in row.phone_encrypted
+
+
+def test_invitee_added_by_name_has_personal_link_and_no_texts(client, host):
+    event = create_event(client, host)
+    invitee = add_invitee(client, host, event["id"], "Sam")
+    assert invitee["can_text"] is False
+    assert invitee["joined_via_link"] is False
+    assert invitee["link"].endswith(f"/events/{event['id']}/respond?invite={invitee['response_token']}")
+
+
+def test_new_link_replaces_old_one_and_keeps_response(client, host):
+    event = create_event(client, host)
+    invitee = add_invitee(client, host, event["id"], "Sam")
+    submit_availability(client, event["id"], "Sam", SLOT, token=invitee["response_token"])
+    res = client.post(f"/api/events/{event['id']}/invitees/{invitee['id']}/new-link", headers=host)
+    assert res.status_code == 200
+    assert res.json()["response_token"] != invitee["response_token"]
+    mine = client.get(f"/api/events/{event['id']}/availability/me", params={"edit_token": res.json()["response_token"]})
+    assert len(mine.json()) == 1
+
+
+def test_general_link_response_is_listed_as_joined_via_link(client, host):
+    event = create_event(client, host)
+    client.cookies.clear()
+    submit_availability(client, event["id"], "Walk-in", SLOT)
+    listed = client.get(f"/api/events/{event['id']}/invitees", headers=host).json()
+    assert [(i["name"], i["joined_via_link"], i["can_text"]) for i in listed] == [("Walk-in", True, False)]
+    assert listed[0]["responded_at"] is not None
+
+
+def test_verifying_a_phone_creates_an_account_and_links_the_response(client, db_session, host):
+    event = create_event(client, host)
+    invitee = add_invitee(client, host, event["id"], "Sam")
+    submit_availability(client, event["id"], "Sam", SLOT, token=invitee["response_token"])
+    token = invitee["response_token"]
+    code = client.post(f"/api/invite/{token}/phone/request-code", json={"phone": "+14695550166"}).json()["dev_code"]
+    res = client.post(f"/api/invite/{token}/phone/verify", json={"phone": "+14695550166", "code": code})
+    assert res.status_code == 200
+    assert res.json()["account_created"] is True
+    assert res.json()["token"]
+    # Wrong codes don't verify
+    bad = client.post(f"/api/invite/{token}/phone/verify", json={"phone": "+14695550166", "code": "000000"})
+    assert bad.status_code == 400
+
+
+# ------------------------------------------------------------------ Time zones in the heatmap
+
+def test_heatmap_window_is_in_the_event_timezone(client, host):
+    """A 12:00-14:00 window in Chicago (CST, UTC-6) starts at 18:00 UTC, on the same candidate date."""
+    event = create_event(client, host, daily_start_time="12:00", daily_end_time="14:00",
+                         candidate_dates=["2026-12-02"])
+    slots = client.get(f"/api/events/{event['id']}/heatmap?refresh=true").json()["slots"]
+    assert [s["start_time"][:16] for s in slots] == ["2026-12-02T18:00", "2026-12-02T19:00"]
+
+
+def test_finalize_window_is_in_the_event_timezone(client, host):
+    event = create_event(client, host, daily_start_time="12:00", daily_end_time="14:00",
+                         candidate_dates=["2026-12-02"])
+    url = f"/api/events/{event['id']}/finalize"
+    inside = client.post(url, json={"start_time": "2026-12-02T18:00:00Z", "end_time": "2026-12-02T19:00:00Z",
+                                    "notify_participants": False}, headers=host)
+    assert inside.status_code == 200
+    event2 = create_event(client, host, daily_start_time="12:00", daily_end_time="14:00",
+                          candidate_dates=["2026-12-02"])
+    outside = client.post(f"/api/events/{event2['id']}/finalize",
+                          json={"start_time": "2026-12-02T12:00:00Z", "end_time": "2026-12-02T13:00:00Z"},
+                          headers=host)
+    assert outside.status_code == 400  # 12:00 UTC is 6 AM in Chicago
+
+
+def test_event_times_are_marked_as_utc(client, host):
+    """Without a UTC marker the browser reads the time as its own local time and shows the wrong hour."""
+    event = create_event(client, host, daily_start_time="12:00", daily_end_time="14:00", candidate_dates=["2026-12-02"])
+    client.post(f"/api/events/{event['id']}/finalize",
+                json={"start_time": "2026-12-02T18:00:00Z", "end_time": "2026-12-02T19:00:00Z",
+                      "notify_participants": False}, headers=host)
+    shown = client.get(f"/api/events/{event['id']}", headers=host).json()
+    assert shown["finalized_start_time"].endswith(("Z", "+00:00"))

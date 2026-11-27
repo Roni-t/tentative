@@ -12,7 +12,7 @@ class RSVP(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     
     participant_name = Column(String(128), nullable=False)
-    participant_email_or_phone = Column(String(128), nullable=True)
+    participant_phone = Column(String(128), nullable=True)
     edit_token = Column(String(64), index=True, nullable=False)
     
     # Status: 'going', 'maybe', 'not_going', 'waitlisted'

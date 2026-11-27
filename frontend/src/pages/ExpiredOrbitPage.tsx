@@ -13,9 +13,9 @@ export const ExpiredOrbitPage: React.FC = () => {
           <div className="text-[10px] uppercase font-bold tracking-widest text-cosmic-pink">
             Link Inactive
           </div>
-          <h1 className="text-3xl font-extrabold text-white">This orbit has ended</h1>
+          <h1 className="text-3xl font-extrabold text-white">This link has expired</h1>
           <p className="text-xs text-slate-400 leading-relaxed">
-            The shareable link for this event has reached its expiration date or was rotated by the host.
+            The link for this event has expired, or the host replaced it with a new one.
             If you need to view or modify your response, please contact the meeting organizer for an updated link.
           </p>
         </div>
@@ -30,10 +30,10 @@ export const ExpiredOrbitPage: React.FC = () => {
           </Link>
           <Link
             to="/create"
-            className="w-full sm:w-auto px-5 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-[0_0_15px_rgba(255,255,255,0.3)] flex items-center justify-center space-x-1.5 transition-all"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 flex items-center justify-center space-x-1.5 transition-all"
           >
             <PlusCircle className="w-3.5 h-3.5 text-black" />
-            <span>Host New Orbit</span>
+            <span>Create an event</span>
           </Link>
         </div>
       </div>

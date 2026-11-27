@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { TimeSlot } from '../types';
 import { formatDateHeading, formatDayName, formatDateSub } from '../utils/format';
+import { zonedWallTimeToUtc } from '../utils/zoned';
 import { Clock, CheckSquare, XSquare, Sparkles, Calendar, Sun, Briefcase } from 'lucide-react';
 
 interface AvailabilityGridProps {
@@ -65,8 +66,8 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
   }, [initialSlots]);
 
   const getSlotIso = (dateStr: string, hour: number, minute: number): { startIso: string; endIso: string } => {
-    const [y, m, d] = dateStr.split('-').map(Number);
-    const startDt = new Date(Date.UTC(y, m - 1, d, hour, minute));
+    // The window (for example 12:00) is a wall-clock time in the event's time zone
+    const startDt = zonedWallTimeToUtc(dateStr, hour, minute, timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
     const endDt = new Date(startDt.getTime() + slotDurationMinutes * 60 * 1000);
     return {
       startIso: startDt.toISOString(),
@@ -232,14 +233,14 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
       {/* University Timetable Grid Style (Course Planner layout) */}
       <div className="overflow-x-auto pb-4 custom-scrollbar rounded-2xl border border-zinc-800 bg-black shadow-2xl">
         <div
-          className="min-w-max"
+          className="min-w-max w-full"
           onTouchMove={handleTouchMove}
           onTouchEnd={() => (isMouseDownRef.current = false)}
         >
           {/* Header Bar Across All Days (Matches Collegiate Schedule Banner) */}
           <div className="flex items-stretch bg-zinc-900/90 border-b border-zinc-700/80 sticky top-0 z-20">
             {/* Corner time header */}
-            <div className="w-20 sm:w-24 shrink-0 p-3 text-right text-[11px] font-bold text-zinc-400 uppercase tracking-wider border-r border-zinc-800 flex items-center justify-end">
+            <div className="w-16 sm:w-20 shrink-0 p-3 text-right text-[11px] font-bold text-zinc-400 uppercase tracking-wider border-r border-zinc-800 flex items-center justify-end">
               Time
             </div>
 
@@ -251,7 +252,7 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
               return (
                 <div
                   key={dateStr}
-                  className="w-32 sm:w-40 md:w-44 shrink-0 py-3 px-3 text-center border-r border-zinc-800 last:border-r-0 flex flex-col items-center justify-center"
+                  className="flex-1 min-w-[5.5rem] py-3 px-3 text-center border-r border-zinc-800 last:border-r-0 flex flex-col items-center justify-center"
                 >
                   <span className="text-xs sm:text-sm font-bold text-white tracking-wide uppercase">
                     {dayName}
@@ -280,7 +281,7 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
                   }`}
                 >
                   {/* Left-hand Time Gutter (Hours & Sub-intervals) */}
-                  <div className="w-20 sm:w-24 shrink-0 pr-3 py-1.5 text-right border-r border-zinc-800/80 flex items-center justify-end">
+                  <div className="w-16 sm:w-20 shrink-0 pr-3 py-1.5 text-right border-r border-zinc-800/80 flex items-center justify-end">
                     <span
                       className={`font-mono text-[11px] ${
                         isTopHour ? 'font-bold text-white' : 'font-normal text-zinc-500'
@@ -310,9 +311,9 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
                           setSelectedSet(next);
                           notifyChange(next);
                         }}
-                        className={`w-32 sm:w-40 md:w-44 h-8 sm:h-9 px-1.5 py-0.5 border-r border-zinc-800/80 last:border-r-0 cursor-pointer transition-colors duration-100 flex items-center ${
+                        className={`flex-1 min-w-[5.5rem] h-8 sm:h-9 px-1.5 py-0.5 border-r border-zinc-800/80 last:border-r-0 cursor-pointer transition-colors duration-100 flex items-center ${
                           isSelected
-                            ? 'bg-zinc-800/90 text-white'
+                            ? 'text-white'
                             : 'hover:bg-zinc-900/60 text-zinc-600'
                         }`}
                       >
@@ -320,13 +321,12 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
                           <motion.div
                             initial={{ scale: 0.95 }}
                             animate={{ scale: 1 }}
-                            className="w-full h-full rounded-md bg-white text-black font-semibold text-[11px] flex items-center justify-between px-2 shadow-[0_0_10px_rgba(255,255,255,0.4)] border-l-4 border-black"
+                            className="w-full h-full rounded-md bg-white text-black font-semibold text-[11px] flex items-center justify-center px-2"
                           >
                             <span className="tracking-tight">Available</span>
-                            <span className="text-[10px] font-mono opacity-70">✓</span>
                           </motion.div>
                         ) : (
-                          <div className="w-full h-full rounded border border-transparent hover:border-zinc-700/40" />
+                          <div className="w-full h-full rounded-md border border-white/[0.06] bg-white/[0.025] hover:bg-white/[0.07] hover:border-white/20 transition-colors" />
                         )}
                       </div>
                     );
@@ -348,7 +348,7 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({
         <motion.div
           animate={{ scale: selectedSet.size > 0 ? [1, 1.04, 1] : 1 }}
           transition={{ duration: 0.2 }}
-          className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white text-black font-mono font-bold shadow-[0_0_15px_rgba(255,255,255,0.3)] text-xs"
+          className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white text-black font-mono font-bold text-xs"
         >
           <Sparkles className="w-3.5 h-3.5 text-black" />
           <span>{selectedSet.size} slots selected ({totalHours} hrs)</span>
