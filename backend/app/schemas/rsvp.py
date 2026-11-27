@@ -1,35 +1,23 @@
 from datetime import datetime
-from typing import List, Optional
-from pydantic import BaseModel, Field
+from typing import Optional
+from pydantic import BaseModel
 
 
 class RsvpSubmitPayload(BaseModel):
-    participant_name: str = Field(..., min_length=1, max_length=128)
-    participant_phone: Optional[str] = None
-    edit_token: Optional[str] = None
-    status: str = Field(..., description="'going', 'maybe', 'not_going'")
+    status: str  # 'going', 'maybe', 'not_going'
 
 
-class RsvpOut(BaseModel):
-    id: int
+class RsvpPage(BaseModel):
+    """What the RSVP link shows: the event, the invitee, and whether they can still answer."""
     event_id: int
-    participant_name: str
-    participant_phone: Optional[str] = None
-    status: str
-    edit_token: str
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class RsvpSummary(BaseModel):
-    event_id: int
-    total_invitees: int
-    count_going: int
-    count_maybe: int
-    count_not_going: int
-    count_no_response: int
+    title: str
+    location: Optional[str] = None
+    timezone: str
+    finalized_start_time: Optional[datetime] = None
+    finalized_end_time: Optional[datetime] = None
+    name: str
+    rsvp_status: Optional[str] = None
+    open: bool
+    closed_reason: Optional[str] = None
     capacity_limit: Optional[int] = None
-    current_status: Optional[str] = None  # if caller provided edit_token
-    rsvps: List[RsvpOut] = []
+    spots_left: Optional[int] = None

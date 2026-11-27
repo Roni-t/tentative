@@ -40,6 +40,10 @@ class InviteeService:
     def respond_link(self, event: Event, invitee: Invitee) -> str:
         return f"{settings.PUBLIC_APP_URL}/events/{event.id}/respond?invite={invitee.response_token}"
 
+    def rsvp_link(self, invitee: Invitee) -> str:
+        # Same personal token as the response link, so it works on any device without a login
+        return f"{settings.PUBLIC_APP_URL}/rsvp/{invitee.response_token}"
+
     def finalize_link(self, event: Event) -> str:
         return f"{settings.PUBLIC_APP_URL}/events/{event.id}/finalize"
 
@@ -109,6 +113,8 @@ class InviteeService:
             "sms_opted_out": opted_out,
             "response_token": inv.response_token,
             "link": self.respond_link(event, inv),
+            "rsvp_status": inv.rsvp_status,
+            "rsvp_link": self.rsvp_link(inv),
         }
 
     def regenerate_link(self, event_id: int, invitee_id: int, user: User, db: Session) -> Dict:
@@ -305,10 +311,16 @@ class InviteeService:
         sent = 0
         for invitee in db.query(Invitee).filter(Invitee.event_id == event.id).all():
             message = (f'Tentative: "{event.title}" is set for {format_local(start, self._tz(event, invitee))}{where}. '
-                       f"Details: {settings.PUBLIC_APP_URL}/events/{event.id}")
+                       f"Are you coming? {self.rsvp_link(invitee)}")
             if self._text(event, invitee, message, "finalized", db):
                 sent += 1
         return sent
+
+    def notify_canceled(self, event: Event, db: Session) -> int:
+        """Text every invitee who gets texts that the event was canceled."""
+        message = f'Tentative: "{event.title}" was canceled by the host.'
+        return sum(1 for invitee in db.query(Invitee).filter(Invitee.event_id == event.id).all()
+                   if self._text(event, invitee, message, "canceled", db))
 
 
 invitee_service = InviteeService()

@@ -9,7 +9,6 @@ from app.models.availability import Availability
 from app.models.changelog import ChangeLogEntry
 from app.models.event import BlockedUser, Event, EventCoHost, Group
 from app.models.recurrence import RecurrenceRule
-from app.models.rsvp import RSVP
 from app.models.shareable_url import ShareableURL
 from app.models.user import User
 
@@ -169,35 +168,7 @@ def seed_database(db: Session) -> None:
 
     db.commit()
 
-    # 6. RSVPs (matches wireframe p. 47)
-    # Capacity limit is 3:
-    # 3 Going: Alex Morgan, Jamie Chen, Priya Shah
-    # 3 Maybe: Daniel Kim, Sofia Patel, Emma Wilson
-    # 1 Not Going: Marcus Lee
-    # 1 No Response: Noah Davis (availability entered, but no RSVP)
-    rsvp_data = [
-        ("Alex Morgan", "+19725550201", "token-alex-01", "going"),
-        ("Jamie Chen", "+19725550202", "token-jamie-02", "going"),
-        ("Priya Shah", "+19725550203", "token-priya-03", "going"),
-        ("Daniel Kim", "+19725550204", "token-daniel-04", "maybe"),
-        ("Sofia Patel", "+19725550205", "token-sofia-05", "maybe"),
-        ("Marcus Lee", "+19725550206", "token-marcus-06", "not_going"),
-        ("Emma Wilson", "+19725550207", "token-emma-07", "maybe"),
-    ]
-
-    for name, phone, tok, stat in rsvp_data:
-        db.add(RSVP(
-            event_id=event.id,
-            participant_name=name,
-            participant_phone=phone,
-            edit_token=tok,
-            status=stat,
-            created_at=now - timedelta(hours=12),
-            updated_at=now - timedelta(hours=10)
-        ))
-    db.commit()
-
-    # 7. Recurrence Rule (UC-11)
+    # 6. Recurrence Rule (UC-11)
     rec_rule = RecurrenceRule(
         event_id=event.id,
         frequency="weekly",

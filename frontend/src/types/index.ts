@@ -81,26 +81,20 @@ export interface HeatmapResponse {
 
 export type RsvpStatus = 'going' | 'maybe' | 'not_going';
 
-export interface Rsvp {
-  id: number;
+// What an invitee's RSVP link shows (DEV-167)
+export interface RsvpPage {
   event_id: number;
-  participant_name: string;
-  participant_phone?: string | null;
-  status: RsvpStatus;
-  edit_token: string;
-  updated_at: string;
-}
-
-export interface RsvpSummary {
-  event_id: number;
-  total_invitees: number;
-  count_going: number;
-  count_maybe: number;
-  count_not_going: number;
-  count_no_response: number;
+  title: string;
+  location?: string | null;
+  timezone: string;
+  finalized_start_time?: string | null;
+  finalized_end_time?: string | null;
+  name: string;
+  rsvp_status?: RsvpStatus | null;
+  open: boolean;
+  closed_reason?: string | null;
   capacity_limit?: number | null;
-  current_status?: RsvpStatus | null;
-  rsvps: Rsvp[];
+  spots_left?: number | null;
 }
 
 export interface ChangeLog {
@@ -160,4 +154,6 @@ export interface Invitee {
   sms_opted_out: boolean;
   response_token: string;
   link: string;
+  rsvp_status?: RsvpStatus | null;
+  rsvp_link: string;
 }

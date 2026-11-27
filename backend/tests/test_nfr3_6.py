@@ -9,7 +9,6 @@ from sqlalchemy import String, Text, inspect
 from app.core.encryption import decrypt_phone
 from app.database import Base
 from app.models.invitee import Invitee
-from app.models.rsvp import RSVP
 from app.models.user import User
 from app.services.auth_service import auth_service
 from tests.helpers import add_invitee, create_event, register_user, submit_availability
@@ -90,8 +89,7 @@ def test_nfr4_no_plaintext_phone_numbers_in_database(client, db_session, host_wi
         phones.append(phone)
 
     needles = {_national(p) for p in phones}
-    # rsvps.participant_phone is covered by its own test below
-    hits = _scan_db(db_session, needles, skip={"rsvps"})
+    hits = _scan_db(db_session, needles)
     assert hits == [], f"plaintext phone numbers found: {hits[:10]}"
 
     # And the encrypted columns really are ciphertext that decrypts back to the number
@@ -103,14 +101,13 @@ def test_nfr4_no_plaintext_phone_numbers_in_database(client, db_session, host_wi
             assert _national(decrypt_phone(inv.phone_encrypted)) in needles
 
 
-@pytest.mark.xfail(strict=True, reason="UC-10 stores rsvps.participant_phone in plaintext; "
-                                       "needs encryption at rest to meet NFR-4")
-def test_nfr4_rsvp_contact_phone_not_stored_in_plaintext(client, db_session, host_with_activity):
-    event_id = db_session.query(Invitee).first().event_id
-    client.post(f"/api/events/{event_id}/rsvp",
-                json={"participant_name": "Walk-in", "participant_phone": "+14695550188", "status": "going"})
-    assert db_session.query(RSVP).count() == 1
-    assert _scan_db(db_session, {_national("+14695550188")}) == []
+def test_nfr4_rsvps_store_no_phone_numbers(client, db_session, host_with_activity):
+    # RSVPs live on the invitee row and texts use the invitee's encrypted number (DEV-167)
+    assert "rsvps" not in Base.metadata.tables
+    invitee = db_session.query(Invitee).filter(Invitee.phone_encrypted.isnot(None)).first()
+    client.cookies.clear()
+    assert client.post(f"/api/rsvp/{invitee.response_token}", json={"status": "going"}).status_code == 200
+    assert _scan_db(db_session, {_national(p) for p in host_with_activity}) == []
 
 
 @pytest.fixture

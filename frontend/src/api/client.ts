@@ -1,4 +1,4 @@
-import type { AuthResponse, CodeSentResponse, DevSmsNotice, Invitee, User } from '../types';
+import type { AuthResponse, CodeSentResponse, DevSmsNotice, Invitee, RsvpPage, RsvpStatus, User } from '../types';
 
 const API_BASE = '/api';
 
@@ -246,26 +246,16 @@ class ApiClient {
     return this.request<any>(`/events/${eventId}/heatmap${refresh ? '?refresh=true' : ''}`);
   }
 
-  // RSVP
-  async submitRsvp(eventId: number | string, participantName: string, status: string, contact?: string, editToken?: string) {
-    const data = await this.request<any>(`/events/${eventId}/rsvp`, {
-      method: 'POST',
-      body: JSON.stringify({
-        participant_name: participantName,
-        participant_phone: contact,
-        edit_token: editToken || this.getEditToken(eventId),
-        status,
-      }),
-    });
-    if (data.edit_token) {
-      this.setEditToken(eventId, data.edit_token);
-    }
-    return data;
+  // RSVP through an invitee's RSVP link (DEV-167)
+  async getRsvp(token: string) {
+    return this.request<RsvpPage>(`/rsvp/${encodeURIComponent(token)}`);
   }
 
-  async getRsvpSummary(eventId: number | string, editToken?: string) {
-    const token = editToken || this.getEditToken(eventId);
-    return this.request<any>(`/events/${eventId}/rsvp${token ? `?edit_token=${token}` : ''}`);
+  async submitRsvp(token: string, status: RsvpStatus) {
+    return this.request<RsvpPage>(`/rsvp/${encodeURIComponent(token)}`, {
+      method: 'POST',
+      body: JSON.stringify({ status }),
+    });
   }
 
   // Admin

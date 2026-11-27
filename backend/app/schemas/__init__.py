@@ -27,8 +27,7 @@ from app.schemas.availability import (
 )
 from app.schemas.rsvp import (
     RsvpSubmitPayload,
-    RsvpOut,
-    RsvpSummary,
+    RsvpPage,
 )
 from app.schemas.admin import (
     SystemStatusOut,
@@ -64,8 +63,7 @@ __all__ = [
     "HeatmapResponse",
     "HeatmapSlotOut",
     "RsvpSubmitPayload",
-    "RsvpOut",
-    "RsvpSummary",
+    "RsvpPage",
     "SystemStatusOut",
     "AdminUserOut",
     "AdminEventOut",
