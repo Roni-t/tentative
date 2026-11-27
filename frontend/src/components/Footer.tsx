@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="mt-auto px-4 sm:px-8 pb-8">
+    <footer className="relative z-10 mt-auto px-4 sm:px-8 pb-8">
       <div className="hairline mb-6" />
       <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
         <span className="eyebrow">tentative / group scheduling</span>
