@@ -34,7 +34,7 @@ export const Navbar: React.FC = () => {
 
   return (
     <header
-      className="sticky top-0 z-50 px-4 sm:px-8 py-4 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+      className="sticky top-0 z-50 px-4 sm:px-8 max-sm:px-3 py-4 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
       style={{ transform: hidden ? 'translateY(-120%)' : 'translateY(0)' }}
     >
       {/* Dark fade behind the bar so page content does not collide with the logo and buttons */}
@@ -43,16 +43,17 @@ export const Navbar: React.FC = () => {
         className="pointer-events-none absolute inset-x-0 top-0 h-28 -z-10 bg-gradient-to-b from-black from-50% via-black/85 to-transparent transition-opacity duration-500"
         style={{ opacity: scrolled ? 1 : 0 }}
       />
-      <div className="max-w-6xl mx-auto flex items-center justify-between gap-2">
+      {/* Three columns with equal sides keep the links centered whatever the logo and sign-in widths are */}
+      <div className="max-w-6xl mx-auto grid grid-cols-[1fr_auto_1fr] items-center gap-2">
         <Link
           to="/"
           onClick={() => pathname === '/' && window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="inline-flex items-center space-x-2.5 shrink-0"
+          className="justify-self-start inline-flex items-center space-x-2.5"
           aria-label="Tentative home"
         >
           <PlanetLogo size={26} />
-          {/* Logo only on phones, so the links and sign-in button fit */}
-          <span className="hidden sm:inline font-mono text-xs tracking-wide text-zinc-300">tentative</span>
+          {/* Phones show the planet only, so the links and sign-in button fit */}
+          <span className="max-sm:hidden font-mono text-xs tracking-wide text-zinc-300">tentative</span>
         </Link>
 
         <nav className="glass-pill-nav flex items-center p-1 rounded-full">
@@ -62,7 +63,7 @@ export const Navbar: React.FC = () => {
               <Link
                 key={to}
                 to={to}
-                className={`relative px-3 sm:px-4 py-1.5 rounded-full text-[13px] sm:text-sm transition-colors duration-300 ${
+                className={`relative px-4 py-1.5 rounded-full text-sm max-sm:px-2.5 max-sm:text-[13px] max-[359px]:px-2 max-[359px]:text-xs transition-colors duration-300 ${
                   active ? 'text-black' : 'text-zinc-400 hover:text-white'
                 }`}
               >
@@ -79,7 +80,7 @@ export const Navbar: React.FC = () => {
           })}
         </nav>
 
-        <div className="flex items-center space-x-2 shrink-0">
+        <div className="justify-self-end flex items-center gap-2">
           {user ? (
             <>
               <span className="hidden sm:block text-sm text-zinc-300 px-3">{user.name}</span>
@@ -92,7 +93,7 @@ export const Navbar: React.FC = () => {
               </button>
             </>
           ) : (
-            <Link to="/login" className="pill pill-light !py-2 !px-3 sm:!px-4 !text-xs whitespace-nowrap">
+            <Link to="/login" className="pill pill-light !py-2 !px-4 !text-xs max-sm:!px-2.5 whitespace-nowrap">
               Sign in
             </Link>
           )}
