@@ -1,3 +1,4 @@
+import { safeNext } from './authRedirect';
 // Keeps the answers from the create event survey, so they are not lost if the page is refreshed or
 // the person has to sign in before creating the event. It lives in sessionStorage, so it goes away
 // when the tab is closed.
@@ -48,5 +49,6 @@ export const clearDraft = () => {
   }
 };
 
-// Where to go after signing in or creating an account: back to the survey if there is a draft in it
-export const afterAuthPath = () => (loadDraft() ? '/create' : '/events');
+// Where to go after signing in or creating an account: the page that asked for it,
+// then the survey if there is a draft in it, then the dashboard
+export const afterAuthPath = (next?: string | null) => safeNext(next) ?? (loadDraft() ? '/create' : '/events');

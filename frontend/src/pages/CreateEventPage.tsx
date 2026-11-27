@@ -6,6 +6,7 @@ import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { COMMON_TIMEZONES, getUserTimezone } from '../utils/timezone';
+import { loginPath } from '../utils/authRedirect';
 import { clearDraft, loadDraft, saveDraft } from '../utils/createDraft';
 
 // Creating an event is a short survey: one question group per screen.
@@ -146,7 +147,7 @@ export const CreateEventPage: React.FC = () => {
   const createEvent = async () => {
     if (!user) {
       showToast('Sign in to finish. Your answers are saved.', 'info');
-      navigate('/login');
+      navigate(loginPath('/create'));
       return;
     }
     setLoading(true);

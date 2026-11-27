@@ -20,6 +20,9 @@ const primaryButton =
 export const CreateAccountPage: React.FC = () => {
   const location = useLocation();
   const prefillPhone = (location.state as { phone?: string } | null)?.phone ?? '';
+  // Keeps ?next= when switching between log in and create account
+  const next = new URLSearchParams(location.search).get('next');
+  const keepNext = location.search;
 
   const [step, setStep] = useState<'details' | 'verify'>('details');
   const [name, setName] = useState('');
@@ -38,7 +41,7 @@ export const CreateAccountPage: React.FC = () => {
   const alreadyRegistered = (message: string): Outcome => ({
     title: 'This number already has an account',
     message,
-    action: { label: 'Log in instead', onClick: () => navigate('/login', { state: { phone } }) },
+    action: { label: 'Log in instead', onClick: () => navigate(`/login${keepNext}`, { state: { phone } }) },
   });
 
   const sendCode = async () => {
@@ -87,7 +90,7 @@ export const CreateAccountPage: React.FC = () => {
     try {
       const user = await register(name, phone, code);
       showToast(`You're all set, ${user.name}!`, 'success');
-      navigate(afterAuthPath());
+      navigate(afterAuthPath(next));
     } catch (err: any) {
       setCode('');
       setOutcome(
@@ -241,7 +244,7 @@ export const CreateAccountPage: React.FC = () => {
 
           <div className="pt-4 border-t border-white/10 text-center text-xs text-zinc-400">
             Already have an account?{' '}
-            <Link to="/login" state={{ phone }} className="text-white hover:underline font-semibold transition-colors">
+            <Link to={`/login${keepNext}`} state={{ phone }} className="text-white hover:underline font-semibold transition-colors">
               Log in
             </Link>
           </div>
