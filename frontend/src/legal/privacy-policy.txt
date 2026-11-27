@@ -73,7 +73,7 @@ Tentative is a shared tool, so some of your information is visible to other peop
 - Participants never see your phone number unless you share it yourself.
 - Hosts can hide some event details from invitees (for example, for a surprise party).
 
-Anyone who has an event's share link can open that event and respond to it. If a link is shared too widely, the host can rotate it, which immediately disables the old link.
+Anyone who has an event's share link can open that event and respond to it. A share link stops working at the event's response deadline, or 30 days after it was created if there is no deadline.
 
 4.2 With service providers
 

@@ -15,10 +15,7 @@ class EventCreatePayload(BaseModel):
     deadline: Optional[datetime] = None
     capacity_limit: Optional[int] = Field(None, ge=1)
     is_hidden_details: bool = False
-    
-    # Expiry settings
-    expiry_option: str = Field("semester", description="'1_week', '1_month', 'semester', 'custom'")
-    custom_expiry_date: Optional[datetime] = None
+
     group_name: Optional[str] = None
 
 
@@ -83,11 +80,6 @@ class FinalizeEventPayload(BaseModel):
 
 class CoHostAddPayload(BaseModel):
     identifier: str = Field(..., description="Phone number or user name")
-
-
-class ExpiryUpdatePayload(BaseModel):
-    expiry_option: str  # '1_week', '1_month', 'semester', 'custom', 'expire_now'
-    custom_expiry_date: Optional[datetime] = None
 
 
 class ChangeLogOut(BaseModel):

@@ -14,7 +14,7 @@ import {
   MapPin,
   Users,
   Sparkles,
-  Share2,
+  CalendarCheck,
   Repeat,
   History,
   CheckCircle2,
@@ -45,6 +45,8 @@ export const EventDetailsPage: React.FC = () => {
   const [cohostInput, setCohostInput] = useState('');
   const [blockInput, setBlockInput] = useState('');
   const [googleCalendarUrl, setGoogleCalendarUrl] = useState('');
+  // The viewer's own RSVP link token, if they're an invitee (saved in this browser or found by their account)
+  const [myRsvpToken, setMyRsvpToken] = useState<string | null>(null);
 
   const fetchEvent = async () => {
     if (!id) return;
@@ -53,6 +55,7 @@ export const EventDetailsPage: React.FC = () => {
       setEvent(data);
       if (data.status === 'finalized') {
         api.getGoogleCalendarUrl(id).then((res) => setGoogleCalendarUrl(res.url)).catch(() => {});
+        api.getMyRsvp(id).then((res) => setMyRsvpToken(res.token)).catch(() => setMyRsvpToken(null));
       }
     } catch (err: any) {
       showToast(err.message || 'Error loading event', 'error');
@@ -137,7 +140,6 @@ export const EventDetailsPage: React.FC = () => {
   const isHost = event.is_host;
   const isCohost = event.is_cohost;
   const canManage = isHost || isCohost;
-  const shareToken = event.active_token || 'demo-orbit-2026';
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
@@ -296,7 +298,7 @@ export const EventDetailsPage: React.FC = () => {
       )}
 
       {/* Primary Action Matrix Navigation */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {/* Heatmap Card */}
         <Link
           to={`/events/${event.id}/heatmap`}
@@ -319,49 +321,76 @@ export const EventDetailsPage: React.FC = () => {
           </div>
         </Link>
 
-        {/* Paint Availability */}
-        <Link
-          to={`/events/${event.id}/respond`}
-          className="glass-panel p-6 rounded-3xl border border-white/10 hover:border-cosmic-cyan/50 transition-all flex flex-col justify-between group"
-        >
-          <div className="space-y-3">
-            <div className="w-10 h-10 rounded-2xl bg-cosmic-cyan/20 text-cosmic-cyan flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Calendar className="w-5 h-5" />
+        {/* Before a time is set: add availability. After: RSVP (DEV-172) */}
+        {event.status !== 'finalized' ? (
+          <Link
+            to={`/events/${event.id}/respond`}
+            className="glass-panel p-6 rounded-3xl border border-white/10 hover:border-cosmic-cyan/50 transition-all flex flex-col justify-between group"
+          >
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-2xl bg-cosmic-cyan/20 text-cosmic-cyan flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Calendar className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-bold text-white group-hover:text-cosmic-cyan transition-colors">
+                Submit My Availability
+              </h3>
+              <p className="text-xs text-slate-400">
+                Paint your free time slots on the interactive drag-and-drop grid.
+              </p>
             </div>
-            <h3 className="text-base font-bold text-white group-hover:text-cosmic-cyan transition-colors">
-              Submit My Availability
-            </h3>
-            <p className="text-xs text-slate-400">
-              Paint your free time slots on the interactive drag-and-drop grid.
-            </p>
-          </div>
-          <div className="mt-4 pt-3 border-t border-white/5 text-xs text-cosmic-cyan font-semibold flex items-center space-x-1">
-            <span>Add my times</span>
-            
-          </div>
-        </Link>
-
-        {/* Share & Expiry */}
-        <Link
-          to={`/events/${event.id}/share`}
-          className="glass-panel p-6 rounded-3xl border border-white/10 hover:border-white/30 transition-all flex flex-col justify-between group"
-        >
-          <div className="space-y-3">
-            <div className="w-10 h-10 rounded-2xl bg-white/10 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Share2 className="w-5 h-5" />
+            <div className="mt-4 pt-3 border-t border-white/5 text-xs text-cosmic-cyan font-semibold flex items-center space-x-1">
+              <span>Add my times</span>
             </div>
-            <h3 className="text-base font-bold text-white group-hover:text-white transition-colors">
-              Share & Expiry Link
-            </h3>
-            <p className="text-xs text-slate-400">
-              Copy the group link, replace it if it leaks, or change when it expires.
-            </p>
+          </Link>
+        ) : myRsvpToken ? (
+          <Link
+            to={`/rsvp/${myRsvpToken}`}
+            className="glass-panel p-6 rounded-3xl border border-white/10 hover:border-emerald-400/50 transition-all flex flex-col justify-between group"
+          >
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-400/15 text-emerald-300 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <CalendarCheck className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-bold text-white group-hover:text-emerald-300 transition-colors">
+                Submit RSVP
+              </h3>
+              <p className="text-xs text-slate-400">The time is set. Tell the host if you are coming.</p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-white/5 text-xs text-emerald-300 font-semibold flex items-center space-x-1">
+              <span>RSVP</span>
+            </div>
+          </Link>
+        ) : canManage ? (
+          <a
+            href="#invitees"
+            className="glass-panel p-6 rounded-3xl border border-white/10 hover:border-emerald-400/50 transition-all flex flex-col justify-between group"
+          >
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-400/15 text-emerald-300 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <CalendarCheck className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-bold text-white group-hover:text-emerald-300 transition-colors">
+                Collect RSVPs
+              </h3>
+              <p className="text-xs text-slate-400">
+                Invitees RSVP with their own link. Copy each one from the invitee list below.
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-white/5 text-xs text-emerald-300 font-semibold flex items-center space-x-1">
+              <span>Go to invitees</span>
+            </div>
+          </a>
+        ) : (
+          <div className="glass-panel p-6 rounded-3xl border border-white/10 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-2xl bg-white/10 text-zinc-300 flex items-center justify-center">
+                <CalendarCheck className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-bold text-white">Submit RSVP</h3>
+              <p className="text-xs text-slate-400">Open the RSVP link the host sent you to tell them if you are coming.</p>
+            </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-white/5 text-xs text-slate-300 font-semibold flex items-center space-x-1">
-            <span>Manage link</span>
-            
-          </div>
-        </Link>
+        )}
 
         {/* Recurrence */}
         <Link
@@ -388,7 +417,7 @@ export const EventDetailsPage: React.FC = () => {
 
       {/* Before a time is set it tracks responses; after, it tracks RSVPs (DEV-169). Hidden for canceled events. */}
       {canManage && event.status !== 'canceled' && (
-        <InviteeList event={event} groupLink={`${window.location.origin}/share/${shareToken}/respond`} />
+        <InviteeList event={event} />
       )}
 
       {/* Modals */}

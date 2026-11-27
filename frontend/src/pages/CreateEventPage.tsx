@@ -12,15 +12,6 @@ import { clearDraft, loadDraft, saveDraft } from '../utils/createDraft';
 // Creating an event is a short survey: one question group per screen.
 const STEPS = ['Details', 'Dates', 'Times', 'Options', 'Review'];
 
-type ExpiryOption = '1_week' | '1_month' | 'semester' | 'custom';
-
-const EXPIRY_LABELS: Record<ExpiryOption, string> = {
-  semester: 'End of semester',
-  '1_week': '1 week',
-  '1_month': '1 month',
-  custom: 'Custom date',
-};
-
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 // Local YYYY-MM-DD. toISOString() would give the UTC date, which can be a day off.
@@ -88,18 +79,16 @@ export const CreateEventPage: React.FC = () => {
   const [deadline, setDeadline] = useState(draft?.deadline ?? '');
   const [capacityLimit, setCapacityLimit] = useState(draft?.capacityLimit ?? '');
   const [isHiddenDetails, setIsHiddenDetails] = useState(draft?.isHiddenDetails ?? false);
-  const [expiryOption, setExpiryOption] = useState<ExpiryOption>((draft?.expiryOption as ExpiryOption) ?? 'semester');
-  const [customExpiry, setCustomExpiry] = useState(draft?.customExpiry ?? '');
   const [loading, setLoading] = useState(false);
 
   // Save the answers whenever something changes
   useEffect(() => {
     saveDraft({
       step, title, description, location, timezone, candidateDates, dailyStartTime, dailyEndTime,
-      slotDuration, deadline, capacityLimit, isHiddenDetails, expiryOption, customExpiry,
+      slotDuration, deadline, capacityLimit, isHiddenDetails,
     });
   }, [step, title, description, location, timezone, candidateDates, dailyStartTime, dailyEndTime,
-    slotDuration, deadline, capacityLimit, isHiddenDetails, expiryOption, customExpiry]);
+    slotDuration, deadline, capacityLimit, isHiddenDetails]);
 
   const toldAboutDraft = useRef(false);
   useEffect(() => {
@@ -126,7 +115,6 @@ export const CreateEventPage: React.FC = () => {
     if (index === 0 && !title.trim()) return 'Give your event a title first.';
     if (index === 1 && candidateDates.length === 0) return 'Pick at least one date.';
     if (index === 2 && dailyEndTime <= dailyStartTime) return 'The latest time has to be after the earliest time.';
-    if (index === 3 && expiryOption === 'custom' && !customExpiry) return 'Pick a date for the link to expire.';
     return null;
   };
 
@@ -164,8 +152,6 @@ export const CreateEventPage: React.FC = () => {
         deadline: deadline ? new Date(deadline).toISOString() : null,
         capacity_limit: capacityLimit ? parseInt(capacityLimit, 10) : null,
         is_hidden_details: isHiddenDetails,
-        expiry_option: expiryOption,
-        custom_expiry_date: expiryOption === 'custom' && customExpiry ? new Date(customExpiry).toISOString() : null,
       } as any);
       clearDraft();
       showToast('Event created', 'success');
@@ -378,6 +364,9 @@ export const CreateEventPage: React.FC = () => {
           <div>
             <label className="block text-sm font-medium text-zinc-300 mb-2">Reply by</label>
             <input type="datetime-local" value={deadline} onChange={(e) => setDeadline(e.target.value)} className={inputClass} />
+            <p className="text-xs text-zinc-500 mt-2">
+              The group link stops working at this time. Without one, it works for 30 days.
+            </p>
           </div>
 
           <div>
@@ -391,35 +380,6 @@ export const CreateEventPage: React.FC = () => {
               className={inputClass}
             />
             <p className="text-xs text-zinc-500 mt-2">Once it's full, nobody else can RSVP going.</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-2">When should the link stop working?</label>
-            <div className="grid grid-cols-2 gap-2">
-              {(Object.keys(EXPIRY_LABELS) as ExpiryOption[]).map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => setExpiryOption(option)}
-                  aria-pressed={expiryOption === option}
-                  className={`py-3 rounded-2xl text-sm font-medium border transition-all duration-200 ${
-                    expiryOption === option
-                      ? 'bg-white text-black border-white'
-                      : 'bg-white/5 text-zinc-300 border-white/10 hover:border-white/30'
-                  }`}
-                >
-                  {EXPIRY_LABELS[option]}
-                </button>
-              ))}
-            </div>
-            {expiryOption === 'custom' && (
-              <input
-                type="datetime-local"
-                value={customExpiry}
-                onChange={(e) => setCustomExpiry(e.target.value)}
-                className={`${inputClass} mt-3`}
-              />
-            )}
           </div>
 
           <label className="flex items-start gap-3 cursor-pointer rounded-2xl border border-white/10 bg-white/[0.03] p-4">
@@ -458,7 +418,6 @@ export const CreateEventPage: React.FC = () => {
       { label: 'Time zone', value: timezone.replace('_', ' '), step: 2 },
       ...(deadline ? [{ label: 'Reply by', value: new Date(deadline).toLocaleString(), step: 3 }] : []),
       ...(capacityLimit ? [{ label: 'Limit', value: `${capacityLimit} people`, step: 3 }] : []),
-      { label: 'Link expires', value: EXPIRY_LABELS[expiryOption], step: 3 },
       ...(isHiddenDetails ? [{ label: 'Surprise', value: 'Details hidden until final', step: 3 }] : []),
     ];
 

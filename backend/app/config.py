@@ -28,10 +28,7 @@ class Settings(BaseSettings):
     TWILIO_AUTH_TOKEN: str = os.getenv("TWILIO_AUTH_TOKEN", "")
     TWILIO_PHONE_NUMBER: str = os.getenv("TWILIO_PHONE_NUMBER", "")  # sends reminders and other texts
     TWILIO_VERIFY_SERVICE_SID: str = os.getenv("TWILIO_VERIFY_SERVICE_SID", "")  # sends and checks sign-in codes
-    
-    # Semester Expiry Default (Dec 18 of current year)
-    DEFAULT_SEMESTER_END_DATE: str = os.getenv("DEFAULT_SEMESTER_END_DATE", "2026-12-18")
-    
+
     # Seed Admin Credentials
     ADMIN_NAME: str = os.getenv("ADMIN_NAME", "Admin Commander")
     ADMIN_PHONE: str = os.getenv("ADMIN_PHONE", "+19725550100")
