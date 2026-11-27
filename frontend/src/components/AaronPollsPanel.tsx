@@ -10,7 +10,6 @@ export const AaronPollsPanel: React.FC<Props> = ({ eventId, canManage }) => {
   const [question, setQuestion] = useState('');
   const [category, setCategory] = useState('General');
   const [optionsText, setOptionsText] = useState('');
-  const [voterName, setVoterName] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -28,9 +27,8 @@ export const AaronPollsPanel: React.FC<Props> = ({ eventId, canManage }) => {
   };
 
   const vote = async (poll: Poll, option: string) => {
-    if (!voterName.trim()) { setError('Enter your name before voting.'); return; }
     setBusy(true); setError('');
-    try { await api.voteAaronPoll(eventId, poll.id, voterName.trim(), option); await reload(); }
+    try { await api.voteAaronPoll(eventId, poll.id, option); await reload(); }
     catch (err: any) { setError(err.message || 'Could not submit vote.'); }
     finally { setBusy(false); }
   };
@@ -41,9 +39,6 @@ export const AaronPollsPanel: React.FC<Props> = ({ eventId, canManage }) => {
         <h2 id="event-polls-heading" className="text-lg font-bold text-white">Event Polls</h2>
         <p className="text-xs text-slate-400 mt-1">Vote on choices for this event.</p>
       </div>
-      <label className="block text-xs text-slate-300">Your name
-        <input value={voterName} onChange={(e) => setVoterName(e.target.value)} maxLength={100} autoComplete="name" className="mt-1 w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-cosmic-cyan" />
-      </label>
       {polls.map((poll) => (
         <article key={poll.id} className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
           <div><span className="text-[10px] uppercase tracking-wider text-cosmic-cyan">{poll.category}</span><h3 className="text-sm font-semibold text-white">{poll.question}</h3></div>
@@ -68,7 +63,7 @@ export const AaronPollsPanel: React.FC<Props> = ({ eventId, canManage }) => {
         <label className="text-xs text-slate-300">Options (one per line)
           <textarea required value={optionsText} onChange={(e) => setOptionsText(e.target.value)} rows={3} className="mt-1 w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-cosmic-cyan" />
         </label>
-        <button disabled={busy} className="justify-self-start px-4 py-2 rounded-xl bg-white text-slate-950 text-xs font-bold disabled:opacity-50">Create poll</button>
+        <button disabled={busy} className="justify-self-start px-4 py-2 rounded-xl bg-white text-slate-950 text-xs font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-cosmic-cyan disabled:opacity-50">Create poll</button>
       </form>}
       {error && <p role="alert" className="text-xs text-red-300">{error}</p>}
     </section>

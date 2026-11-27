@@ -42,6 +42,20 @@ def test_uc11_02_biweekly_multiple_days(client, db_session):
     assert body["occurrences"] == ["2026-12-02", "2026-12-04", "2026-12-16", "2026-12-18", "2026-12-30"]
 
 
+def test_uc11_weekly_multiple_days_returns_full_series(client, db_session):
+    host = register_user(client, HOST, "Host")
+    event = create_event(client, host)
+
+    res = put_rule(client, event["id"], host, days=("MO", "TU"), end="2027-12-02")
+
+    assert res.status_code == 200, res.text
+    occurrences = res.json()["occurrences"]
+    assert len(occurrences) == 104
+    assert occurrences[0] == "2026-12-07"
+    assert occurrences[-1] == "2027-11-30"
+    assert len(occurrences) == len(set(occurrences))
+
+
 def test_uc11_03_invalid_inputs_rejected(client, db_session):
     """Invalid input: bad frequency, no days, unknown day, end date not after the first meeting."""
     host = register_user(client, HOST, "Host")

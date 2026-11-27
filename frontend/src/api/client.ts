@@ -360,9 +360,9 @@ class ApiClient {
     });
   }
 
-  async voteAaronPoll(eventId: number | string, pollId: number, voterName: string, option: string) {
+  async voteAaronPoll(eventId: number | string, pollId: number, option: string) {
     return this.request<any>(`/aaron/events/${eventId}/polls/${pollId}/votes`, {
-      method: 'POST', body: JSON.stringify({ voter_name: voterName, option }),
+      method: 'POST', body: JSON.stringify({ option }),
     });
   }
 

@@ -1,12 +1,14 @@
 """Aaron-owned event poll and backup endpoints."""
 
 import json
+import secrets
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Cookie, Depends, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.core.dependencies import get_current_user, get_current_user_optional
+from app.core.dependencies import get_current_user
+from app.config import settings
 from app.database import get_db
 from app.models.user import User
 from app.services import aaron_service
@@ -21,7 +23,6 @@ class PollCreateRequest(BaseModel):
 
 
 class PollVoteRequest(BaseModel):
-    voter_name: str = Field(min_length=1, max_length=100)
     option: str = Field(min_length=1, max_length=200)
 
 
@@ -47,9 +48,21 @@ def vote_in_poll(
     event_id: int,
     poll_id: int,
     payload: PollVoteRequest,
+    response: Response,
+    voter_token: str | None = Cookie(None, alias="tentative_poll_voter"),
     db: Session = Depends(get_db),
 ):
-    return aaron_service.vote_in_poll(event_id, poll_id, payload.voter_name, payload.option, db)
+    if not voter_token or not voter_token.strip():
+        voter_token = secrets.token_urlsafe(32)
+        response.set_cookie(
+            key="tentative_poll_voter",
+            value=voter_token,
+            httponly=True,
+            secure=settings.ENVIRONMENT.lower() == "production",
+            samesite="lax",
+            max_age=60 * 60 * 24 * 365,
+        )
+    return aaron_service.vote_in_poll(event_id, poll_id, voter_token, payload.option, db)
 
 
 @router.get("/events/{event_id}/backup.json")

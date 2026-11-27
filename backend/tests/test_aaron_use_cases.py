@@ -18,18 +18,49 @@ def test_poll_create_vote_and_list(client):
 
     voted = client.post(
         f"/api/aaron/events/{event_id}/polls/{poll['id']}/votes",
-        json={"voter_name": "Jordan", "option": "Friday"},
+        json={"option": "Friday"},
     )
     assert voted.status_code == 200, voted.text
     assert voted.json()["tally"]["Friday"] == 1
+    assert "tentative_poll_voter" in client.cookies
 
     changed = client.post(
         f"/api/aaron/events/{event_id}/polls/{poll['id']}/votes",
-        json={"voter_name": "jordan", "option": "Saturday"},
+        json={"option": "Saturday"},
     )
     assert changed.status_code == 200, changed.text
     assert changed.json()["tally"] == {"Friday": 0, "Saturday": 1}
+
+    # A second browser gets a distinct server-issued identity, even if a user
+    # could submit the same display name as the first browser.
+    client.cookies.clear()
+    second_browser_vote = client.post(
+        f"/api/aaron/events/{event_id}/polls/{poll['id']}/votes",
+        json={"option": "Friday", "voter_name": "Jordan"},
+    )
+    assert second_browser_vote.status_code == 200, second_browser_vote.text
+    assert second_browser_vote.json()["tally"] == {"Friday": 1, "Saturday": 1}
+
+    # A blank/whitespace cookie is ignored and replaced with a fresh server token.
+    client.cookies.clear()
+    blank_cookie_vote = client.post(
+        f"/api/aaron/events/{event_id}/polls/{poll['id']}/votes",
+        json={"option": "Friday"},
+        headers={"Cookie": "tentative_poll_voter=   "},
+    )
+    assert blank_cookie_vote.status_code == 200, blank_cookie_vote.text
+    assert client.cookies.get("tentative_poll_voter", "").strip()
+    assert blank_cookie_vote.json()["tally"] == {"Friday": 2, "Saturday": 1}
     assert len(client.get(f"/api/aaron/events/{event_id}/polls").json()) == 1
+
+    # Canceled events close poll voting.
+    assert client.post(f"/api/events/{event_id}/cancel", headers=headers).status_code == 200
+    canceled_vote = client.post(
+        f"/api/aaron/events/{event_id}/polls/{poll['id']}/votes",
+        json={"option": "Saturday"},
+    )
+    assert canceled_vote.status_code == 400
+    assert canceled_vote.json()["detail"] == "Polls are closed for canceled events."
 
 
 def test_poll_validation_and_host_auth(client):

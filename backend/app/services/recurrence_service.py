@@ -16,6 +16,7 @@ from app.models.recurrence import RecurrenceRule
 DAY_CODES = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"]  # index matches date.weekday()
 FREQUENCIES = {"weekly": 1, "biweekly": 2}  # weeks between repeats
 MAX_SERIES_DAYS = 366
+MAX_SERIES_OCCURRENCES = MAX_SERIES_DAYS + 1
 
 
 def _bad_request(detail: str) -> HTTPException:
@@ -62,7 +63,14 @@ class RecurrenceService:
             raise _bad_request("A recurring series can last at most one year.")
         return days
 
-    def occurrences(self, event: Event, frequency: str, days: List[str], end_date: date, limit: int = 52) -> List[str]:
+    def occurrences(
+        self,
+        event: Event,
+        frequency: str,
+        days: List[str],
+        end_date: date,
+        limit: int = MAX_SERIES_OCCURRENCES,
+    ) -> List[str]:
         """Dates (YYYY-MM-DD) in the series, starting on the first day and stopping at end_date."""
         start = self.series_start(event)
         week_step = FREQUENCIES[frequency]

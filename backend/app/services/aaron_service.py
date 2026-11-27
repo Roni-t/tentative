@@ -99,7 +99,7 @@ def list_polls(event_id: int, db: Session) -> list[dict[str, Any]]:
 def vote_in_poll(
     event_id: int,
     poll_id: int,
-    voter_name: str,
+    voter_token: str,
     option: str,
     db: Session,
 ) -> dict[str, Any]:
@@ -115,13 +115,13 @@ def vote_in_poll(
     if poll is None:
         raise HTTPException(status_code=404, detail="Poll not found.")
 
-    clean_name = voter_name.strip()
-    if not clean_name:
-        raise HTTPException(status_code=400, detail="Your name is required to vote.")
+    if not voter_token:
+        raise HTTPException(status_code=400, detail="A voter session is required.")
     if option not in poll.options:
         raise HTTPException(status_code=400, detail="Choose one of the poll options.")
 
-    voter_key = hashlib.sha256(clean_name.casefold().encode("utf-8")).hexdigest()
+    # Use an unguessable server-issued browser token; display names are not identities.
+    voter_key = hashlib.sha256(voter_token.encode("utf-8")).hexdigest()
     vote = (
         db.query(AaronPollVote)
         .filter(AaronPollVote.poll_id == poll.id, AaronPollVote.voter_key == voter_key)
