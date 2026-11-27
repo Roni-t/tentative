@@ -341,7 +341,7 @@ export const EventDetailsPage: React.FC = () => {
           </div>
         </Link>
 
-        {/* RSVP List & Waitlist */}
+        {/* RSVP List */}
         <Link
           to={`/events/${event.id}/rsvps`}
           className="glass-panel p-6 rounded-3xl border border-white/10 hover:border-cosmic-pink/50 transition-all flex flex-col justify-between group"
@@ -351,10 +351,10 @@ export const EventDetailsPage: React.FC = () => {
               <Users className="w-5 h-5" />
             </div>
             <h3 className="text-base font-bold text-white group-hover:text-cosmic-pink transition-colors">
-              RSVP List & Waitlist
+              RSVP List
             </h3>
             <p className="text-xs text-slate-400">
-              Monitor going/maybe/declined responses, view FIFO waitlist, and export CSV.
+              Monitor going/maybe/declined responses and export CSV.
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-white/5 text-xs text-cosmic-pink font-semibold flex items-center space-x-1">

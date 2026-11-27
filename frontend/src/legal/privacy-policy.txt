@@ -22,7 +22,7 @@ Contact: kxn210043@utdallas.edu
 - Account information. To create an account, you provide your name and mobile phone number. Accounts are required for hosts and optional for invitees.
 - Guest information. If you respond to an event without an account, you provide a display name and, if you choose, a phone number for event notifications.
 - Event information. If you host an event, we collect what you enter: title, description, category, candidate dates, daily time window, response deadline, location or meeting link, capacity limit, recurrence settings, co-hosts, groups, and invitees.
-- Availability and responses. The time slots you mark as available or unavailable, your RSVP status (going, maybe, declined, waitlisted), and any changes you make to them.
+- Availability and responses. The time slots you mark as available or unavailable, your RSVP status (going, maybe, declined), and any changes you make to them.
 - Polls. Votes you cast in event polls.
 - Communications with us. Bug reports, feedback, and support requests you send us.
 
@@ -50,7 +50,7 @@ If you use the "filter events by distance" feature, we use the location you ente
 We use information to:
 
 - Create and secure your account, including verifying your phone number with one-time codes sent by text message.
-- Run the core scheduling features: collecting availability, building the availability heatmap, handling RSVPs and waitlists, and letting hosts finalize a time.
+- Run the core scheduling features: collecting availability, building the availability heatmap, handling RSVPs, and letting hosts finalize a time.
 - Send text messages and in-app notifications related to events you host or are invited to (see Section 5).
 - Show change history and activity on an event page.
 - Generate calendar files (.ics) and CSV exports that you request.

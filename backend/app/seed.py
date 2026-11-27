@@ -84,7 +84,7 @@ def seed_database(db: Session) -> None:
         daily_end_time="18:00",
         slot_duration_minutes=30,
         deadline=now + timedelta(days=5),
-        capacity_limit=3,  # capacity limit set to 3 to trigger waitlist demo!
+        capacity_limit=3,  # full with 3 going, so the demo shows a full event
         is_hidden_details=False,
         status="collecting",
         created_by_id=host.id,
@@ -169,31 +169,29 @@ def seed_database(db: Session) -> None:
 
     db.commit()
 
-    # 6. RSVPs with FIFO Waitlist (matches wireframe p. 47)
+    # 6. RSVPs (matches wireframe p. 47)
     # Capacity limit is 3:
     # 3 Going: Alex Morgan, Jamie Chen, Priya Shah
-    # 2 Maybe: Daniel Kim, Sofia Patel
+    # 3 Maybe: Daniel Kim, Sofia Patel, Emma Wilson
     # 1 Not Going: Marcus Lee
-    # 1 Waitlisted: Emma Wilson (rank 1)
     # 1 No Response: Noah Davis (availability entered, but no RSVP)
     rsvp_data = [
-        ("Alex Morgan", "+19725550201", "token-alex-01", "going", None),
-        ("Jamie Chen", "+19725550202", "token-jamie-02", "going", None),
-        ("Priya Shah", "+19725550203", "token-priya-03", "going", None),
-        ("Daniel Kim", "+19725550204", "token-daniel-04", "maybe", None),
-        ("Sofia Patel", "+19725550205", "token-sofia-05", "maybe", None),
-        ("Marcus Lee", "+19725550206", "token-marcus-06", "not_going", None),
-        ("Emma Wilson", "+19725550207", "token-emma-07", "waitlisted", 1),
+        ("Alex Morgan", "+19725550201", "token-alex-01", "going"),
+        ("Jamie Chen", "+19725550202", "token-jamie-02", "going"),
+        ("Priya Shah", "+19725550203", "token-priya-03", "going"),
+        ("Daniel Kim", "+19725550204", "token-daniel-04", "maybe"),
+        ("Sofia Patel", "+19725550205", "token-sofia-05", "maybe"),
+        ("Marcus Lee", "+19725550206", "token-marcus-06", "not_going"),
+        ("Emma Wilson", "+19725550207", "token-emma-07", "maybe"),
     ]
 
-    for name, phone, tok, stat, rank in rsvp_data:
+    for name, phone, tok, stat in rsvp_data:
         db.add(RSVP(
             event_id=event.id,
             participant_name=name,
             participant_phone=phone,
             edit_token=tok,
             status=stat,
-            waitlist_position=rank,
             created_at=now - timedelta(hours=12),
             updated_at=now - timedelta(hours=10)
         ))

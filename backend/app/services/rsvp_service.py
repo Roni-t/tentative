@@ -51,39 +51,17 @@ class RsvpService:
         if target_status not in ["going", "maybe", "not_going"]:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid RSVP status")
 
-        waitlist_pos = None
-
-        # Check capacity & waitlist logic
-        if target_status == "going":
-            if event.capacity_limit is not None:
-                # Count current going (excluding this user if they were already going)
-                going_query = db.query(RSVP).filter(
-                    RSVP.event_id == event_id,
-                    RSVP.status == "going"
-                )
-                if existing and existing.status == "going":
-                    going_query = going_query.filter(RSVP.id != existing.id)
-                
-                current_going_count = going_query.count()
-
-                if current_going_count >= event.capacity_limit:
-                    target_status = "waitlisted"
-                    # Determine FIFO position
-                    max_pos = db.query(RSVP).filter(
-                        RSVP.event_id == event_id,
-                        RSVP.status == "waitlisted"
-                    ).count()
-                    waitlist_pos = max_pos + 1
-
-        # Check if a previously going participant is freeing up a spot
-        freed_spot = (prev_status == "going" and target_status != "going")
+        # Capacity limit: once full, nobody else can say they're going. People already going keep their spot.
+        if target_status == "going" and event.capacity_limit is not None and prev_status != "going":
+            going_count = db.query(RSVP).filter(RSVP.event_id == event_id, RSVP.status == "going").count()
+            if going_count >= event.capacity_limit:
+                raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="This event is full.")
 
         if existing:
             existing.participant_name = payload.participant_name.strip()
             if payload.participant_phone:
                 existing.participant_phone = payload.participant_phone.strip()
             existing.status = target_status
-            existing.waitlist_position = waitlist_pos
             existing.updated_at = now
             rsvp_record = existing
         else:
@@ -94,7 +72,6 @@ class RsvpService:
                 participant_phone=payload.participant_phone.strip() if payload.participant_phone else None,
                 edit_token=edit_token,
                 status=target_status,
-                waitlist_position=waitlist_pos,
                 created_at=now,
                 updated_at=now
             )
@@ -111,43 +88,7 @@ class RsvpService:
             db=db
         )
 
-        # If a spot freed up, auto-promote next in line
-        if freed_spot:
-            self.promote_next_waitlist_attendee(event, db)
-
         return rsvp_record
-
-    def promote_next_waitlist_attendee(self, event: Event, db: Session):
-        """FIFO Waitlist auto-promotion."""
-        next_waitlisted = db.query(RSVP).filter(
-            RSVP.event_id == event.id,
-            RSVP.status == "waitlisted"
-        ).order_by(RSVP.waitlist_position.asc(), RSVP.created_at.asc()).first()
-
-        if next_waitlisted:
-            next_waitlisted.status = "going"
-            next_waitlisted.waitlist_position = None
-            next_waitlisted.updated_at = datetime.now(timezone.utc)
-            db.commit()
-
-            # Re-index remaining waitlisted users
-            remaining = db.query(RSVP).filter(
-                RSVP.event_id == event.id,
-                RSVP.status == "waitlisted"
-            ).order_by(RSVP.waitlist_position.asc()).all()
-
-            for idx, r in enumerate(remaining, start=1):
-                r.waitlist_position = idx
-            db.commit()
-
-            # Notify promoted attendee
-            notification_service.notify_participant(
-                recipient=next_waitlisted.participant_phone or next_waitlisted.participant_name,
-                event=event,
-                message=f"You're off the waitlist! A spot opened up for '{event.title}'. Your RSVP is now Going.",
-                notification_type="waitlist_promoted",
-                db=db
-            )
 
     def get_rsvp_summary(self, event_id: int, edit_token: Optional[str], db: Session) -> RsvpSummary:
         event = db.query(Event).filter(Event.id == event_id).first()
@@ -164,15 +105,12 @@ class RsvpService:
         count_going = sum(1 for r in rsvps if r.status == "going")
         count_maybe = sum(1 for r in rsvps if r.status == "maybe")
         count_not_going = sum(1 for r in rsvps if r.status == "not_going")
-        count_waitlisted = sum(1 for r in rsvps if r.status == "waitlisted")
 
         current_status = None
-        current_waitlist_pos = None
         if edit_token:
             for r in rsvps:
                 if r.edit_token == edit_token:
                     current_status = r.status
-                    current_waitlist_pos = r.waitlist_position
                     break
 
         return RsvpSummary(
@@ -181,11 +119,9 @@ class RsvpService:
             count_going=count_going,
             count_maybe=count_maybe,
             count_not_going=count_not_going,
-            count_waitlisted=count_waitlisted,
             count_no_response=no_response_count,
             capacity_limit=event.capacity_limit,
             current_status=current_status,
-            current_waitlist_position=current_waitlist_pos,
             rsvps=[RsvpOut.model_validate(r) for r in rsvps]
         )
 
@@ -193,12 +129,11 @@ class RsvpService:
         summary = self.get_rsvp_summary(event_id, None, db)
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow(["Name", "Status", "Waitlist Rank", "Last Updated (UTC)"])
+        writer.writerow(["Name", "Status", "Last Updated (UTC)"])
         for r in summary.rsvps:
             writer.writerow([
                 r.participant_name,
                 r.status.upper(),
-                r.waitlist_position if r.waitlist_position else "-",
                 r.updated_at.strftime("%Y-%m-%d %H:%M:%S")
             ])
         return output.getvalue()

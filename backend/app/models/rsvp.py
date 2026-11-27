@@ -15,9 +15,8 @@ class RSVP(Base):
     participant_phone = Column(String(128), nullable=True)
     edit_token = Column(String(64), index=True, nullable=False)
     
-    # Status: 'going', 'maybe', 'not_going', 'waitlisted'
+    # Status: 'going', 'maybe', 'not_going'
     status = Column(String(32), default="going", nullable=False, index=True)
-    waitlist_position = Column(Integer, nullable=True)  # FIFO rank when status == 'waitlisted'
     
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)

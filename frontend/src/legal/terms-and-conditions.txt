@@ -33,7 +33,7 @@ You must be at least 13 years old to use the Service. If you are under 18, you m
 
 4.2 Share links. Anyone with an event's share link can view and respond to that event. You are responsible for who you share links with. If a link is shared further than you intended, you can rotate it, which disables the old link.
 
-4.3 Host and co-host controls. Hosts and the co-hosts they appoint can edit event details, set deadlines and capacity limits, manage the waitlist, remove attendees, block accounts from RSVPing, view and export RSVP lists, send updates, finalize a time, and cancel the event. Only a host or co-host can finalize an event's time. Hosts are responsible for the actions of the co-hosts they appoint.
+4.3 Host and co-host controls. Hosts and the co-hosts they appoint can edit event details, set deadlines and capacity limits, remove attendees, block accounts from RSVPing, view and export RSVP lists, send updates, finalize a time, and cancel the event. Only a host or co-host can finalize an event's time. Hosts are responsible for the actions of the co-hosts they appoint.
 
 4.4 Exported data. If you export an RSVP list (CSV) or calendar file (.ics), you are responsible for handling that data lawfully and respectfully, including other participants' names and responses.
 

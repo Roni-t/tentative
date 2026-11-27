@@ -65,11 +65,7 @@ export const RsvpListPage: React.FC = () => {
     setSubmittingRsvp(true);
     try {
       const updated = await api.submitRsvp(id, participantName.trim(), selectedStatus);
-      if (updated.status === 'waitlisted') {
-        showToast(`Event capacity reached. You are on the waitlist at position #${updated.waitlist_position}`, 'info');
-      } else {
-        showToast(`RSVP recorded as ${updated.status}!`, 'success');
-      }
+      showToast(`RSVP recorded as ${updated.status}!`, 'success');
       loadData();
     } catch (err: any) {
       showToast(err.message || 'Failed to submit RSVP', 'error');
@@ -116,7 +112,7 @@ export const RsvpListPage: React.FC = () => {
       </div>
 
       {/* Stats Counter Bar (matches Wireframe p. 46) */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="glass-panel p-4 rounded-2xl border border-white/10 text-center">
           <div className="text-2xl font-extrabold text-emerald-400">{summary.count_going}</div>
           <div className="text-[11px] text-slate-400 uppercase font-semibold tracking-wider mt-1">Going</div>
@@ -133,11 +129,6 @@ export const RsvpListPage: React.FC = () => {
         </div>
 
         <div className="glass-panel p-4 rounded-2xl border border-zinc-800 text-center">
-          <div className="text-2xl font-extrabold text-white">{summary.count_waitlisted}</div>
-          <div className="text-[11px] text-zinc-400 uppercase font-semibold tracking-wider mt-1">Waitlist</div>
-        </div>
-
-        <div className="glass-panel p-4 rounded-2xl border border-zinc-800 text-center col-span-2 sm:col-span-1">
           <div className="text-2xl font-extrabold text-zinc-400">{summary.count_no_response}</div>
           <div className="text-[11px] text-zinc-400 uppercase font-semibold tracking-wider mt-1">No Response</div>
         </div>
@@ -208,13 +199,6 @@ export const RsvpListPage: React.FC = () => {
             </div>
           </div>
 
-          {summary.current_waitlist_position && (
-            <div className="p-3 rounded-2xl bg-zinc-900 border border-zinc-700 text-xs text-zinc-200">
-              You are currently on the waitlist at <strong>Position #{summary.current_waitlist_position}</strong>.
-              If a spot opens up, you will be automatically promoted to Going.
-            </div>
-          )}
-
           <div className="flex justify-end">
             <button
               type="submit"
@@ -243,7 +227,7 @@ export const RsvpListPage: React.FC = () => {
 
           <div className="flex items-center space-x-1.5 self-start sm:self-auto text-xs">
             <Filter className="w-3.5 h-3.5 text-slate-400" />
-            {['all', 'going', 'maybe', 'not_going', 'waitlisted'].map((st) => (
+            {['all', 'going', 'maybe', 'not_going'].map((st) => (
               <button
                 key={st}
                 onClick={() => setStatusFilter(st)}
@@ -281,11 +265,6 @@ export const RsvpListPage: React.FC = () => {
                   <tr key={r.id} className="hover:bg-white/[0.02] transition-colors">
                     <td className="py-3.5 px-4 sm:px-6 font-semibold text-white">
                       {r.participant_name}
-                      {r.waitlist_position && (
-                        <span className="ml-2 text-[10px] font-mono font-bold text-zinc-400">
-                          (Waitlist #{r.waitlist_position})
-                        </span>
-                      )}
                     </td>
                     <td className="py-3.5 px-4">
                       <span
@@ -294,8 +273,6 @@ export const RsvpListPage: React.FC = () => {
                             ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
                             : r.status === 'maybe'
                             ? 'bg-amber-400/20 text-amber-300 border border-amber-400/30'
-                            : r.status === 'waitlisted'
-                            ? 'bg-zinc-800 text-zinc-300 border border-zinc-700'
                             : 'bg-red-400/20 text-red-300 border border-red-400/30'
                         }`}
                       >

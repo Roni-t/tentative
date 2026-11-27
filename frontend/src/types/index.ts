@@ -79,7 +79,7 @@ export interface HeatmapResponse {
   cached_at: string;
 }
 
-export type RsvpStatus = 'going' | 'maybe' | 'not_going' | 'waitlisted';
+export type RsvpStatus = 'going' | 'maybe' | 'not_going';
 
 export interface Rsvp {
   id: number;
@@ -87,7 +87,6 @@ export interface Rsvp {
   participant_name: string;
   participant_phone?: string | null;
   status: RsvpStatus;
-  waitlist_position?: number | null;
   edit_token: string;
   updated_at: string;
 }
@@ -98,11 +97,9 @@ export interface RsvpSummary {
   count_going: number;
   count_maybe: number;
   count_not_going: number;
-  count_waitlisted: number;
   count_no_response: number;
   capacity_limit?: number | null;
   current_status?: RsvpStatus | null;
-  current_waitlist_position?: number | null;
   rsvps: Rsvp[];
 }
 
