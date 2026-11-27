@@ -14,8 +14,12 @@ def escape_text(text: str) -> str:
     return text.replace("\r\n", "\n").replace("\n", "\\n")
 
 
-def make_ics(event) -> str:
-    """Build the text of a .ics file for a finalized event."""
+def make_ics(event, cancel: bool = False) -> str:
+    """Build the text of a .ics file for a finalized event.
+
+    FR-13 (Trinity): with cancel=True the file has the same UID but METHOD:CANCEL and
+    STATUS:CANCELLED, so opening it removes the event from a calendar that imported it earlier.
+    """
     start = calendar_time(event.finalized_start_time)
     end = calendar_time(event.finalized_end_time or event.finalized_start_time)
     lines = [
@@ -23,14 +27,15 @@ def make_ics(event) -> str:
         "VERSION:2.0",
         "PRODID:-//Tentative//Group Scheduling//EN",
         "CALSCALE:GREGORIAN",
-        "METHOD:PUBLISH",
+        "METHOD:CANCEL" if cancel else "METHOD:PUBLISH",
         "BEGIN:VEVENT",
         f"UID:tentative-event-{event.id}-{start}@tentative",
+        f"SEQUENCE:{1 if cancel else 0}",
         f"DTSTAMP:{calendar_time(event.updated_at or event.finalized_start_time)}",
         f"DTSTART:{start}",
         f"DTEND:{end}",
-        f"SUMMARY:{escape_text(event.title)}",
-        "STATUS:CONFIRMED",
+        f"SUMMARY:{'Canceled: ' if cancel else ''}{escape_text(event.title)}",
+        "STATUS:CANCELLED" if cancel else "STATUS:CONFIRMED",
         "END:VEVENT",
         "END:VCALENDAR",
     ]

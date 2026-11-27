@@ -8,6 +8,7 @@ import { formatDateTimeLong } from '../utils/format';
 import { Modal } from '../components/Modal';
 import { ChangeHistoryModal } from '../components/ChangeHistoryModal';
 import { InviteeList } from '../components/InviteeList';
+import { AaronPollsPanel } from '../components/AaronPollsPanel';
 import { HostUpdateModal } from '../components/HostUpdateModal';
 import {
   Calendar,
@@ -50,6 +51,20 @@ export const EventDetailsPage: React.FC = () => {
   // The viewer's own RSVP link token, if they're an invitee (saved in this browser or found by their account)
   const [myRsvpToken, setMyRsvpToken] = useState<string | null>(null);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+
+  const downloadBackup = async () => {
+    if (!id) return;
+    try {
+      const blob = await api.downloadAaronBackup(id);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `tentative-event-${id}-backup.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      showToast('Event backup downloaded.', 'success');
+    } catch (err: any) { showToast(err.message || 'Could not download backup.', 'error'); }
+  };
 
   const fetchEvent = async () => {
     if (!id) return;
@@ -209,6 +224,9 @@ export const EventDetailsPage: React.FC = () => {
                   <Trash2 className="w-4 h-4" />
                 </button>
               )}
+              <button type="button" onClick={downloadBackup} className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-slate-300 hover:text-white border border-white/10 transition-colors">
+                <Download className="w-3.5 h-3.5 inline mr-1.5" />JSON Backup
+              </button>
             </div>
           )}
         </div>
@@ -281,6 +299,19 @@ export const EventDetailsPage: React.FC = () => {
         </div>
       )}
 
+      {/* FR-13 (Trinity): a canceled event that had a time can be removed from calendars */}
+      {event.status === 'canceled' && event.finalized_start_time && (
+        <div className="p-5 rounded-3xl glass-panel border border-red-500/30 bg-red-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="text-xs text-slate-300">
+            This event was canceled. If you added it to your calendar, open this file to remove it.
+          </div>
+          <a href={`/api/events/${event.id}/export.ics`} download className="pill pill-dark !py-2 !px-4 !text-xs">
+            <Download className="w-3.5 h-3.5" />
+            <span>Remove from calendar (.ics)</span>
+          </a>
+        </div>
+      )}
+
       {/* A short guide for hosts, so it is clear what to do next */}
       {canManage && event.status === 'collecting' && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -299,6 +330,8 @@ export const EventDetailsPage: React.FC = () => {
           ))}
         </div>
       )}
+
+      <AaronPollsPanel eventId={event.id} canManage={canManage} />
 
       {/* Primary Action Matrix Navigation */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">

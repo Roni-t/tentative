@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import List, Optional
 from pydantic import BaseModel, Field
 
@@ -91,3 +91,19 @@ class ChangeLogOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# UC-11 Recurring events (FR-1, Aaron)
+class RecurrencePayload(BaseModel):
+    frequency: str  # "weekly" or "biweekly"
+    days_of_week: List[str]  # e.g. ["MO", "WE"]
+    end_date: date
+
+
+class RecurrenceOut(BaseModel):
+    event_id: int
+    is_recurring: bool
+    frequency: Optional[str] = None
+    days_of_week: List[str] = []
+    end_date: Optional[str] = None
+    occurrences: List[str] = []

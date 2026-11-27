@@ -51,6 +51,18 @@ def run_reminder_job():
         db.close()
 
 
+def run_meeting_start_job():
+    """FR-7 (Reese): notify participants when a finalized meeting starts."""
+    from app.services.notification_service import notification_service
+    db: Session = SessionLocal()
+    try:
+        sent = notification_service.send_start_notifications(db)
+        if sent:
+            logger.info(f"Sent meeting-start notifications for {sent} event(s).")
+    finally:
+        db.close()
+
+
 async def start_scheduler_task():
     """Background periodic loop running every 60 seconds."""
     while True:
@@ -62,4 +74,8 @@ async def start_scheduler_task():
             run_reminder_job()
         except Exception as e:
             logger.error(f"Reminder job encountered error: {e}")
+        try:
+            run_meeting_start_job()
+        except Exception as e:
+            logger.error(f"Meeting start job encountered error: {e}")
         await asyncio.sleep(60)

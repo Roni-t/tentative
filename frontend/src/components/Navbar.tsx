@@ -58,7 +58,9 @@ export const Navbar: React.FC = () => {
 
         <nav className="glass-pill-nav flex items-center p-1 rounded-full">
           {LINKS.map(({ to, label }) => {
-            const active = pathname === to;
+            const active = to === '/share/demo-orbit-2026/heatmap'
+              ? pathname.startsWith('/share/demo-orbit-2026')
+              : pathname === to;
             return (
               <Link
                 key={to}

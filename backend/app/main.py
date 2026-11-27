@@ -6,12 +6,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.adapters.scheduler import start_scheduler_task
 from app.config import settings
 from app.database import Base, SessionLocal, engine
+from app.database_migrations import upgrade_legacy_schema
 from app.routers import (
     admin_router,
+    aaron_router,
     auth_router,
     availability_router,
     bug_reports_router,
     events_router,
+    groups_router,
     invitees_router,
     rsvp_router,
     share_router,
@@ -27,6 +30,7 @@ async def lifespan(app: FastAPI):
     settings.require_sms_settings()
     logger.info("Creating database tables")
     Base.metadata.create_all(bind=engine)
+    upgrade_legacy_schema(engine)
 
     if settings.SEED_ON_STARTUP:
         db = SessionLocal()
@@ -76,6 +80,8 @@ app.include_router(rsvp_router)
 app.include_router(admin_router)
 app.include_router(bug_reports_router)
 app.include_router(invitees_router)
+app.include_router(groups_router)
+app.include_router(aaron_router)
 
 
 @app.get("/api/health")

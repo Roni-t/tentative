@@ -34,6 +34,14 @@ export const MyEventsPage: React.FC = () => {
           <h1 className="text-3xl font-extrabold text-white tracking-tight">My Events</h1>
           <p className="text-xs text-slate-400 mt-1">All the events you host or help host</p>
         </div>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+        {/* FR-24 (Daniel): one link for several events */}
+        <Link
+          to="/groups"
+          className="px-5 py-2.5 rounded-full text-xs font-bold border border-white/15 text-zinc-200 hover:text-white transition-all cursor-pointer"
+        >
+          Group links
+        </Link>
         <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.96 }}>
           <Link
             to="/create"
@@ -43,6 +51,7 @@ export const MyEventsPage: React.FC = () => {
             <span>New event</span>
           </Link>
         </motion.div>
+        </div>
       </div>
 
       {/* Tabs with animated layout pill */}

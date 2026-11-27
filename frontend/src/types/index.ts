@@ -166,3 +166,32 @@ export interface Invitee {
   rsvp_status?: RsvpStatus | null;
   rsvp_link: string;
 }
+
+// UC-11 Recurring events (FR-1, Aaron)
+export interface RecurrenceInfo {
+  event_id: number;
+  is_recurring: boolean;
+  frequency: 'weekly' | 'biweekly' | null;
+  days_of_week: string[];
+  end_date: string | null;
+  occurrences: string[];
+}
+
+// FR-24 Group share links (Daniel)
+export interface GroupEvent {
+  id: number;
+  title: string;
+  status: string;
+  location?: string | null;
+  candidate_dates: string[];
+  finalized_start_time?: string | null;
+  share_token?: string | null;
+}
+
+export interface GroupInfo {
+  id: number;
+  name: string;
+  share_token: string | null;
+  share_url: string | null;
+  events: GroupEvent[];
+}
