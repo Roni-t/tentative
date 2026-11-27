@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.adapters.scheduler import start_scheduler_task
 from app.config import settings
 from app.database import Base, SessionLocal, engine
+from app.database_migrations import upgrade_legacy_schema
 from app.routers import (
     admin_router,
     aaron_router,
@@ -29,6 +30,7 @@ logger = logging.getLogger("tentative")
 async def lifespan(app: FastAPI):
     logger.info("Creating database tables")
     Base.metadata.create_all(bind=engine)
+    upgrade_legacy_schema(engine)
 
     if settings.SEED_ON_STARTUP:
         db = SessionLocal()
