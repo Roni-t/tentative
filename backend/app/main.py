@@ -21,6 +21,11 @@ class EventCreate(BaseModel):
     description: str = "default description"
     location: str = "Online"
 
+class TimespanAdd(BaseModel):
+    eventid: int
+    timestart: int
+    timeend: int
+
 
 @app.post("/api/user/new")
 def newUser(user: UserCreate):
@@ -43,7 +48,7 @@ def userList():
 
 
 
-@app.get("/api/event/new")
+@app.post("/api/event/new")
 def newEvent(event: EventCreate):
     foo = db.Event(manager_id = event.manager, name = event.name, description = event.description, location = event.location)
     with db.newSession() as session:
@@ -61,6 +66,16 @@ def eventID(eid: int):
 def eventList():
     cell = select(db.Event)
     return db.newSelection(cell)
+
+
+@app.post("/api/event/tspan_add")
+def addTimespan(ts: TimespanAdd):
+    foo = db.Timespan(event = ts.eventid, start_time = ts.timestart, end_time = ts.timeend)
+    with db.newSession() as session:
+        session.add_all([foo])
+        session.commit()
+    
+    return foo
 
 
 @app.get("/api/test")

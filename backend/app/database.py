@@ -48,6 +48,8 @@ class Timespan(Base):
     timespanid: Mapped[int] = mapped_column(primary_key = True)
     event: Mapped[int] = mapped_column(ForeignKey("events.id"))
     ts_event: Mapped["Event"] = relationship(back_populates = "valid_timespans")
+    start_time: Mapped[int] = mapped_column(default = 0)    # unix timestamp
+    end_time: Mapped[int] = mapped_column(default = 1)
 
 
 #I don't know if I'm doing this right but these were the databases I needed, so please check over -Trinity
