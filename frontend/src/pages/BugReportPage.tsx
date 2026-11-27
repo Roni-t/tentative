@@ -86,7 +86,7 @@ export const BugReportPage: React.FC = () => {
                   aria-describedby="contact-privacy"
                   className="w-full px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:border-cosmic-purple"
                 />
-                <LegalNote id="contact-privacy" className="mt-1.5">
+                <LegalNote id="contact-privacy" className="mt-2.5">
                   <PrivacyLink />
                 </LegalNote>
               </div>

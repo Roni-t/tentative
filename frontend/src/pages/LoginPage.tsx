@@ -171,7 +171,7 @@ export const LoginPage: React.FC = () => {
                       className={inputClass}
                     />
                   </div>
-                  <LegalNote id="phone-privacy" className="mt-1.5">
+                  <LegalNote id="phone-privacy" className="mt-2.5">
                     <PrivacyLink />
                   </LegalNote>
                 </div>
