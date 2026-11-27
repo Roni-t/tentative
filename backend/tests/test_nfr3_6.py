@@ -110,6 +110,17 @@ def test_nfr4_rsvps_store_no_phone_numbers(client, db_session, host_with_activit
     assert _scan_db(db_session, {_national(p) for p in host_with_activity}) == []
 
 
+
+def test_nfr4_bug_reports_store_no_phone_number(client, db_session):
+    # Bug reports no longer have a phone field (DEV-57); a number sent by an old form is dropped
+    res = client.post("/api/bug-reports", json={
+        "user_name": "Rae Reporter", "contact": "+14695550188", "page_url": "/events", "description": "The grid froze."})
+    assert res.status_code == 200 and "contact" not in res.json()
+    assert _scan_db(db_session, {_national("+14695550188")}) == []
+    admin = register_user(client, phone="+19725550100", name="Admin Commander")
+    listed = client.get("/api/bug-reports", headers=admin).json()
+    assert [r["description"] for r in listed] == ["The grid froze."] and "contact" not in listed[0]
+
 @pytest.fixture
 def host_with_activity(client):
     """The doc's 6 fixture users plus invitees, invite texts, a reminder, an update and a finalization.

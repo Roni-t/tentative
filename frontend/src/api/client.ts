@@ -294,10 +294,10 @@ class ApiClient {
   }
 
   // Bug Reports
-  async submitBugReport(userName: string, contact: string, pageUrl: string, description: string) {
+  async submitBugReport(userName: string, pageUrl: string, description: string) {
     return this.request<any>('/bug-reports', {
       method: 'POST',
-      body: JSON.stringify({ user_name: userName, contact: contact, page_url: pageUrl, description }),
+      body: JSON.stringify({ user_name: userName, page_url: pageUrl, description }),
     });
   }
 
