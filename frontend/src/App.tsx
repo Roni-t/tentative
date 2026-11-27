@@ -28,6 +28,7 @@ import { AdminPage } from './pages/AdminPage';
 import { BugReportPage } from './pages/BugReportPage';
 import { ExpiredOrbitPage } from './pages/ExpiredOrbitPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { PrivacyPolicyPage, TermsPage } from './pages/LegalPage';
 
 // Helper component that redirects /share/:token to /share/:token/heatmap
 const ShareRedirect: React.FC = () => {
@@ -87,6 +88,8 @@ const AnimatedRoutes: React.FC = () => {
           {/* System & Extra Views */}
           <Route path="/admin" element={<RequireAuth><AdminPage /></RequireAuth>} />
           <Route path="/bug-report" element={<BugReportPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
           <Route path="/expired" element={<ExpiredOrbitPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

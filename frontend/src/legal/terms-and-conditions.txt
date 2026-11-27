@@ -1,0 +1,132 @@
+TENTATIVE TERMS AND CONDITIONS
+
+Effective date: 11/27/2026
+Last updated: 11/27/2026
+
+These Terms and Conditions ("Terms") govern your use of the Tentative website and web application at https://tentative-frontend.onrender.com/ (the "Service"), operated by the Tentative team ("Tentative," "we," "us," or "our"). By creating an account, creating or responding to an event, or otherwise using the Service, you agree to these Terms and to our Privacy Policy. If you do not agree, do not use the Service.
+
+
+1. ABOUT THE SERVICE
+
+Tentative helps groups find a time to meet. A host creates an event proposal with candidate dates and a time window and shares it with invitees. Invitees mark their availability, and the host reviews the combined availability heatmap and finalizes a time. Tentative can send invitations, reminders, and updates by text message, and can connect to external calendars if you choose.
+
+Tentative is a student project developed by Computer Science students at The University of Texas at Dallas. It is not an official product or service of The University of Texas at Dallas, and the University is not responsible for it.
+
+
+2. ELIGIBILITY
+
+You must be at least 13 years old to use the Service. If you are under 18, you may use the Service only with the involvement and permission of a parent or legal guardian. By using the Service, you confirm that you meet these requirements.
+
+
+3. ACCOUNTS AND GUEST ACCESS
+
+3.1 Accounts. Hosts must create an account using their name and a mobile phone number they own or are authorized to use. We verify your number with a one-time code sent by text message.
+
+3.2 Guest access. Invitees may respond to an event through its share link without creating an account. Guest responses are tied to that event only.
+
+3.3 Your responsibilities. You agree to provide accurate information, to keep it up to date, and to keep control of your phone number and devices. You are responsible for activity that happens under your account. You may hold only one account; duplicate accounts may be removed. Tell us right away at kxn210043@utdallas.edu if you believe your account has been accessed without permission.
+
+
+4. HOSTING AND INVITING
+
+4.1 Consent to contact. If you add invitees by phone number or ask Tentative to text them, you confirm that each person has agreed to be contacted by you about the event and that you have the right to share their number with us. Do not use the Service to send messages to people who have not agreed to receive them.
+
+4.2 Share links. Anyone with an event's share link can view and respond to that event. You are responsible for who you share links with. If a link is shared further than you intended, you can rotate it, which disables the old link.
+
+4.3 Host and co-host controls. Hosts and the co-hosts they appoint can edit event details, set deadlines and capacity limits, manage the waitlist, remove attendees, block accounts from RSVPing, view and export RSVP lists, send updates, finalize a time, and cancel the event. Only a host or co-host can finalize an event's time. Hosts are responsible for the actions of the co-hosts they appoint.
+
+4.4 Exported data. If you export an RSVP list (CSV) or calendar file (.ics), you are responsible for handling that data lawfully and respectfully, including other participants' names and responses.
+
+4.5 Events themselves. Tentative is only a scheduling tool. We do not organize, host, supervise, or attend any event, and we are not responsible for any event, its location, its content, or the conduct of anyone at it.
+
+
+5. TEXT MESSAGES
+
+By providing your phone number, you agree to receive text messages from Tentative related to your account and events, including verification codes, invitations, host updates, reminders, and finalization or cancellation notices. These messages are transactional and related to your use of the Service; we do not send marketing texts.
+
+Message frequency varies with your event activity. Message and data rates may apply. Reply STOP to opt out of event texts or HELP for help. Carriers are not liable for delayed or undelivered messages. We do not guarantee that any message will be delivered or received on time.
+
+
+6. CONNECTED CALENDARS
+
+You may choose to connect a Google, Microsoft Outlook, or CalDAV calendar. You authorize us to access your calendar only as described in our Privacy Policy (read-only free/busy data for auto-fill, and writing a finalized event to your calendar if you ask us to). Your use of those calendar services is also governed by their own terms. You can disconnect a calendar at any time. Auto-filled availability is a suggestion: review it before you submit, because you are responsible for the availability you submit.
+
+
+7. ACCEPTABLE USE
+
+You agree not to:
+
+- Use the Service for any unlawful, harmful, fraudulent, or deceptive purpose.
+- Harass, threaten, abuse, or impersonate any person, or post hateful, sexually explicit, or violent content in event details, comments, or polls.
+- Send spam or unsolicited messages, or use invitations or SMS features to contact people who have not agreed to it.
+- Collect or harvest other users' information, including phone numbers, without their consent.
+- Attempt to get around rate limits, permission checks, share-link rotation, or other security features, or access events, accounts, or data you are not authorized to access.
+- Probe, scan, or test the vulnerability of the Service, or interfere with or disrupt it, including through bots, scrapers, or automated mass requests, except as permitted in writing by us.
+- Upload or link to malware or other harmful code.
+- Use the Service to organize events that promote or involve illegal activity or violence.
+
+We may remove content, cancel events, limit features, or suspend or terminate accounts that violate these Terms.
+
+
+8. YOUR CONTENT
+
+"Your Content" means the information you submit to the Service, including event details, availability, RSVPs, comments, and poll votes. You keep ownership of Your Content. You give Tentative a limited, non-exclusive, royalty-free, worldwide license to host, store, copy, display, and process Your Content only as needed to operate, secure, back up, and improve the Service, and to show it to the participants of the events where you posted it. This license ends when Your Content is deleted from the Service, except for copies in backups that are overwritten on a rolling basis and copies other users have already exported.
+
+You are responsible for Your Content and confirm that you have the rights needed to submit it.
+
+
+9. OUR PROPERTY
+
+The Service, including its software, design, logos, and the "Tentative" name, belongs to the Tentative team and its licensors and is protected by intellectual property laws. Except for the right to use the Service under these Terms, we do not grant you any rights in it.
+
+If you send us feedback or suggestions, we may use them without any obligation to you.
+
+
+10. AVAILABILITY OF THE SERVICE
+
+Tentative is a student project and may change, be interrupted, or be discontinued at any time, with or without notice. We may add, change, or remove features. We do not guarantee that the Service will be available at any particular time, that data will never be lost, or that notifications will arrive on time. Keep your own record of important event details, for example by exporting a calendar file.
+
+
+11. TERMINATION
+
+You may stop using the Service and delete your account at any time. We may suspend or end your access at any time if you violate these Terms, if required by law, or if we discontinue the Service. When your account ends, your right to use the Service stops. Sections 4.4, 4.5, 8 (as to licenses for content already shared), 9, 12, 13, 14, and 15 survive termination.
+
+
+12. DISCLAIMERS
+
+THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE," WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS OR IMPLIED, INCLUDING IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE, OR SECURE, THAT AVAILABILITY CALCULATIONS, TIME ZONE CONVERSIONS, OR CALENDAR SYNCS WILL BE ACCURATE, OR THAT MESSAGES WILL BE DELIVERED. YOU ARE RESPONSIBLE FOR CONFIRMING EVENT TIMES AND DETAILS WITH OTHER PARTICIPANTS.
+
+
+13. LIMITATION OF LIABILITY
+
+TO THE FULLEST EXTENT PERMITTED BY LAW, TENTATIVE AND ITS TEAM MEMBERS WILL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES, OR FOR ANY LOSS OF DATA, PROFITS, OR GOODWILL, ARISING OUT OF OR RELATED TO YOUR USE OF THE SERVICE, MISSED OR MIS-SCHEDULED EVENTS, OR THE CONDUCT OF OTHER USERS, EVEN IF WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. OUR TOTAL LIABILITY FOR ANY CLAIM RELATED TO THE SERVICE WILL NOT EXCEED FIFTY U.S. DOLLARS (US $50).
+
+Some jurisdictions do not allow certain disclaimers or limitations of liability, so some of the above may not apply to you.
+
+
+14. INDEMNIFICATION
+
+You agree to defend, indemnify, and hold harmless Tentative and its team members from any claims, damages, losses, and expenses (including reasonable attorneys' fees) arising from Your Content, your events, your messages to other people through the Service, or your violation of these Terms or of any law or third-party right.
+
+
+15. GOVERNING LAW AND DISPUTES
+
+These Terms are governed by the laws of the State of Texas and applicable U.S. federal law, without regard to conflict-of-law rules. Any dispute arising from these Terms or the Service will be brought only in the state or federal courts located in Dallas County, Texas, and you and we consent to the jurisdiction of those courts. Before filing a claim, you agree to contact us at kxn210043@utdallas.edu and try to resolve the dispute informally for at least 30 days.
+
+
+16. CHANGES TO THESE TERMS
+
+We may update these Terms from time to time. When we do, we will update the "Last updated" date above. If changes are material, we will give notice in the app or by text message before they take effect. Your continued use of the Service after changes take effect means you accept the updated Terms.
+
+
+17. GENERAL
+
+These Terms and our Privacy Policy are the entire agreement between you and Tentative about the Service. If any part of these Terms is found unenforceable, the rest stays in effect. Our failure to enforce any part of these Terms is not a waiver. You may not transfer your rights under these Terms without our consent; we may transfer ours as part of a change in who maintains the Service.
+
+
+18. CONTACT US
+
+Questions about these Terms:
+
+Tentative
+kxn210043@utdallas.edu

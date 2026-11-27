@@ -184,9 +184,16 @@ export const CreateAccountPage: React.FC = () => {
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="(972) 555-0142"
                       required
+                      aria-describedby="phone-privacy"
                       className={inputClass}
                     />
                   </div>
+                  <p id="phone-privacy" className="mt-1.5 text-[11px] text-zinc-500">
+                    {/* New tab, so the form isn't lost */}
+                    <Link to="/privacy" target="_blank" rel="noopener" className="underline decoration-zinc-600 underline-offset-2 hover:text-white hover:decoration-white transition-colors">
+                      Privacy policy
+                    </Link>
+                  </p>
                 </div>
 
                 <button type="submit" disabled={loading} className={primaryButton}>
