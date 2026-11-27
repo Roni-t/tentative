@@ -390,7 +390,7 @@ export const CreateEventPage: React.FC = () => {
               placeholder="No limit"
               className={inputClass}
             />
-            <p className="text-xs text-zinc-500 mt-2">Extra people go on a waitlist in the order they join.</p>
+            <p className="text-xs text-zinc-500 mt-2">Once it's full, nobody else can RSVP going.</p>
           </div>
 
           <div>

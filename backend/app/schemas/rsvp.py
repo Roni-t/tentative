@@ -16,7 +16,6 @@ class RsvpOut(BaseModel):
     participant_name: str
     participant_phone: Optional[str] = None
     status: str
-    waitlist_position: Optional[int] = None
     edit_token: str
     updated_at: datetime
 
@@ -30,9 +29,7 @@ class RsvpSummary(BaseModel):
     count_going: int
     count_maybe: int
     count_not_going: int
-    count_waitlisted: int
     count_no_response: int
     capacity_limit: Optional[int] = None
     current_status: Optional[str] = None  # if caller provided edit_token
-    current_waitlist_position: Optional[int] = None
     rsvps: List[RsvpOut] = []

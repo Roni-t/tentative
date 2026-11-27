@@ -21,7 +21,6 @@ import { RespondAvailabilityPage } from './pages/RespondAvailabilityPage';
 import { HeatmapPage } from './pages/HeatmapPage';
 import { FinalizePage } from './pages/FinalizePage';
 import { RsvpListPage } from './pages/RsvpListPage';
-import { DiscussionPage } from './pages/DiscussionPage';
 import { ShareExpiryPage } from './pages/ShareExpiryPage';
 import { RecurrencePage } from './pages/RecurrencePage';
 import { AdminPage } from './pages/AdminPage';
@@ -75,7 +74,6 @@ const AnimatedRoutes: React.FC = () => {
           <Route path="/events/:id/heatmap" element={<HeatmapPage />} />
           <Route path="/events/:id/finalize" element={<RequireAuth><FinalizePage /></RequireAuth>} />
           <Route path="/events/:id/rsvps" element={<RsvpListPage />} />
-          <Route path="/events/:id/discussion" element={<DiscussionPage />} />
           <Route path="/events/:id/share" element={<RequireAuth><ShareExpiryPage /></RequireAuth>} />
           <Route path="/events/:id/recurrence" element={<RequireAuth><RecurrencePage /></RequireAuth>} />
 

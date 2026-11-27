@@ -22,8 +22,8 @@ Contact: kxn210043@utdallas.edu
 - Account information. To create an account, you provide your name and mobile phone number. Accounts are required for hosts and optional for invitees.
 - Guest information. If you respond to an event without an account, you provide a display name and, if you choose, a phone number for event notifications.
 - Event information. If you host an event, we collect what you enter: title, description, category, candidate dates, daily time window, response deadline, location or meeting link, capacity limit, recurrence settings, co-hosts, groups, and invitees.
-- Availability and responses. The time slots you mark as available or unavailable, your RSVP status (going, maybe, declined, waitlisted), and any changes you make to them.
-- Comments and polls. Questions or comments you post on an event page and votes you cast in event polls.
+- Availability and responses. The time slots you mark as available or unavailable, your RSVP status (going, maybe, declined), and any changes you make to them.
+- Polls. Votes you cast in event polls.
 - Communications with us. Bug reports, feedback, and support requests you send us.
 
 2.2 Information from connected calendars (optional)
@@ -38,7 +38,7 @@ If you choose to add a finalized event to a connected calendar, we write that si
 
 - Log and device information, such as IP address, browser type, device type, operating system, pages visited, and timestamps.
 - Session information. We use a session token (stored in your browser) to keep you signed in.
-- Security and abuse-prevention data, such as request counts used by our rate limiter to block spam and excessive invites, comments, or text messages.
+- Security and abuse-prevention data, such as request counts used by our rate limiter to block spam and excessive invites or text messages.
 
 2.4 Location information
 
@@ -50,7 +50,7 @@ If you use the "filter events by distance" feature, we use the location you ente
 We use information to:
 
 - Create and secure your account, including verifying your phone number with one-time codes sent by text message.
-- Run the core scheduling features: collecting availability, building the availability heatmap, handling RSVPs and waitlists, and letting hosts finalize a time.
+- Run the core scheduling features: collecting availability, building the availability heatmap, handling RSVPs, and letting hosts finalize a time.
 - Send text messages and in-app notifications related to events you host or are invited to (see Section 5).
 - Show change history and activity on an event page.
 - Generate calendar files (.ics) and CSV exports that you request.
@@ -68,8 +68,8 @@ We do not sell your personal information. We do not share your personal informat
 
 Tentative is a shared tool, so some of your information is visible to other people in the events you join:
 
-- The host and any co-hosts can see invitees' names, availability, RSVP status, comments, and poll votes, and can export the RSVP list as a CSV file. Once exported, that file is under the host's control, not ours.
-- Other invitees may see participant names, the availability heatmap, which participants are available in a selected time slot, comments, and the event's change history.
+- The host and any co-hosts can see invitees' names, availability, RSVP status, and poll votes, and can export the RSVP list as a CSV file. Once exported, that file is under the host's control, not ours.
+- Other invitees may see participant names, the availability heatmap, which participants are available in a selected time slot, and the event's change history.
 - Participants never see your phone number unless you share it yourself.
 - Hosts can hide some event details from invitees (for example, for a surprise party).
 
@@ -127,7 +127,7 @@ We use reasonable measures to protect your information, including encrypting pho
 9. DATA RETENTION
 
 - Account information is kept while your account is active and deleted within 30 days after you delete your account, except where we must keep it for legal, security, or fraud-prevention reasons.
-- Event data, including availability, RSVPs, comments, and change history, is kept while the event exists. When a host deletes or cancels an event, its data is removed from our active database. Backups containing it are overwritten on a rolling basis within 30 days.
+- Event data, including availability, RSVPs, and change history, is kept while the event exists. When a host deletes or cancels an event, its data is removed from our active database. Backups containing it are overwritten on a rolling basis within 30 days.
 - Guest responses are kept for as long as the event they belong to exists.
 - Server logs are kept for up to 90 days.
 - Calendar access tokens are deleted when you disconnect a calendar or delete your account.
@@ -145,7 +145,7 @@ You can:
 
 Depending on where you live, you may have additional rights, such as the right to access, correct, delete, or receive a copy of your personal information, or to appeal a decision we make about your request. To exercise these rights, contact us at kxn210043@utdallas.edu. We will verify your request, generally by confirming control of your phone number, and respond within the time required by applicable law. We will not discriminate against you for exercising your rights.
 
-Note that if you delete your account, content you contributed to other people's events (such as comments) may be removed or shown as from a "Deleted user," and copies a host has already exported (for example, a CSV file) are outside our control.
+Note that if you delete your account, content you contributed to other people's events (such as availability or RSVPs) may be removed or shown as from a "Deleted user," and copies a host has already exported (for example, a CSV file) are outside our control.
 
 
 11. CHILDREN'S PRIVACY

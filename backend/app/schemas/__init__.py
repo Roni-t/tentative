@@ -30,11 +30,6 @@ from app.schemas.rsvp import (
     RsvpOut,
     RsvpSummary,
 )
-from app.schemas.comment import (
-    CommentCreatePayload,
-    CommentOut,
-    CommentReplyOut,
-)
 from app.schemas.admin import (
     SystemStatusOut,
     AdminUserOut,
@@ -71,9 +66,6 @@ __all__ = [
     "RsvpSubmitPayload",
     "RsvpOut",
     "RsvpSummary",
-    "CommentCreatePayload",
-    "CommentOut",
-    "CommentReplyOut",
     "SystemStatusOut",
     "AdminUserOut",
     "AdminEventOut",

@@ -268,18 +268,6 @@ class ApiClient {
     return this.request<any>(`/events/${eventId}/rsvp${token ? `?edit_token=${token}` : ''}`);
   }
 
-  // Comments
-  async getComments(eventId: number | string) {
-    return this.request<any[]>(`/events/${eventId}/comments`);
-  }
-
-  async addComment(eventId: number | string, authorName: string, content: string, isQuestion: boolean = false, parentId?: number) {
-    return this.request<any>(`/events/${eventId}/comments`, {
-      method: 'POST',
-      body: JSON.stringify({ author_name: authorName, content, is_question: isQuestion, parent_id: parentId }),
-    });
-  }
-
   // Admin
   async getAdminStatus() {
     return this.request<any>('/admin/status');

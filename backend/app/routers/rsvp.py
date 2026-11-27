@@ -8,7 +8,7 @@ from app.models.user import User
 from app.schemas.rsvp import RsvpOut, RsvpSubmitPayload, RsvpSummary
 from app.services.rsvp_service import rsvp_service
 
-router = APIRouter(prefix="/api/events/{event_id}/rsvp", tags=["RSVP & Waitlist"])
+router = APIRouter(prefix="/api/events/{event_id}/rsvp", tags=["RSVP"])
 
 
 @router.post("", response_model=RsvpOut)
@@ -20,7 +20,7 @@ def submit_rsvp(
     tentative_edit_token: Optional[str] = Cookie(None),
     db: Session = Depends(get_db)
 ):
-    """Submit or update RSVP status. Handles FIFO waitlist if capacity limit is reached."""
+    """Submit or update RSVP status. Going is refused once the event reaches its capacity limit."""
     if not payload.edit_token and tentative_edit_token:
         existing = db.query(RSVP).filter(
             RSVP.event_id == event_id,
@@ -54,7 +54,7 @@ def get_rsvp_summary(
     tentative_edit_token: Optional[str] = Cookie(None),
     db: Session = Depends(get_db)
 ):
-    """Get RSVP totals, attendance lists, and waitlist position."""
+    """Get RSVP totals and attendance lists."""
     token = edit_token or tentative_edit_token
     return rsvp_service.get_rsvp_summary(event_id=event_id, edit_token=token, db=db)
 
