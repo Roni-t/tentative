@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../api/client';
 import { Event } from '../types';
@@ -8,24 +8,19 @@ import { PlusCircle, Calendar, Users, Sparkles, ArrowUpRight } from 'lucide-reac
 
 export const MyEventsPage: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'hosted' | 'cohosted'>('hosted');
 
   useEffect(() => {
-    if (authLoading) return; // wait until we know whether someone is logged in
-    if (!user) {
-      navigate('/login');
-      return;
-    }
+    if (authLoading || !user) return; // RequireAuth sends logged-out visitors to login
     setLoading(true);
     api
       .listEvents()
       .then(setEvents)
       .catch(() => setEvents([]))
       .finally(() => setLoading(false));
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading]);
 
   const hostedEvents = events.filter((e) => e.created_by_id === user?.id);
   const cohostedEvents = events.filter((e) => e.created_by_id !== user?.id);
