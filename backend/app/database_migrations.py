@@ -34,11 +34,17 @@ def _upgrade_invitees(engine, tables) -> None:
 
     columns = inspect(engine).get_columns("invitees")
     names = {column["name"] for column in columns}
-    if "joined_via_link" not in names:
-        with engine.begin() as connection:
-            connection.execute(text(
-                "ALTER TABLE invitees ADD COLUMN joined_via_link BOOLEAN NOT NULL DEFAULT FALSE"
-            ))
+    added_column = False
+    for col_name, col_ddl in (
+        ("joined_via_link", "BOOLEAN NOT NULL DEFAULT FALSE"),
+        ("rsvp_status", "VARCHAR(16)"),
+        ("rsvp_updated_at", "DATETIME"),
+    ):
+        if col_name not in names:
+            with engine.begin() as connection:
+                connection.execute(text(f"ALTER TABLE invitees ADD COLUMN {col_name} {col_ddl}"))
+            added_column = True
+    if added_column:
         columns = inspect(engine).get_columns("invitees")
 
     phone_fields_require_nullable_upgrade = any(

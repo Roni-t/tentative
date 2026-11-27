@@ -9,7 +9,6 @@ from sqlalchemy import String, Text, inspect
 from app.core.encryption import decrypt_phone
 from app.database import Base
 from app.models.invitee import Invitee
-from app.models.rsvp import RSVP
 from app.models.user import User
 from app.services.auth_service import auth_service
 from tests.helpers import add_invitee, create_event, register_user, submit_availability
@@ -90,8 +89,7 @@ def test_nfr4_no_plaintext_phone_numbers_in_database(client, db_session, host_wi
         phones.append(phone)
 
     needles = {_national(p) for p in phones}
-    # rsvps.participant_phone is covered by its own test below
-    hits = _scan_db(db_session, needles, skip={"rsvps"})
+    hits = _scan_db(db_session, needles)
     assert hits == [], f"plaintext phone numbers found: {hits[:10]}"
 
     # And the encrypted columns really are ciphertext that decrypts back to the number
@@ -103,15 +101,25 @@ def test_nfr4_no_plaintext_phone_numbers_in_database(client, db_session, host_wi
             assert _national(decrypt_phone(inv.phone_encrypted)) in needles
 
 
-@pytest.mark.xfail(strict=True, reason="UC-10 stores rsvps.participant_phone in plaintext; "
-                                       "needs encryption at rest to meet NFR-4")
-def test_nfr4_rsvp_contact_phone_not_stored_in_plaintext(client, db_session, host_with_activity):
-    event_id = db_session.query(Invitee).first().event_id
-    client.post(f"/api/events/{event_id}/rsvp",
-                json={"participant_name": "Walk-in", "participant_phone": "+14695550188", "status": "going"})
-    assert db_session.query(RSVP).count() == 1
-    assert _scan_db(db_session, {_national("+14695550188")}) == []
+def test_nfr4_rsvps_store_no_phone_numbers(client, db_session, host_with_activity):
+    # RSVPs live on the invitee row and texts use the invitee's encrypted number (DEV-167)
+    assert "rsvps" not in Base.metadata.tables
+    invitee = db_session.query(Invitee).filter(Invitee.phone_encrypted.isnot(None)).first()
+    client.cookies.clear()
+    assert client.post(f"/api/rsvp/{invitee.response_token}", json={"status": "going"}).status_code == 200
+    assert _scan_db(db_session, {_national(p) for p in host_with_activity}) == []
 
+
+
+def test_nfr4_bug_reports_store_no_phone_number(client, db_session):
+    # Bug reports no longer have a phone field (DEV-57); a number sent by an old form is dropped
+    res = client.post("/api/bug-reports", json={
+        "user_name": "Rae Reporter", "contact": "+14695550188", "page_url": "/events", "description": "The grid froze."})
+    assert res.status_code == 200 and "contact" not in res.json()
+    assert _scan_db(db_session, {_national("+14695550188")}) == []
+    admin = register_user(client, phone="+19725550100", name="Admin Commander")
+    listed = client.get("/api/bug-reports", headers=admin).json()
+    assert [r["description"] for r in listed] == ["The grid froze."] and "contact" not in listed[0]
 
 @pytest.fixture
 def host_with_activity(client):

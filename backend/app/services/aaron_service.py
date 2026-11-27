@@ -141,7 +141,7 @@ def _event_snapshot(event: Event, db: Session) -> dict[str, Any]:
     polls = list_polls(event.id, db)
     participant_names = {
         availability.participant_name for availability in event.availabilities
-    } | {rsvp.participant_name for rsvp in event.rsvps} | {invitee.name for invitee in invitees}
+    } | {invitee.name for invitee in invitees}
 
     return {
         "schema_version": 1,
@@ -173,6 +173,8 @@ def _event_snapshot(event: Event, db: Session) -> dict[str, Any]:
                     "timezone": invitee.timezone,
                     "joined_via_link": invitee.joined_via_link,
                     "responded_at": _iso(invitee.responded_at),
+                    "rsvp_status": invitee.rsvp_status,
+                    "rsvp_updated_at": _iso(invitee.rsvp_updated_at),
                     "created_at": _iso(invitee.created_at),
                 }
                 for invitee in invitees
@@ -188,13 +190,12 @@ def _event_snapshot(event: Event, db: Session) -> dict[str, Any]:
             ],
             "rsvps": [
                 {
-                    "name": item.participant_name,
-                    "status": item.status,
-                    "waitlist_position": item.waitlist_position,
-                    "created_at": _iso(item.created_at),
-                    "updated_at": _iso(item.updated_at),
+                    "name": invitee.name,
+                    "status": invitee.rsvp_status,
+                    "updated_at": _iso(invitee.rsvp_updated_at),
                 }
-                for item in event.rsvps
+                for invitee in invitees
+                if invitee.rsvp_status
             ],
         },
         "recurrence": [
@@ -206,17 +207,6 @@ def _event_snapshot(event: Event, db: Session) -> dict[str, Any]:
                 "created_at": _iso(rule.created_at),
             }
             for rule in event.recurrence_rules
-        ],
-        "comments": [
-            {
-                "id": comment.id,
-                "author_name": comment.author_name,
-                "is_question": comment.is_question,
-                "content": comment.content,
-                "parent_id": comment.parent_id,
-                "created_at": _iso(comment.created_at),
-            }
-            for comment in event.comments
         ],
         "change_history": [
             {

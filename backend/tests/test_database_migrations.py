@@ -47,6 +47,8 @@ def test_upgrade_legacy_schema_renames_columns_and_allows_link_invitees(tmp_path
 
     invitee_columns = {column["name"]: column for column in inspect(engine).get_columns("invitees")}
     assert "joined_via_link" in invitee_columns
+    assert "rsvp_status" in invitee_columns
+    assert "rsvp_updated_at" in invitee_columns
     assert invitee_columns["phone_encrypted"]["nullable"]
     assert invitee_columns["phone_hash"]["nullable"]
     assert {column["name"] for column in inspect(engine).get_columns("rsvps")} == {

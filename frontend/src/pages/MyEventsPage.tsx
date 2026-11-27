@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../api/client';
 import { Event } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { PlusCircle, Calendar, Users, Sparkles, ArrowUpRight } from 'lucide-react';
+import { PlusCircle, Calendar, Users, Sparkles } from 'lucide-react';
 
 export const MyEventsPage: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
@@ -133,7 +133,7 @@ export const MyEventsPage: React.FC = () => {
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.3, delay: idx * 0.05 }}
                 whileHover={{ y: -5, scale: 1.015 }}
-                className="glass-panel p-6 rounded-3xl border border-zinc-800 hover:border-zinc-500 transition-colors flex flex-col justify-between group cursor-default"
+                className="relative glass-panel p-6 rounded-3xl border border-zinc-800 hover:border-zinc-500 transition-colors flex flex-col justify-between group cursor-pointer"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -155,7 +155,13 @@ export const MyEventsPage: React.FC = () => {
 
                   <div>
                     <h3 className="text-base font-bold text-white group-hover:text-zinc-300 transition-colors">
-                      {ev.title}
+                      {/* The title link stretches over the whole card, so clicking anywhere opens the event (DEV-173) */}
+                      <Link
+                        to={`/events/${ev.id}`}
+                        className="after:absolute after:inset-0 after:rounded-3xl focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-white/60"
+                      >
+                        {ev.title}
+                      </Link>
                     </h3>
                     <p className="text-xs text-zinc-400 line-clamp-2 mt-1">
                       {ev.description || 'No description provided.'}
@@ -175,25 +181,17 @@ export const MyEventsPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-zinc-800/80 flex items-center justify-between gap-2">
-                  <Link
-                    to={`/events/${ev.id}`}
-                    className="text-xs font-semibold text-white hover:text-zinc-300 flex items-center space-x-1 transition-colors"
-                  >
-                    <span>Manage event</span>
-                    <ArrowUpRight className="w-3.5 h-3.5" />
-                  </Link>
-                  {ev.active_token && (
-                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                      <Link
-                        to={`/share/${ev.active_token}/heatmap`}
-                        className="px-3 py-1.5 rounded-xl bg-white text-black hover:bg-zinc-200 text-xs font-semibold flex items-center space-x-1.5 transition-colors"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-black" />
-                        <span>View heatmap</span>
-                      </Link>
-                    </motion.div>
-                  )}
+                <div className="mt-6 pt-4 border-t border-zinc-800/80 flex items-center justify-end gap-2">
+                  {/* Sits above the card's stretched link so it keeps its own destination */}
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="relative z-10">
+                    <Link
+                      to={`/events/${ev.id}/heatmap`}
+                      className="px-3 py-1.5 rounded-xl bg-white text-black hover:bg-zinc-200 text-xs font-semibold flex items-center space-x-1.5 transition-colors"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-black" />
+                      <span>View heatmap</span>
+                    </Link>
+                  </motion.div>
                 </div>
               </motion.div>
             ))}

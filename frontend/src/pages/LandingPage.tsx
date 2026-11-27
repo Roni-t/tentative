@@ -6,6 +6,18 @@ import { HeroPlanet } from '../components/HeroPlanet';
 import { IntroSplash } from '../components/IntroSplash';
 import { introIsPending, markIntroDone } from '../utils/intro';
 import { Reveal } from '../components/Reveal';
+
+// New visitors start with an account, then go straight to creating an event (DEV-161)
+const SIGN_UP = '/register?next=%2Fcreate';
+
+const LogInHint: React.FC = () => (
+  <p className="mt-5 text-xs text-zinc-500">
+    Already have an account?{' '}
+    <Link to="/login" className="text-zinc-300 underline decoration-zinc-600 underline-offset-2 hover:text-white">
+      Log in
+    </Link>
+  </p>
+);
 import { useAuth } from '../context/AuthContext';
 
 const STEPS = [
@@ -59,7 +71,7 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div className="w-full">
-      <section className="relative min-h-[calc(100vh-4.5rem)] flex flex-col items-center justify-center text-center px-4">
+      <section className="relative min-h-[calc(100vh-4.5rem)] flex flex-col items-center justify-center text-center px-4 pb-24">
         <motion.div style={{ y: planetY, scale: planetScale }}>
           {/* The intro's planet lands exactly here, then this one fades in under it */}
           <div ref={planetRef} style={{ opacity: revealed ? 1 : 0, transition: 'opacity 0.4s ease-out' }}>
@@ -101,7 +113,7 @@ export const LandingPage: React.FC = () => {
             transition={{ duration: 1, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-wrap items-center justify-center gap-3 mt-10"
           >
-            <Link to={user ? '/create' : '/login'} className="pill pill-light">
+            <Link to={user ? '/create' : SIGN_UP} className="pill pill-light">
               <span>{user ? 'Create an event' : 'Get started'}</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
@@ -109,8 +121,18 @@ export const LandingPage: React.FC = () => {
               View demo heatmap
             </Link>
           </motion.div>
+          {!user && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={revealed ? { opacity: 1 } : { opacity: 0 }}
+              transition={{ duration: 1, delay: 0.5 }}
+            >
+              <LogInHint />
+            </motion.div>
+          )}
         </motion.div>
 
+        {/* The section's bottom padding keeps the buttons clear of this label on short screens */}
         <div className="absolute bottom-8 eyebrow">Scroll</div>
       </section>
 
@@ -172,11 +194,12 @@ export const LandingPage: React.FC = () => {
         <Reveal>
           <h2 className="text-4xl sm:text-6xl font-semibold text-white tracking-[-0.04em]">Ready when you are.</h2>
           <div className="flex justify-center gap-3 mt-10">
-            <Link to={user ? '/create' : '/login'} className="pill pill-light">
+            <Link to={user ? '/create' : SIGN_UP} className="pill pill-light">
               <span>{user ? 'Create an event' : 'Get started'}</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
+          {!user && <LogInHint />}
         </Reveal>
       </section>
 

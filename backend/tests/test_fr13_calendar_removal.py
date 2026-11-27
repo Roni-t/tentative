@@ -18,7 +18,9 @@ def test_fr13_01_canceled_event_ics_removes_it(client, db_session):
 
     assert removed.status_code == 200
     assert "METHOD:CANCEL" in removed.text and "STATUS:CANCELLED" in removed.text
+    expected_uid = f"UID:tentative-event-{event['id']}-20261202T140000Z@tentative"
     uid = next(line for line in added.splitlines() if line.startswith("UID:"))
+    assert uid == expected_uid
     assert uid in removed.text  # same UID, so the calendar removes the event it added
     assert "canceled.ics" in removed.headers["content-disposition"]
 

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 from app.models.notification import Notification
 from app.services.notification_service import notification_service
-from tests.helpers import create_event, register_user
+from tests.helpers import add_invitee, create_event, register_user
 
 HOST = "+19725550351"
 EVENT = {"timezone": "UTC", "candidate_dates": ["2026-12-02"], "daily_start_time": "14:00", "daily_end_time": "16:00"}
@@ -14,10 +14,12 @@ START = datetime(2026, 12, 2, 14, 0, tzinfo=timezone.utc)
 def setup_meeting(client):
     host = register_user(client, HOST, "Host")
     event = create_event(client, host, **EVENT)
-    for name, status in [("Alice", "going"), ("Bob", "maybe"), ("Cara", "declined")]:
+    tokens = [(add_invitee(client, host, event["id"], name)["response_token"], status)
+              for name, status in [("Alice", "going"), ("Bob", "maybe"), ("Cara", "not_going")]]
+    assert client.post(f"/api/events/{event['id']}/finalize", json=SLOT, headers=host).status_code == 200
+    for token, status in tokens:
         client.cookies.clear()
-        client.post(f"/api/events/{event['id']}/rsvp", json={"participant_name": name, "status": status})
-    client.post(f"/api/events/{event['id']}/finalize", json=SLOT, headers=host)
+        assert client.post(f"/api/rsvp/{token}", json={"status": status}).status_code == 200
     return event, host
 
 

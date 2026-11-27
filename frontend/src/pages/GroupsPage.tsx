@@ -55,9 +55,18 @@ export const GroupsPage: React.FC = () => {
     }
   };
 
-  const copy = (token: string | null) => {
-    navigator.clipboard?.writeText(fullLink(token));
-    showToast('Link copied.', 'success');
+  const copy = async (token: string | null) => {
+    const link = fullLink(token);
+    if (!link || !navigator.clipboard?.writeText) {
+      showToast('Could not copy link.', 'error');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(link);
+      showToast('Link copied.', 'success');
+    } catch {
+      showToast('Could not copy link.', 'error');
+    }
   };
 
   return (
@@ -139,7 +148,10 @@ export const GroupSharePage: React.FC = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!token) return;
+    if (!token) {
+      setError('This link does not work.');
+      return;
+    }
     api.openGroupLink(token).then(setGroup).catch((err: any) => setError(err.message || 'This link does not work.'));
   }, [token]);
 

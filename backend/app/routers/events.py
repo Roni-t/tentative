@@ -20,8 +20,8 @@ from app.schemas.event import (
 )
 from app.services.event_service import event_service
 from app.services.invitee_service import invitee_service
-from app.services.notification_service import notification_service
 from app.services.recurrence_service import recurrence_service
+from app.services.share_link_service import share_link_service
 from app.core.timefmt import format_local, to_utc
 
 router = APIRouter(prefix="/api/events", tags=["Events"])
@@ -79,7 +79,7 @@ def _format_event_out(event: Event, current_user: Optional[User], db: Session) -
         created_at=event.created_at,
         updated_at=event.updated_at,
         active_token=active_url.token if active_url else None,
-        expires_at=as_utc(active_url.expires_at) if active_url else None,
+        expires_at=share_link_service.expiry_for(active_url, event) if active_url else None,
         is_host=is_host,
         is_cohost=is_cohost,
         respondents_count=unique_respondents,
@@ -153,12 +153,6 @@ def finalize_event(
     )
 
     if payload.notify_participants:
-        notification_service.notify_all_invitees(
-            event=event,
-            message=f"Event '{event.title}' is finalized for {event.finalized_start_time.strftime('%b %d at %I:%M %p')}.",
-            notification_type="finalized",
-            db=db
-        )
         invitee_service.notify_finalized(event, db)  # FR-22: texted in each invitee's timezone
 
     return _format_event_out(event, current_user, db)
@@ -172,12 +166,7 @@ def cancel_event(
 ):
     """Cancel event and alert participants."""
     event = event_service.cancel_event(event_id=event_id, user=current_user, db=db)
-    notification_service.notify_all_invitees(
-        event=event,
-        message=f"Event '{event.title}' was canceled by the host.",
-        notification_type="canceled",
-        db=db
-    )
+    invitee_service.notify_canceled(event, db)
     return _format_event_out(event, current_user, db)
 
 

@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 from app.adapters.sms_adapter import get_sms_adapter
 from app.core.encryption import decrypt_phone, mask_phone
 from app.models.event import Event
+from app.models.invitee import Invitee, SmsOptOut
 from app.models.notification import Notification
-from app.models.rsvp import RSVP
 from app.models.user import User
 
 
@@ -50,12 +50,6 @@ class NotificationService:
             sms = get_sms_adapter()
             sms.send_notification(recipient, message)
 
-    def notify_all_invitees(self, event: Event, message: str, notification_type: str, db: Session):
-        rsvps = db.query(RSVP).filter(RSVP.event_id == event.id).all()
-        for r in rsvps:
-            recip = r.participant_phone or r.participant_name
-            self.notify_participant(recip, event, message, notification_type, db)
-
     # FR-7 (Reese): tell participants when a finalized meeting starts
     START_WINDOW = timedelta(minutes=30)  # a meeting that started up to 30 min ago still gets the alert
 
@@ -78,11 +72,28 @@ class NotificationService:
             where = f" at {event.location}" if event.location else ""
             message = f'Tentative: "{event.title}" is starting now{where}.'
             self.notify_host(event, message, "meeting_starting", db)
-            attendees = db.query(RSVP).filter(RSVP.event_id == event.id, RSVP.status.in_(["going", "maybe"])).all()
-            for r in attendees:
-                self.notify_participant(r.participant_phone or r.participant_name, event, message, "meeting_starting", db)
+            attendees = db.query(Invitee).filter(
+                Invitee.event_id == event.id, Invitee.rsvp_status.in_(["going", "maybe"])
+            ).all()
+            for invitee in attendees:
+                opted_out = bool(invitee.phone_hash) and (
+                    db.query(SmsOptOut).filter(SmsOptOut.phone_hash == invitee.phone_hash).first() is not None
+                )
+                if opted_out:
+                    continue
+                db.add(Notification(
+                    event_id=event.id,
+                    recipient=invitee.name,
+                    message=message,
+                    notification_type="meeting_starting",
+                    sent_at=datetime.now(timezone.utc),
+                ))
+                db.commit()
+                if invitee.phone_encrypted:
+                    plain_phone = decrypt_phone(invitee.phone_encrypted)
+                    if plain_phone:
+                        get_sms_adapter().send_notification(plain_phone, message)
             sent_events += 1
         return sent_events
-
 
 notification_service = NotificationService()

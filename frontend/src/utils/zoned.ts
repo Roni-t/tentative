@@ -67,3 +67,9 @@ export const longDateInZone = (iso: string, tz: string): string =>
     day: 'numeric',
     year: 'numeric',
   });
+
+// "CST", so a 5:00 PM start isn't read as the viewer's own local time
+export const zoneName = (iso: string, tz: string): string =>
+  new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'short' })
+    .formatToParts(new Date(iso))
+    .find((p) => p.type === 'timeZoneName')?.value ?? tz;

@@ -18,7 +18,7 @@ from app.models.event import Event, Group
 from app.models.shareable_url import ShareableURL
 from app.models.user import User
 from app.services.event_service import event_service
-from app.services.share_link_service import share_link_service
+from app.services.share_link_service import LINK_LIFETIME, share_link_service
 
 router = APIRouter(tags=["Groups"])
 
@@ -73,12 +73,13 @@ def _group_out(group: Group, db: Session) -> GroupOut:
 
 
 def _new_group_link(group_id: int, db: Session) -> ShareableURL:
+    now = datetime.now(timezone.utc)
     link = ShareableURL(
         token=generate_secure_token(16),
         group_id=group_id,
-        expires_at=share_link_service.compute_expiry("semester"),
+        expires_at=now + LINK_LIFETIME,
         is_active=True,
-        created_at=datetime.now(timezone.utc),
+        created_at=now,
     )
     db.add(link)
     return link

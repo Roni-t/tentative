@@ -34,6 +34,7 @@ export const CreateAccountPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [codeRejected, setCodeRejected] = useState(false);
 
   const { register, pollDevCode, clearDevNotice } = useAuth();
   const { showToast } = useToast();
@@ -94,6 +95,7 @@ export const CreateAccountPage: React.FC = () => {
       navigate(afterAuthPath(next));
     } catch (err: any) {
       setCode('');
+      setCodeRejected(err.status !== 404 && err.status !== 409);
       setOutcome(
         err.status === 409
           ? alreadyRegistered(err.message)
@@ -222,7 +224,11 @@ export const CreateAccountPage: React.FC = () => {
 
                 <CodeEntry
                   code={code}
-                  onChange={setCode}
+                  onChange={(value) => {
+                    setCode(value);
+                    setCodeRejected(false);
+                  }}
+                  invalid={codeRejected}
                   expiresAt={expiresAt}
                   maskedPhone={maskedPhone}
                   onResend={handleResend}
