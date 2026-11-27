@@ -8,6 +8,7 @@ import { formatDateTimeLong } from '../utils/format';
 import { Modal } from '../components/Modal';
 import { ChangeHistoryModal } from '../components/ChangeHistoryModal';
 import { InviteeList } from '../components/InviteeList';
+import { AaronPollsPanel } from '../components/AaronPollsPanel';
 import {
   Calendar,
   Clock,
@@ -46,6 +47,20 @@ export const EventDetailsPage: React.FC = () => {
   const [cohostInput, setCohostInput] = useState('');
   const [blockInput, setBlockInput] = useState('');
   const [googleCalendarUrl, setGoogleCalendarUrl] = useState('');
+
+  const downloadBackup = async () => {
+    if (!id) return;
+    try {
+      const blob = await api.downloadAaronBackup(id);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `tentative-event-${id}-backup.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      showToast('Event backup downloaded.', 'success');
+    } catch (err: any) { showToast(err.message || 'Could not download backup.', 'error'); }
+  };
 
   const fetchEvent = async () => {
     if (!id) return;
@@ -205,6 +220,9 @@ export const EventDetailsPage: React.FC = () => {
                   <Trash2 className="w-4 h-4" />
                 </button>
               )}
+              <button type="button" onClick={downloadBackup} className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-slate-300 hover:text-white border border-white/10 transition-colors">
+                <Download className="w-3.5 h-3.5 inline mr-1.5" />JSON Backup
+              </button>
             </div>
           )}
         </div>
@@ -308,6 +326,8 @@ export const EventDetailsPage: React.FC = () => {
           ))}
         </div>
       )}
+
+      <AaronPollsPanel eventId={event.id} canManage={canManage} />
 
       {/* Primary Action Matrix Navigation */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

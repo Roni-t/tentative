@@ -350,6 +350,34 @@ class ApiClient {
     return this.request<any>(`/admin/events/${id}`, { method: 'DELETE' });
   }
 
+  async listAaronPolls(eventId: number | string) {
+    return this.request<any[]>(`/aaron/events/${eventId}/polls`);
+  }
+
+  async createAaronPoll(eventId: number | string, question: string, category: string, options: string[]) {
+    return this.request<any>(`/aaron/events/${eventId}/polls`, {
+      method: 'POST', body: JSON.stringify({ question, category, options }),
+    });
+  }
+
+  async voteAaronPoll(eventId: number | string, pollId: number, voterName: string, option: string) {
+    return this.request<any>(`/aaron/events/${eventId}/polls/${pollId}/votes`, {
+      method: 'POST', body: JSON.stringify({ voter_name: voterName, option }),
+    });
+  }
+
+  async downloadAaronBackup(eventId: number | string): Promise<Blob> {
+    const headers: Record<string, string> = {};
+    const token = this.getToken();
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE}/aaron/events/${eventId}/backup.json`, { headers, credentials: 'include' });
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ detail: `HTTP ${res.status}: ${res.statusText}` }));
+      throw new Error(errorData.detail || 'Could not download event backup');
+    }
+    return res.blob();
+  }
+
   // Bug Reports
   async submitBugReport(userName: string, contact: string, pageUrl: string, description: string) {
     return this.request<any>('/bug-reports', {

@@ -1,11 +1,84 @@
+import asyncio
+import inspect
+from contextlib import asynccontextmanager
+
+import httpx
 import pytest
-from fastapi.testclient import TestClient
+import fastapi.dependencies.utils
+import fastapi.routing
+import starlette.concurrency
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from app.core.rate_limiter import rate_limiter
 from app.database import Base, get_db
 from app.main import app
+
+
+async def _run_sync_inline(func, *args, **kwargs):
+    """Keep sync endpoint calls on the ASGI loop when AnyIO's worker pool is broken."""
+    result = func(*args, **kwargs)
+    if inspect.isawaitable(result):
+        return await result
+    return result
+
+
+# The provided environment's AnyIO worker portal/thread pool never wakes queued
+# work. Tests use SQLite and do not need parallel endpoint execution.
+starlette.concurrency.run_in_threadpool = _run_sync_inline
+fastapi.routing.run_in_threadpool = _run_sync_inline
+fastapi.dependencies.utils.run_in_threadpool = _run_sync_inline
+
+
+@asynccontextmanager
+async def _contextmanager_inline(cm):
+    with cm as value:
+        yield value
+
+
+fastapi.dependencies.utils.contextmanager_in_threadpool = _contextmanager_inline
+
+
+class SyncASGIClient:
+    """Small synchronous test client that avoids AnyIO's broken blocking portal.
+
+    HTTPX's ASGI transport does not run lifespan hooks; each test already creates
+    and drops the shared test schema through ``db_session``. Skipping production
+    startup also prevents scheduler jobs from touching a separate database.
+    """
+
+    def __init__(self, application):
+        self.application = application
+        self.cookies = httpx.Cookies()
+
+    def request(self, method, url, **kwargs):
+        async def send():
+            transport = httpx.ASGITransport(app=self.application)
+            async with httpx.AsyncClient(
+                transport=transport,
+                base_url="http://testserver",
+                cookies=self.cookies,
+            ) as client:
+                response = await client.request(method, url, **kwargs)
+                self.cookies.update(client.cookies)
+                return response
+
+        return asyncio.run(send())
+
+    def get(self, url, **kwargs):
+        return self.request("GET", url, **kwargs)
+
+    def post(self, url, **kwargs):
+        return self.request("POST", url, **kwargs)
+
+    def put(self, url, **kwargs):
+        return self.request("PUT", url, **kwargs)
+
+    def patch(self, url, **kwargs):
+        return self.request("PATCH", url, **kwargs)
+
+    def delete(self, url, **kwargs):
+        return self.request("DELETE", url, **kwargs)
 
 # In-memory SQLite for testing
 TEST_DATABASE_URL = "sqlite:///:memory:"
@@ -41,8 +114,7 @@ def client(db_session):
     # Each test starts with a clean rate-limit counter; otherwise login limits
     # (10/min per IP) accumulate across tests and later tests get 429s.
     rate_limiter._requests.clear()
-    with TestClient(app) as c:
-        yield c
+    yield SyncASGIClient(app)
     app.dependency_overrides.clear()
 
 

@@ -8,6 +8,7 @@ from app.config import settings
 from app.database import Base, SessionLocal, engine
 from app.routers import (
     admin_router,
+    aaron_router,
     auth_router,
     availability_router,
     bug_reports_router,
@@ -79,6 +80,7 @@ app.include_router(admin_router)
 app.include_router(bug_reports_router)
 app.include_router(invitees_router)
 app.include_router(groups_router)
+app.include_router(aaron_router)
 
 
 @app.get("/api/health")
